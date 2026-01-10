@@ -17,7 +17,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Target, Search, X, ExternalLink } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Loader2, Target, Search, X, ExternalLink, Download, Upload, Copy, Check } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, SLOT_ICONS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 
@@ -145,6 +153,13 @@ export default function BisListsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Item[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+
+  // Import/Export dialog state
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importTarget, setImportTarget] = useState<'current' | 'bis'>('current');
+  const [importJson, setImportJson] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchPlayers();
@@ -393,6 +408,98 @@ export default function BisListsPage() {
     const wowsimsUrl = `https://wowsims.com/tbc/${specPath}/`;
 
     window.open(wowsimsUrl, '_blank');
+  };
+
+  // Export gear as JSON
+  const handleExportJson = (gearType: 'current' | 'bis') => {
+    if (!selectedPlayerData) return;
+
+    const gear = gearType === 'current' ? currentGear : bisConfig;
+    const allSlots = [...LEFT_SLOTS, ...RIGHT_SLOTS];
+
+    const exportData = {
+      player: selectedPlayerData.name,
+      class: selectedPlayerData.class,
+      spec: selectedPlayerData.mainSpec,
+      gearType,
+      gear: allSlots.map(({ slot }) => {
+        if (gearType === 'current') {
+          const item = currentGear.find(g => g.slot === slot);
+          return {
+            slot,
+            wowheadId: item?.wowheadId || item?.item?.wowheadId || null,
+            name: item?.itemName || item?.item?.name || null,
+            icon: item?.icon || item?.item?.icon || null,
+          };
+        } else {
+          const item = bisConfig.find(b => b.slot === slot);
+          return {
+            slot,
+            wowheadId: item?.wowheadId || item?.item?.wowheadId || null,
+            name: item?.itemName || item?.item?.name || null,
+            icon: item?.item?.icon || null,
+          };
+        }
+      }).filter(g => g.wowheadId),
+    };
+
+    const json = JSON.stringify(exportData, null, 2);
+    navigator.clipboard.writeText(json);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Open import dialog
+  const handleOpenImport = (target: 'current' | 'bis') => {
+    setImportTarget(target);
+    setImportJson('');
+    setImportDialogOpen(true);
+  };
+
+  // Import gear from JSON
+  const handleImportJson = async () => {
+    if (!selectedPlayerId || !importJson) return;
+
+    setImportLoading(true);
+    try {
+      const data = JSON.parse(importJson);
+      const gearItems = data.gear || data.equipment || [];
+
+      for (const item of gearItems) {
+        if (!item.wowheadId && !item.id) continue;
+
+        const slot = item.slot;
+        const wowheadId = item.wowheadId || item.id;
+        const itemName = item.name || `Item ${wowheadId}`;
+
+        if (importTarget === 'current') {
+          await fetch(`/api/players/${selectedPlayerId}/gear`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              slot,
+              wowheadId,
+              itemName,
+              icon: item.icon,
+            }),
+          });
+        }
+        // BiS import would need different API endpoint
+      }
+
+      // Refresh data
+      if (importTarget === 'current') {
+        await fetchCurrentGear(selectedPlayerId);
+      }
+
+      setImportDialogOpen(false);
+      setImportJson('');
+    } catch (error) {
+      console.error('Failed to import:', error);
+      alert('Failed to import. Please check the JSON format.');
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   // Calculate BiS completion percentage
@@ -645,9 +752,28 @@ export default function BisListsPage() {
               {/* BiS List Panel */}
               <Card>
                 <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide text-center">
-                    BiS List
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      BiS List
+                    </CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-7 px-2">
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleExportJson('bis')}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Export JSON
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenImport('bis')}>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Import JSON
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="grid grid-cols-2 gap-2">
@@ -666,9 +792,28 @@ export default function BisListsPage() {
               {/* Current Gear Panel */}
               <Card>
                 <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide text-center">
-                    Current Gear
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Current Gear
+                    </CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-7 px-2">
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleExportJson('current')}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Export JSON
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenImport('current')}>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Import JSON
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="grid grid-cols-2 gap-2">
@@ -772,6 +917,41 @@ export default function BisListsPage() {
                 </p>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Import {importTarget === 'current' ? 'Current Gear' : 'BiS List'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Paste JSON</Label>
+              <Textarea
+                placeholder='{"gear": [{"slot": "Head", "wowheadId": 12345, "name": "Item Name"}, ...]}'
+                value={importJson}
+                onChange={(e) => setImportJson(e.target.value)}
+                rows={8}
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Paste exported JSON from this app or WoWSims format
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleImportJson} disabled={!importJson || importLoading}>
+              {importLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+              Import
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
