@@ -7,8 +7,8 @@ import { SessionProvider } from '@/components/providers/session-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'HOOLIGANS Guild - Loot Council',
-  description: 'Loot Council Management Platform for HOOLIGANS Guild',
+  title: 'HOOLIGANS Guild',
+  description: 'Guild Management Platform for HOOLIGANS',
   icons: {
     icon: '/favicon.ico',
   },
