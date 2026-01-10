@@ -247,6 +247,7 @@ export async function POST(request: Request) {
               quality: details.quality,
               slot: details.slot,
               raid: raidName,
+              boss: 'Unknown', // Boss info not available from zone import
               phase: phase,
             },
           });
