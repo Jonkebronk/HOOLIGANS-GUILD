@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 import { auth, signIn } from '@/lib/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 
 export default async function LoginPage({
   searchParams,
@@ -19,14 +20,33 @@ export default async function LoginPage({
   const callbackUrl = params.callbackUrl || '/dashboard';
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-xl bg-primary flex items-center justify-center">
-            <span className="text-3xl font-bold text-primary-foreground">H</span>
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/login-bg.png"
+          alt="Big League Hooligans"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
+
+      {/* Login Card */}
+      <Card className="relative z-10 w-full max-w-md bg-background/95 backdrop-blur-sm border-border/50">
+        <CardHeader className="text-center pb-2">
+          <div className="mx-auto mb-4">
+            <Image
+              src="/images/logo.png"
+              alt="HOOLIGANS Logo"
+              width={180}
+              height={180}
+              className="drop-shadow-2xl"
+              priority
+            />
           </div>
-          <CardTitle className="text-2xl">Welcome to HOOLIGANS</CardTitle>
-          <CardDescription>
+          <CardDescription className="text-base">
             Sign in to access the Loot Council platform
           </CardDescription>
         </CardHeader>
