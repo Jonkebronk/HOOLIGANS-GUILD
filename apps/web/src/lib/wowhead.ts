@@ -102,15 +102,15 @@ export function buildWowheadLink(itemId: number, domain: string = 'tbc') {
 
 // TBC Raid instances for zone import
 export const TBC_RAIDS = [
-  { id: 'karazhan', name: 'Karazhan', zoneId: 3457, phase: 'P1' },
-  { id: 'gruul', name: "Gruul's Lair", zoneId: 3923, phase: 'P1' },
-  { id: 'magtheridon', name: "Magtheridon's Lair", zoneId: 3836, phase: 'P1' },
-  { id: 'ssc', name: 'Serpentshrine Cavern', zoneId: 3607, phase: 'P2' },
-  { id: 'tk', name: 'Tempest Keep', zoneId: 3845, phase: 'P2' },
-  { id: 'hyjal', name: 'Hyjal Summit', zoneId: 3606, phase: 'P3' },
-  { id: 'bt', name: 'Black Temple', zoneId: 3959, phase: 'P3' },
-  { id: 'za', name: "Zul'Aman", zoneId: 3805, phase: 'P4' },
-  { id: 'swp', name: 'Sunwell Plateau', zoneId: 4075, phase: 'P5' },
+  { id: '3457', name: 'Karazhan', zoneId: 3457, phase: 'P1' },
+  { id: '3923', name: "Gruul's Lair", zoneId: 3923, phase: 'P1' },
+  { id: '3836', name: "Magtheridon's Lair", zoneId: 3836, phase: 'P1' },
+  { id: '3607', name: 'Serpentshrine Cavern', zoneId: 3607, phase: 'P2' },
+  { id: '3845', name: 'Tempest Keep', zoneId: 3845, phase: 'P2' },
+  { id: '3606', name: 'Mount Hyjal', zoneId: 3606, phase: 'P3' },
+  { id: '3959', name: 'Black Temple', zoneId: 3959, phase: 'P3' },
+  { id: '3805', name: "Zul'Aman", zoneId: 3805, phase: 'P4' },
+  { id: '4075', name: 'Sunwell Plateau', zoneId: 4075, phase: 'P5' },
 ];
 
 // Gear slot icons

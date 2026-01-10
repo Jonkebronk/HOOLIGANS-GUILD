@@ -57,6 +57,8 @@ export default function ItemsPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importZone, setImportZone] = useState('');
   const [importUrl, setImportUrl] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState('');
   const [newItem, setNewItem] = useState({
     name: '',
     slot: '',
@@ -99,6 +101,58 @@ export default function ItemsPage() {
     const raid = TBC_RAIDS.find(r => r.id === zoneId);
     if (raid) {
       setImportUrl(`https://www.wowhead.com/tbc/zone=${zoneId}/${raid.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`);
+    }
+  };
+
+  const handleImportZone = async () => {
+    if (!importUrl || !importZone) {
+      setImportError('Please enter a Wowhead URL and select a raid zone');
+      return;
+    }
+
+    const zoneId = parseZoneFromUrl(importUrl);
+    if (!zoneId) {
+      setImportError('Invalid Wowhead URL. Expected format: https://www.wowhead.com/tbc/zone=3457/karazhan');
+      return;
+    }
+
+    const selectedRaid = TBC_RAIDS.find(r => r.id === importZone);
+    if (!selectedRaid) {
+      setImportError('Please select a raid zone');
+      return;
+    }
+
+    setIsImporting(true);
+    setImportError('');
+
+    try {
+      const res = await fetch('/api/items/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          zoneId: parseInt(zoneId),
+          raidName: selectedRaid.name,
+          phase: selectedRaid.phase,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Refresh items list
+        await fetchItems();
+        setIsImportDialogOpen(false);
+        setImportUrl('');
+        setImportZone('');
+        alert(`Successfully imported ${data.imported} items from ${selectedRaid.name}`);
+      } else {
+        const error = await res.json();
+        setImportError(error.error || 'Failed to import items');
+      }
+    } catch (error) {
+      console.error('Failed to import:', error);
+      setImportError('Failed to import items. Please try again.');
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -197,21 +251,13 @@ export default function ItemsPage() {
                     onChange={(e) => handleUrlChange(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Paste a Wowhead zone URL or select from the dropdown below
+                    Paste a Wowhead zone URL - the raid will be auto-selected
                   </p>
                 </div>
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">or</span>
-                  </div>
-                </div>
                 <div className="space-y-2">
-                  <Label>Select Raid Zone</Label>
+                  <Label>Raid Zone</Label>
                   <Select value={importZone} onValueChange={handleZoneSelectChange}>
-                    <SelectTrigger><SelectValue placeholder="Select zone to import" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select zone" /></SelectTrigger>
                     <SelectContent>
                       {TBC_RAIDS.map((raid) => (
                         <SelectItem key={raid.id} value={raid.id}>
@@ -220,15 +266,25 @@ export default function ItemsPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Items will be assigned to this raid in the database
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  This will fetch all items from the selected zone and add them to the database.
-                </p>
+                {importError && (
+                  <p className="text-sm text-red-500">{importError}</p>
+                )}
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>Cancel</Button>
-                <Button disabled={!importZone}>
-                  <Upload className="h-4 w-4 mr-2" />Import Items
+                <Button variant="outline" onClick={() => setIsImportDialogOpen(false)} disabled={isImporting}>
+                  Cancel
+                </Button>
+                <Button onClick={handleImportZone} disabled={!importZone || !importUrl || isImporting}>
+                  {isImporting ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  {isImporting ? 'Importing...' : 'Import Items'}
                 </Button>
               </DialogFooter>
             </DialogContent>

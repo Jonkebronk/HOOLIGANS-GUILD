@@ -78,13 +78,13 @@ export const LOOT_POINTS: Record<string, number> = {
 // TBC Raids
 export const RAIDS = [
   { name: 'Karazhan', phase: 'P1', shortName: 'Kara' },
-  { name: 'Gruuls Lair', phase: 'P1', shortName: 'Gruul' },
-  { name: 'Magtheridons Lair', phase: 'P1', shortName: 'Mag' },
-  { name: 'Serpentshrine Caverns', phase: 'P2', shortName: 'SSC' },
+  { name: "Gruul's Lair", phase: 'P1', shortName: 'Gruul' },
+  { name: "Magtheridon's Lair", phase: 'P1', shortName: 'Mag' },
+  { name: 'Serpentshrine Cavern', phase: 'P2', shortName: 'SSC' },
   { name: 'Tempest Keep', phase: 'P2', shortName: 'TK' },
-  { name: 'Hyjal Summit', phase: 'P3', shortName: 'Hyjal' },
+  { name: 'Mount Hyjal', phase: 'P3', shortName: 'Hyjal' },
   { name: 'Black Temple', phase: 'P3', shortName: 'BT' },
-  { name: 'ZulAman', phase: 'P4', shortName: 'ZA' },
+  { name: "Zul'Aman", phase: 'P4', shortName: 'ZA' },
   { name: 'Sunwell Plateau', phase: 'P5', shortName: 'SWP' },
 ];
 
