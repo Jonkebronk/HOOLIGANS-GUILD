@@ -23,14 +23,20 @@ import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, SLOT_ICONS, ITE
 
 const WOW_CLASSES = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
 
-// All gear slots in order
-const ALL_SLOTS = [
+// Left side slots (icon | text)
+const LEFT_SLOTS = [
   { slot: 'Head', label: 'Head' },
   { slot: 'Neck', label: 'Neck' },
   { slot: 'Shoulder', label: 'Shoulders' },
   { slot: 'Back', label: 'Back' },
   { slot: 'Chest', label: 'Chest' },
   { slot: 'Wrist', label: 'Wrists' },
+  { slot: 'Weapon1', label: 'Main Hand' },
+  { slot: 'Weapon2', label: 'Off Hand' },
+];
+
+// Right side slots (text | icon)
+const RIGHT_SLOTS = [
   { slot: 'Hands', label: 'Hands' },
   { slot: 'Waist', label: 'Waist' },
   { slot: 'Legs', label: 'Legs' },
@@ -39,8 +45,6 @@ const ALL_SLOTS = [
   { slot: 'Finger2', label: 'Ring 2' },
   { slot: 'Trinket1', label: 'Trinket 1' },
   { slot: 'Trinket2', label: 'Trinket 2' },
-  { slot: 'Weapon1', label: 'Main Hand' },
-  { slot: 'Weapon2', label: 'Off Hand' },
   { slot: 'Ranged', label: 'Ranged' },
 ];
 
@@ -571,30 +575,44 @@ export default function BisListsPage() {
           {/* Side-by-Side Gear Comparison */}
           {selectedPlayerData && (
             <div className="grid grid-cols-2 gap-4">
-              {/* BiS List Column (Left) */}
+              {/* BiS List Panel */}
               <Card>
                 <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide text-center">
                     BiS List
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="space-y-0.5">
-                    {ALL_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'bis', 'left'))}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Left side slots */}
+                    <div className="space-y-0.5">
+                      {LEFT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'bis', 'left'))}
+                    </div>
+                    {/* Right side slots */}
+                    <div className="space-y-0.5">
+                      {RIGHT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'bis', 'right'))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Current Gear Column (Right - mirrored) */}
+              {/* Current Gear Panel */}
               <Card>
                 <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide text-right">
+                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide text-center">
                     Current Gear
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="space-y-0.5">
-                    {ALL_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'current', 'right'))}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Left side slots */}
+                    <div className="space-y-0.5">
+                      {LEFT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'current', 'left'))}
+                    </div>
+                    {/* Right side slots */}
+                    <div className="space-y-0.5">
+                      {RIGHT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'current', 'right'))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
