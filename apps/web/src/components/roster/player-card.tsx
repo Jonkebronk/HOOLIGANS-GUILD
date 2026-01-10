@@ -61,27 +61,20 @@ export function PlayerCard({ player, onEdit, onDelete, onToggleActive }: PlayerC
         {/* Header Row */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            {/* Avatar with initials or spec icon */}
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+            {/* Spec Icon */}
+            <img
+              src={getSpecIconUrl(player.mainSpec)}
+              alt={player.mainSpec}
+              className="w-10 h-10 rounded-full"
               style={{
-                backgroundColor: `${classColor}20`,
                 border: `2px solid ${classColor}`,
-                color: classColor,
               }}
-            >
-              {player.name.slice(0, 2).toUpperCase()}
-            </div>
+            />
             <div>
               <h3 className="font-semibold text-sm" style={{ color: classColor }}>
                 {player.name}
               </h3>
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <img
-                  src={getSpecIconUrl(player.mainSpec)}
-                  alt={player.mainSpec}
-                  className="w-4 h-4 rounded"
-                />
+              <p className="text-xs text-muted-foreground">
                 {specName} {player.wowClass}
               </p>
             </div>
