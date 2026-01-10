@@ -231,36 +231,39 @@ export default function RaidSplitsPage() {
             </div>
           </CardHeader>
           <CardContent className="max-h-[600px] overflow-y-auto">
-            <div className="space-y-1">
-              {unassignedPlayers.map((player) => (
-                <button
-                  key={player.id}
-                  onClick={() => {
-                    const groupWithSpace = groups.findIndex(g => g.some(s => s === null));
-                    if (groupWithSpace !== -1) {
-                      addPlayerToGroup(groupWithSpace, player);
-                    }
-                  }}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 text-left w-full"
-                >
-                  <img
-                    src={getSpecIconUrl(player.mainSpec)}
-                    alt={player.mainSpec}
-                    className="w-8 h-8 rounded"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span
-                      className="text-sm font-medium truncate block"
-                      style={{ color: CLASS_COLORS[player.class] }}
-                    >
-                      {player.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground truncate block">
-                      {player.mainSpec?.replace(player.class, '').trim()}
-                    </span>
-                  </div>
-                </button>
-              ))}
+            <div className="space-y-0.5">
+              {unassignedPlayers.map((player) => {
+                const specName = player.mainSpec?.replace(player.class, '').trim().replace(/([A-Z])/g, ' $1').trim();
+                return (
+                  <button
+                    key={player.id}
+                    onClick={() => {
+                      const groupWithSpace = groups.findIndex(g => g.some(s => s === null));
+                      if (groupWithSpace !== -1) {
+                        addPlayerToGroup(groupWithSpace, player);
+                      }
+                    }}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 text-left w-full"
+                  >
+                    <img
+                      src={getSpecIconUrl(player.mainSpec)}
+                      alt={player.mainSpec}
+                      className="w-9 h-9 rounded-md"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span
+                        className="text-sm font-semibold truncate block"
+                        style={{ color: CLASS_COLORS[player.class] }}
+                      >
+                        {player.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate block">
+                        {specName}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
