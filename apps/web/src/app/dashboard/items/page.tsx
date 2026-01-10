@@ -496,24 +496,24 @@ export default function ItemsPage() {
         </Card>
       ) : (
         <>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground mb-2">
             Showing {filteredItems.length} of {items.length} items
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredItems.map((item) => (
-              <Card key={item.id} className="hover:opacity-80 transition-opacity" style={{ borderColor: `${ITEM_QUALITY_COLORS[item.quality]}40` }}>
-                <CardContent className="pt-4">
-                  <div className="flex items-start gap-3">
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border">
+                {filteredItems.map((item) => (
+                  <div key={item.id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors">
                     <a
                       href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <img
-                        src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'large')}
+                        src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
                         alt={item.name}
-                        className="w-12 h-12 rounded"
+                        className="w-9 h-9 rounded flex-shrink-0"
                         style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                       />
                     </a>
@@ -522,23 +522,28 @@ export default function ItemsPage() {
                         href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-semibold hover:underline truncate block"
+                        className="font-medium hover:underline truncate block"
                         style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                       >
                         {item.name}
                       </a>
-                      <p className="text-sm text-muted-foreground">{item.slot}</p>
-                      <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-muted mt-1">{item.phase}</span>
                     </div>
-                  </div>
-                  <div className="mt-3 text-sm text-muted-foreground">
-                    {item.raid}{item.boss ? ` - ${item.boss}` : ''}
-                  </div>
-                  {item.bisSpecs && item.bisSpecs.length > 0 && (
-                    <div className="mt-2">
-                      <div className="flex flex-wrap gap-1">
+                    <div className="hidden sm:block w-24 text-sm text-muted-foreground">
+                      {item.slot}
+                    </div>
+                    <div className="hidden md:block w-32 text-sm text-muted-foreground truncate">
+                      {item.raid}
+                    </div>
+                    <div className="hidden lg:block w-24 text-sm text-muted-foreground">
+                      {item.boss || '-'}
+                    </div>
+                    <div className="w-12 text-center">
+                      <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-muted">{item.phase}</span>
+                    </div>
+                    {item.bisSpecs && item.bisSpecs.length > 0 ? (
+                      <div className="hidden xl:flex gap-1 w-40">
                         {item.bisSpecs.slice(0, 2).map((bisSpec) => (
-                          <span key={bisSpec.id} className="px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-400">
+                          <span key={bisSpec.id} className="px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-400 truncate">
                             {formatSpec(bisSpec.spec)}
                           </span>
                         ))}
@@ -548,12 +553,14 @@ export default function ItemsPage() {
                           </span>
                         )}
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    ) : (
+                      <div className="hidden xl:block w-40" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
     </div>
