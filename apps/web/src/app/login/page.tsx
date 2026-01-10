@@ -35,17 +35,7 @@ export default async function LoginPage({
 
       {/* Login Card */}
       <Card className="relative z-10 w-full max-w-md bg-background/95 backdrop-blur-sm border-border/50">
-        <CardHeader className="text-center pb-2">
-          <div className="mx-auto mb-4">
-            <Image
-              src="/images/logo.png"
-              alt="HOOLIGANS Logo"
-              width={180}
-              height={180}
-              className="drop-shadow-2xl"
-              priority
-            />
-          </div>
+        <CardHeader className="text-center">
           <CardDescription className="text-base">
             Sign in to access the Loot Council platform
           </CardDescription>
