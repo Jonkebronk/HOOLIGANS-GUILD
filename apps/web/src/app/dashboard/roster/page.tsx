@@ -120,11 +120,6 @@ export default function RosterPage() {
     Ranged: filteredPlayers.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Ranged'),
   };
 
-  // Get unique specs for each role group
-  const getSpecsForRole = (rolePlayers: Player[]) => {
-    const specs = new Set(rolePlayers.map(p => p.mainSpec));
-    return Array.from(specs);
-  };
 
   const availableSpecs = newPlayer.wowClass ? CLASS_SPECS[newPlayer.wowClass] || [] : [];
 
@@ -314,79 +309,38 @@ export default function RosterPage() {
               ))}
             </div>
           ) : (
-            <div className="space-y-6">
-              {/* Tank Section */}
-              {groupedPlayers.Tank.length > 0 && (
-                <RoleSection
-                  title="Tank"
-                  icon="/icons/roles/tank.png"
-                  color="#8B4513"
-                  players={groupedPlayers.Tank}
-                  specs={getSpecsForRole(groupedPlayers.Tank)}
-                />
-              )}
+            <div className="grid grid-cols-4 gap-4">
+              {/* Tank Column */}
+              <RoleColumn
+                title="Tank"
+                icon="/icons/roles/tank.png"
+                color="#8B4513"
+                players={groupedPlayers.Tank}
+              />
 
-              {/* Healer Section */}
-              {groupedPlayers.Heal.length > 0 && (
-                <RoleSection
-                  title="Healers"
-                  icon="/icons/roles/healer.png"
-                  color="#2E8B57"
-                  players={groupedPlayers.Heal}
-                  specs={getSpecsForRole(groupedPlayers.Heal)}
-                />
-              )}
+              {/* Healer Column */}
+              <RoleColumn
+                title="Healer"
+                icon="/icons/roles/healer.png"
+                color="#2E8B57"
+                players={groupedPlayers.Heal}
+              />
 
-              {/* Melee Section */}
-              {groupedPlayers.Melee.length > 0 && (
-                <RoleSection
-                  title="Melee"
-                  icon="/icons/roles/melee.png"
-                  color="#8B0000"
-                  players={groupedPlayers.Melee}
-                  specs={getSpecsForRole(groupedPlayers.Melee)}
-                />
-              )}
+              {/* Melee Column */}
+              <RoleColumn
+                title="Melee"
+                icon="/icons/roles/melee.png"
+                color="#8B0000"
+                players={groupedPlayers.Melee}
+              />
 
-              {/* Ranged Section */}
-              {groupedPlayers.Ranged.length > 0 && (
-                <RoleSection
-                  title="Ranged"
-                  icon="/icons/roles/ranged.png"
-                  color="#4B0082"
-                  players={groupedPlayers.Ranged}
-                  specs={getSpecsForRole(groupedPlayers.Ranged)}
-                />
-              )}
-
-              {/* Summary */}
-              <Card>
-                <CardContent className="py-4">
-                  <div className="space-y-2">
-                    {[
-                      { label: 'Tanks', icon: '/icons/roles/tank.png', count: groupedPlayers.Tank.length },
-                      { label: 'Healers', icon: '/icons/roles/healer.png', count: groupedPlayers.Heal.length },
-                      { label: 'Melee', icon: '/icons/roles/melee.png', count: groupedPlayers.Melee.length },
-                      { label: 'Ranged', icon: '/icons/roles/ranged.png', count: groupedPlayers.Ranged.length },
-                    ].map(item => (
-                      <div key={item.label} className="flex items-center gap-3">
-                        <img src={item.icon} alt="" className="w-6 h-6" />
-                        <span className="text-sm font-medium w-20">{item.label}:</span>
-                        <div className="bg-primary/20 text-primary px-3 py-0.5 rounded text-sm font-semibold">
-                          {item.count}
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex items-center gap-3 pt-2 border-t">
-                      <Users className="w-6 h-6 text-muted-foreground" />
-                      <span className="text-sm font-medium w-20">Total:</span>
-                      <div className="bg-muted text-foreground px-3 py-0.5 rounded text-sm font-semibold">
-                        {filteredPlayers.length}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Ranged Column */}
+              <RoleColumn
+                title="Ranged"
+                icon="/icons/roles/ranged.png"
+                color="#4B0082"
+                players={groupedPlayers.Ranged}
+              />
             </div>
           )}
         </>
@@ -395,77 +349,66 @@ export default function RosterPage() {
   );
 }
 
-// Role Section Component for List View
-function RoleSection({
+// Role Column Component for List View (4 columns side by side)
+function RoleColumn({
   title,
   icon,
   color,
   players,
-  specs,
 }: {
   title: string;
   icon: string;
   color: string;
   players: Player[];
-  specs: string[];
 }) {
+  // Get spec name from mainSpec (e.g., "DruidRestoration" -> "Restoration")
+  const getSpecName = (mainSpec: string, playerClass: string) => {
+    return mainSpec.replace(playerClass, '').replace(/([A-Z])/g, ' $1').trim();
+  };
+
   return (
-    <Card>
+    <div className="flex flex-col">
+      {/* Icon */}
+      <div className="flex justify-center py-3">
+        <div className="w-12 h-12 rounded-full bg-background border-2 border-border flex items-center justify-center">
+          <img src={icon} alt="" className="w-8 h-8" />
+        </div>
+      </div>
+
+      {/* Title Header */}
       <div
-        className="flex items-center gap-2 px-4 py-2 rounded-t-lg"
+        className="text-center py-2 font-bold text-white"
         style={{ backgroundColor: color }}
       >
-        <img src={icon} alt="" className="w-6 h-6" />
-        <span className="text-white font-semibold">{title}</span>
-        <span className="text-white/80 text-sm">({players.length})</span>
+        {title}
       </div>
-      <CardContent className="p-0">
-        {/* Spec Headers */}
-        <div className="grid border-b" style={{ gridTemplateColumns: `repeat(${Math.min(specs.length, 6)}, 1fr)` }}>
-          {specs.slice(0, 6).map(spec => {
-            const specName = spec.replace(/([A-Z])/g, ' $1').trim();
-            const className = spec.replace(/^([A-Z][a-z]+).*/, '$1');
-            return (
-              <div key={spec} className="flex items-center gap-1 px-2 py-1.5 border-r last:border-r-0 bg-muted/50">
-                <img src={getSpecIconUrl(spec)} alt="" className="w-5 h-5 rounded" />
-                <span className="text-xs font-medium truncate" style={{ color: CLASS_COLORS[className] }}>
-                  {specName.split(' ').slice(-1)[0]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        {/* Player Grid */}
-        <div className="grid" style={{ gridTemplateColumns: `repeat(${Math.min(specs.length, 6)}, 1fr)` }}>
-          {specs.slice(0, 6).map(spec => {
-            const specPlayers = players.filter(p => p.mainSpec === spec);
-            return (
-              <div key={spec} className="border-r last:border-r-0 min-h-[60px]">
-                {specPlayers.map(player => (
-                  <div
-                    key={player.id}
-                    className="px-2 py-1 border-b last:border-b-0 text-sm truncate"
-                    style={{ color: CLASS_COLORS[player.class] }}
-                  >
-                    {player.name}
-                  </div>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-        {/* Counts */}
-        <div className="grid border-t bg-muted/30" style={{ gridTemplateColumns: `repeat(${Math.min(specs.length, 6)}, 1fr)` }}>
-          {specs.slice(0, 6).map(spec => {
-            const count = players.filter(p => p.mainSpec === spec).length;
-            return (
-              <div key={spec} className="px-2 py-1 text-center text-sm font-medium border-r last:border-r-0">
-                {count}
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+
+      {/* Player Specs */}
+      <div className="border-x border-b border-border flex-1">
+        {players.length === 0 ? (
+          <div className="py-4 text-center text-muted-foreground text-sm">
+            No players
+          </div>
+        ) : (
+          players.map((player, index) => (
+            <div
+              key={player.id}
+              className="px-3 py-2 text-center border-b last:border-b-0 text-sm font-medium"
+              style={{
+                color: CLASS_COLORS[player.class],
+                backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+              }}
+            >
+              {getSpecName(player.mainSpec, player.class)}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Count */}
+      <div className="text-center py-2 bg-muted/50 border-x border-b border-border text-sm font-semibold">
+        {players.length}
+      </div>
+    </div>
   );
 }
