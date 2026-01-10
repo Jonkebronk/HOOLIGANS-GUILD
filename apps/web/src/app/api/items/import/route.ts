@@ -1,35 +1,61 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@hooligans/database';
+import { prisma, GearSlot } from '@hooligans/database';
 
-// Map Wowhead inventory types to our slot names
-const INVENTORY_TYPE_MAP: Record<number, string> = {
+// Map Wowhead inventory types to GearSlot enum
+const INVENTORY_TYPE_MAP: Record<number, GearSlot> = {
   1: 'Head',
   2: 'Neck',
   3: 'Shoulder',
-  4: 'Shirt',
   5: 'Chest',
   6: 'Waist',
   7: 'Legs',
   8: 'Feet',
   9: 'Wrist',
   10: 'Hands',
-  11: 'Finger',
-  12: 'Trinket',
-  13: 'One-Hand',
-  14: 'Off Hand',
+  11: 'Finger1',
+  12: 'Trinket1',
+  13: 'Weapon1',     // One-Hand
+  14: 'Weapon2',     // Off Hand / Shield
   15: 'Ranged',
   16: 'Back',
-  17: 'Two-Hand',
-  18: 'Bag',
-  19: 'Tabard',
-  20: 'Chest', // Robe
-  21: 'Main Hand',
-  22: 'Off Hand',
-  23: 'Held In Off-hand',
-  24: 'Ammo',
-  25: 'Thrown',
+  17: 'Weapon1',     // Two-Hand
+  20: 'Chest',       // Robe
+  21: 'Weapon1',     // Main Hand
+  22: 'Weapon2',     // Off Hand
+  23: 'Weapon2',     // Held In Off-hand
+  25: 'Ranged',      // Thrown
   26: 'Ranged',
-  28: 'Relic',
+  28: 'Ranged',      // Relic/Idol/etc
+};
+
+// Map slot text to GearSlot enum
+const SLOT_TEXT_MAP: Record<string, GearSlot> = {
+  'Head': 'Head',
+  'Neck': 'Neck',
+  'Shoulder': 'Shoulder',
+  'Back': 'Back',
+  'Chest': 'Chest',
+  'Wrist': 'Wrist',
+  'Hands': 'Hands',
+  'Waist': 'Waist',
+  'Legs': 'Legs',
+  'Feet': 'Feet',
+  'Finger': 'Finger1',
+  'Trinket': 'Trinket1',
+  'Main Hand': 'Weapon1',
+  'Off Hand': 'Weapon2',
+  'One-Hand': 'Weapon1',
+  'Two-Hand': 'Weapon1',
+  'Ranged': 'Ranged',
+  'Relic': 'Ranged',
+  'Idol': 'Ranged',
+  'Libram': 'Ranged',
+  'Totem': 'Ranged',
+  'Wand': 'Ranged',
+  'Gun': 'Ranged',
+  'Bow': 'Ranged',
+  'Crossbow': 'Ranged',
+  'Thrown': 'Ranged',
 };
 
 // Extract item IDs from Wowhead zone page HTML
@@ -95,7 +121,7 @@ async function fetchItemDetails(itemId: number): Promise<{
   name: string;
   icon: string;
   quality: number;
-  slot: string | null;
+  slot: GearSlot | null;
 } | null> {
   try {
     // Use Wowhead's tooltip API (dataEnv=5 is TBC)
@@ -111,7 +137,7 @@ async function fetchItemDetails(itemId: number): Promise<{
     const data = await response.json();
 
     // Extract slot from tooltip HTML if available
-    let slot: string | null = null;
+    let slot: GearSlot | null = null;
     if (data.tooltip) {
       // Look for inventory slot in tooltip HTML comments or text
       const slotMatch = data.tooltip.match(/<!--\s*inventorySlot:\s*(\d+)\s*-->/);
@@ -120,9 +146,9 @@ async function fetchItemDetails(itemId: number): Promise<{
       }
       // Alternative: Look for slot text like "Head", "Chest", etc.
       if (!slot) {
-        const slotTextMatch = data.tooltip.match(/<th[^>]*>(Head|Neck|Shoulder|Back|Chest|Wrist|Hands|Waist|Legs|Feet|Finger|Trinket|Main Hand|Off Hand|One-Hand|Two-Hand|Ranged|Relic)<\/th>/i);
+        const slotTextMatch = data.tooltip.match(/<th[^>]*>(Head|Neck|Shoulder|Back|Chest|Wrist|Hands|Waist|Legs|Feet|Finger|Trinket|Main Hand|Off Hand|One-Hand|Two-Hand|Ranged|Relic|Idol|Libram|Totem|Wand|Gun|Bow|Crossbow|Thrown)<\/th>/i);
         if (slotTextMatch) {
-          slot = slotTextMatch[1];
+          slot = SLOT_TEXT_MAP[slotTextMatch[1]] || null;
         }
       }
     }
@@ -206,6 +232,12 @@ export async function POST(request: Request) {
         const details = await fetchItemDetails(itemId);
 
         if (details) {
+          // Skip items without a valid gear slot (non-equipment items)
+          if (!details.slot) {
+            skipped++;
+            continue;
+          }
+
           // Create item in database
           await prisma.item.create({
             data: {
@@ -213,7 +245,7 @@ export async function POST(request: Request) {
               wowheadId: itemId,
               icon: details.icon,
               quality: details.quality,
-              slot: details.slot || 'Unknown',
+              slot: details.slot,
               raid: raidName,
               phase: phase,
             },
