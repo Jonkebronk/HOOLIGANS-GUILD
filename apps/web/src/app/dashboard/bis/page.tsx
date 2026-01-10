@@ -381,7 +381,7 @@ export default function BisListsPage() {
     );
   }
 
-  const renderGearSlot = (slot: string, label: string, context: DialogContext) => {
+  const renderGearSlot = (slot: string, label: string, context: DialogContext, align: 'left' | 'right') => {
     const gearItem = context === 'current' ? getCurrentGearItem(slot) : getBisItem(slot);
     const item = context === 'current'
       ? (gearItem as PlayerGear | null)?.item
@@ -392,59 +392,71 @@ export default function BisListsPage() {
     const slotIcon = SLOT_ICONS[slot] || 'inv_misc_questionmark';
     const hasItem = !!wowheadId || !!item;
 
+    const iconElement = hasItem && wowheadId ? (
+      <a
+        href={`https://www.wowhead.com/tbc/item=${wowheadId}`}
+        onClick={(e) => e.preventDefault()}
+        className="relative block flex-shrink-0"
+      >
+        <img
+          src={getItemIconUrl(icon || 'inv_misc_questionmark', 'medium')}
+          alt={itemName || label}
+          className="w-8 h-8 rounded"
+          style={{
+            borderWidth: 2,
+            borderStyle: 'solid',
+            borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee',
+          }}
+        />
+      </a>
+    ) : (
+      <div className="relative flex-shrink-0">
+        <img
+          src={getItemIconUrl(slotIcon, 'medium')}
+          alt={label}
+          className="w-8 h-8 rounded"
+          style={{
+            borderWidth: 2,
+            borderStyle: 'solid',
+            borderColor: '#333',
+            opacity: 0.4,
+          }}
+        />
+      </div>
+    );
+
+    const textElement = (
+      <div className={`flex-1 min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
+        {hasItem ? (
+          <span
+            className="text-xs font-medium block truncate"
+            style={{ color: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee' }}
+          >
+            {itemName}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">{label}</span>
+        )}
+      </div>
+    );
+
     return (
       <div
         key={`${context}-${slot}`}
         onClick={() => handleSlotClick(slot, label, context)}
         className="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
       >
-        {/* Item icon */}
-        {hasItem && wowheadId ? (
-          <a
-            href={`https://www.wowhead.com/tbc/item=${wowheadId}`}
-            onClick={(e) => e.preventDefault()}
-            className="relative block flex-shrink-0"
-          >
-            <img
-              src={getItemIconUrl(icon || 'inv_misc_questionmark', 'medium')}
-              alt={itemName || label}
-              className="w-8 h-8 rounded"
-              style={{
-                borderWidth: 2,
-                borderStyle: 'solid',
-                borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee',
-              }}
-            />
-          </a>
+        {align === 'left' ? (
+          <>
+            {iconElement}
+            {textElement}
+          </>
         ) : (
-          <div className="relative flex-shrink-0">
-            <img
-              src={getItemIconUrl(slotIcon, 'medium')}
-              alt={label}
-              className="w-8 h-8 rounded"
-              style={{
-                borderWidth: 2,
-                borderStyle: 'solid',
-                borderColor: '#333',
-                opacity: 0.4,
-              }}
-            />
-          </div>
+          <>
+            {textElement}
+            {iconElement}
+          </>
         )}
-
-        {/* Item name */}
-        <div className="flex-1 min-w-0">
-          {hasItem ? (
-            <span
-              className="text-xs font-medium block truncate"
-              style={{ color: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee' }}
-            >
-              {itemName}
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">{label}</span>
-          )}
-        </div>
       </div>
     );
   };
@@ -559,21 +571,7 @@ export default function BisListsPage() {
           {/* Side-by-Side Gear Comparison */}
           {selectedPlayerData && (
             <div className="grid grid-cols-2 gap-4">
-              {/* Current Gear Column */}
-              <Card>
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                    Current Gear
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-0.5">
-                    {ALL_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'current'))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* BiS List Column */}
+              {/* BiS List Column (Left) */}
               <Card>
                 <CardHeader className="py-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
@@ -582,7 +580,21 @@ export default function BisListsPage() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-0.5">
-                    {ALL_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'bis'))}
+                    {ALL_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'bis', 'left'))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Current Gear Column (Right - mirrored) */}
+              <Card>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide text-right">
+                    Current Gear
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-0.5">
+                    {ALL_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'current', 'right'))}
                   </div>
                 </CardContent>
               </Card>
