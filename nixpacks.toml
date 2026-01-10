@@ -5,10 +5,7 @@ nixPkgs = ["nodejs_22", "pnpm"]
 cmds = ["pnpm install"]
 
 [phases.build]
-cmds = [
-  "pnpm db:generate",
-  "pnpm build"
-]
+cmds = ["pnpm db:generate && pnpm build"]
 
 [start]
 cmd = "pnpm db:push && pnpm start"
