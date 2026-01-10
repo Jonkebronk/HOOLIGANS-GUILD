@@ -31,8 +31,8 @@ const LEFT_SLOTS = [
   { slot: 'Back', label: 'Back' },
   { slot: 'Chest', label: 'Chest' },
   { slot: 'Wrist', label: 'Wrists' },
-  { slot: 'Weapon1', label: 'Main Hand' },
-  { slot: 'Weapon2', label: 'Off Hand' },
+  { slot: 'MainHand', label: 'Main Hand' },
+  { slot: 'OffHand', label: 'Off Hand' },
 ];
 
 // Right side slots (text | icon)
