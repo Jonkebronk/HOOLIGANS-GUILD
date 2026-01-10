@@ -12,4 +12,4 @@ Key Evaluation Criteria
 Engagement - Active participation in raids and strategy discussions
 Attendance/Reliability - Consistent presence and preparation
 Performance - DPS/HPS output, teamwork, and boss mechanics execution
-Magnitude of Upgrade - How significant the item is for the player's character (BiS vs minor upgrade)
+Magnitude of Upgrade - How significant the item is for the player's character (BiS vs minor upgrade)# Railway auto-deploy trigger
