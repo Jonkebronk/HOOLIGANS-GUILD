@@ -21,9 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Users, Loader2 } from 'lucide-react';
+import { Plus, Search, Filter, Users, Loader2, LayoutGrid, List } from 'lucide-react';
 import { CLASS_COLORS, CLASS_SPECS, SPEC_ROLES } from '@hooligans/shared';
 import { PlayerCard } from '@/components/roster/player-card';
+import { getSpecIconUrl } from '@/lib/wowhead';
 
 type Player = {
   id: string;
@@ -48,6 +49,7 @@ export default function RosterPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newPlayer, setNewPlayer] = useState({ name: '', wowClass: '', mainSpec: '', notes: '' });
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
   useEffect(() => {
     fetchPlayers();
@@ -102,9 +104,27 @@ export default function RosterPage() {
   const filteredPlayers = players.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesClass = classFilter === 'all' || player.class === classFilter;
-    const matchesRole = roleFilter === 'all' || player.role === roleFilter;
+    let matchesRole = roleFilter === 'all';
+    if (roleFilter === 'Tank') matchesRole = player.role === 'Tank';
+    if (roleFilter === 'Heal') matchesRole = player.role === 'Heal';
+    if (roleFilter === 'DPS_Melee') matchesRole = player.role === 'DPS' && player.roleSubtype === 'DPS_Melee';
+    if (roleFilter === 'DPS_Ranged') matchesRole = player.role === 'DPS' && player.roleSubtype === 'DPS_Ranged';
     return matchesSearch && matchesClass && matchesRole;
   });
+
+  // Group players by role for list view
+  const groupedPlayers = {
+    Tank: filteredPlayers.filter(p => p.role === 'Tank'),
+    Heal: filteredPlayers.filter(p => p.role === 'Heal'),
+    Melee: filteredPlayers.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Melee'),
+    Ranged: filteredPlayers.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Ranged'),
+  };
+
+  // Get unique specs for each role group
+  const getSpecsForRole = (rolePlayers: Player[]) => {
+    const specs = new Set(rolePlayers.map(p => p.mainSpec));
+    return Array.from(specs);
+  };
 
   const availableSpecs = newPlayer.wowClass ? CLASS_SPECS[newPlayer.wowClass] || [] : [];
 
@@ -186,14 +206,53 @@ export default function RosterPage() {
               </SelectContent>
             </Select>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Role" /></SelectTrigger>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Role" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="Tank">Tank</SelectItem>
-                <SelectItem value="Heal">Healer</SelectItem>
-                <SelectItem value="DPS">DPS</SelectItem>
+                <SelectItem value="Tank">
+                  <div className="flex items-center gap-2">
+                    <img src="/icons/roles/tank.png" alt="" className="w-4 h-4" />
+                    Tank
+                  </div>
+                </SelectItem>
+                <SelectItem value="Heal">
+                  <div className="flex items-center gap-2">
+                    <img src="/icons/roles/healer.png" alt="" className="w-4 h-4" />
+                    Healer
+                  </div>
+                </SelectItem>
+                <SelectItem value="DPS_Melee">
+                  <div className="flex items-center gap-2">
+                    <img src="/icons/roles/melee.png" alt="" className="w-4 h-4" />
+                    Melee DPS
+                  </div>
+                </SelectItem>
+                <SelectItem value="DPS_Ranged">
+                  <div className="flex items-center gap-2">
+                    <img src="/icons/roles/ranged.png" alt="" className="w-4 h-4" />
+                    Ranged DPS
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex border rounded-md">
+              <Button
+                variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="rounded-r-none"
+                onClick={() => setViewMode('cards')}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="rounded-l-none"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -235,26 +294,178 @@ export default function RosterPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredPlayers.map((player) => (
-              <PlayerCard
-                key={player.id}
-                player={{
-                  id: player.id,
-                  name: player.name,
-                  wowClass: player.class,
-                  mainSpec: player.mainSpec,
-                  role: player.role,
-                  roleSubtype: player.roleSubtype,
-                  attendance: 0,
-                  bisPercent: 0,
-                  active: player.active,
-                }}
-              />
-            ))}
-          </div>
+          {viewMode === 'cards' ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredPlayers.map((player) => (
+                <PlayerCard
+                  key={player.id}
+                  player={{
+                    id: player.id,
+                    name: player.name,
+                    wowClass: player.class,
+                    mainSpec: player.mainSpec,
+                    role: player.role,
+                    roleSubtype: player.roleSubtype,
+                    attendance: 0,
+                    bisPercent: 0,
+                    active: player.active,
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Tank Section */}
+              {groupedPlayers.Tank.length > 0 && (
+                <RoleSection
+                  title="Tank"
+                  icon="/icons/roles/tank.png"
+                  color="#8B4513"
+                  players={groupedPlayers.Tank}
+                  specs={getSpecsForRole(groupedPlayers.Tank)}
+                />
+              )}
+
+              {/* Healer Section */}
+              {groupedPlayers.Heal.length > 0 && (
+                <RoleSection
+                  title="Healers"
+                  icon="/icons/roles/healer.png"
+                  color="#2E8B57"
+                  players={groupedPlayers.Heal}
+                  specs={getSpecsForRole(groupedPlayers.Heal)}
+                />
+              )}
+
+              {/* Melee Section */}
+              {groupedPlayers.Melee.length > 0 && (
+                <RoleSection
+                  title="Melee"
+                  icon="/icons/roles/melee.png"
+                  color="#8B0000"
+                  players={groupedPlayers.Melee}
+                  specs={getSpecsForRole(groupedPlayers.Melee)}
+                />
+              )}
+
+              {/* Ranged Section */}
+              {groupedPlayers.Ranged.length > 0 && (
+                <RoleSection
+                  title="Ranged"
+                  icon="/icons/roles/ranged.png"
+                  color="#4B0082"
+                  players={groupedPlayers.Ranged}
+                  specs={getSpecsForRole(groupedPlayers.Ranged)}
+                />
+              )}
+
+              {/* Summary */}
+              <Card>
+                <CardContent className="py-4">
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Tanks', icon: '/icons/roles/tank.png', count: groupedPlayers.Tank.length },
+                      { label: 'Healers', icon: '/icons/roles/healer.png', count: groupedPlayers.Heal.length },
+                      { label: 'Melee', icon: '/icons/roles/melee.png', count: groupedPlayers.Melee.length },
+                      { label: 'Ranged', icon: '/icons/roles/ranged.png', count: groupedPlayers.Ranged.length },
+                    ].map(item => (
+                      <div key={item.label} className="flex items-center gap-3">
+                        <img src={item.icon} alt="" className="w-6 h-6" />
+                        <span className="text-sm font-medium w-20">{item.label}:</span>
+                        <div className="bg-primary/20 text-primary px-3 py-0.5 rounded text-sm font-semibold">
+                          {item.count}
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center gap-3 pt-2 border-t">
+                      <Users className="w-6 h-6 text-muted-foreground" />
+                      <span className="text-sm font-medium w-20">Total:</span>
+                      <div className="bg-muted text-foreground px-3 py-0.5 rounded text-sm font-semibold">
+                        {filteredPlayers.length}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </>
       )}
     </div>
+  );
+}
+
+// Role Section Component for List View
+function RoleSection({
+  title,
+  icon,
+  color,
+  players,
+  specs,
+}: {
+  title: string;
+  icon: string;
+  color: string;
+  players: Player[];
+  specs: string[];
+}) {
+  return (
+    <Card>
+      <div
+        className="flex items-center gap-2 px-4 py-2 rounded-t-lg"
+        style={{ backgroundColor: color }}
+      >
+        <img src={icon} alt="" className="w-6 h-6" />
+        <span className="text-white font-semibold">{title}</span>
+        <span className="text-white/80 text-sm">({players.length})</span>
+      </div>
+      <CardContent className="p-0">
+        {/* Spec Headers */}
+        <div className="grid border-b" style={{ gridTemplateColumns: `repeat(${Math.min(specs.length, 6)}, 1fr)` }}>
+          {specs.slice(0, 6).map(spec => {
+            const specName = spec.replace(/([A-Z])/g, ' $1').trim();
+            const className = spec.replace(/^([A-Z][a-z]+).*/, '$1');
+            return (
+              <div key={spec} className="flex items-center gap-1 px-2 py-1.5 border-r last:border-r-0 bg-muted/50">
+                <img src={getSpecIconUrl(spec)} alt="" className="w-5 h-5 rounded" />
+                <span className="text-xs font-medium truncate" style={{ color: CLASS_COLORS[className] }}>
+                  {specName.split(' ').slice(-1)[0]}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        {/* Player Grid */}
+        <div className="grid" style={{ gridTemplateColumns: `repeat(${Math.min(specs.length, 6)}, 1fr)` }}>
+          {specs.slice(0, 6).map(spec => {
+            const specPlayers = players.filter(p => p.mainSpec === spec);
+            return (
+              <div key={spec} className="border-r last:border-r-0 min-h-[60px]">
+                {specPlayers.map(player => (
+                  <div
+                    key={player.id}
+                    className="px-2 py-1 border-b last:border-b-0 text-sm truncate"
+                    style={{ color: CLASS_COLORS[player.class] }}
+                  >
+                    {player.name}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+        {/* Counts */}
+        <div className="grid border-t bg-muted/30" style={{ gridTemplateColumns: `repeat(${Math.min(specs.length, 6)}, 1fr)` }}>
+          {specs.slice(0, 6).map(spec => {
+            const count = players.filter(p => p.mainSpec === spec).length;
+            return (
+              <div key={spec} className="px-2 py-1 text-center text-sm font-medium border-r last:border-r-0">
+                {count}
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
