@@ -21,6 +21,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <script src="https://wow.zamimg.com/js/tooltips.js" async />
+      </head>
       <body className={inter.className}>
         <SessionProvider>
           {children}
