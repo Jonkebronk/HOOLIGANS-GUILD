@@ -1,0 +1,21 @@
+{
+  "name": "hooligans-guild",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @hooligans/web dev",
+    "build": "pnpm --filter @hooligans/web build",
+    "start": "pnpm --filter @hooligans/web start",
+    "lint": "pnpm --filter @hooligans/web lint",
+    "db:generate": "pnpm --filter @hooligans/database generate",
+    "db:push": "pnpm --filter @hooligans/database push",
+    "db:studio": "pnpm --filter @hooligans/database studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@10.26.2",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm install)",
+      "Bash(pnpm config set:*)",
+      "Bash(pnpm rebuild)",
+      "Bash(npx prisma generate)",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Initial HOOLIGANS Guild Loot Council Platform\n\n- Next.js 15 monorepo with pnpm workspaces\n- Prisma schema for players, items, loot, attendance, BiS tracking\n- Dark WoW-themed UI with TailwindCSS + shadcn/ui\n- Dashboard with guild stats and recent loot\n- Roster management with player cards\n- Discord OAuth authentication setup\n- Railway deployment configuration\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

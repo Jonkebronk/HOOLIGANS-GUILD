@@ -1,0 +1,361 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum WowClass {
+  Druid
+  Hunter
+  Mage
+  Paladin
+  Priest
+  Rogue
+  Shaman
+  Warlock
+  Warrior
+}
+
+enum Role {
+  Tank
+  Heal
+  DPS
+}
+
+enum RoleSubtype {
+  Tank
+  Heal
+  DPS_Melee
+  DPS_Ranged
+  DPS_Caster
+}
+
+enum LootResponse {
+  BiS
+  GreaterUpgrade
+  MinorUpgrade
+  Offspec
+  PvP
+  Disenchant
+}
+
+enum Phase {
+  P1
+  P2
+  P3
+  P4
+  P5
+}
+
+enum GearSlot {
+  Head
+  Neck
+  Shoulder
+  Back
+  Chest
+  Wrist
+  Hands
+  Waist
+  Legs
+  Feet
+  Finger1
+  Finger2
+  Trinket1
+  Trinket2
+  Weapon1
+  Weapon2
+  Ranged
+}
+
+enum UserRole {
+  GM
+  Officer
+  Raider
+}
+
+// ============================================
+// AUTH & USERS (NextAuth.js compatible)
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  // Discord fields
+  discordId     String?   @unique
+  discordName   String?
+
+  // Battle.net fields
+  battleNetId   String?   @unique
+  battleNetTag  String?
+
+  // App-specific
+  role          UserRole  @default(Raider)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts      Account[]
+  sessions      Session[]
+
+  // App relations
+  players       Player[]  // A user can have multiple characters
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================
+// ROSTER
+// ============================================
+
+model Player {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  class         WowClass
+  mainSpec      String    // e.g., "DruidBalance", "WarriorFury"
+  offSpec       String?
+  role          Role
+  roleSubtype   RoleSubtype
+  notes         String?   // e.g., "BiS wep P1-2", "pass on crafting"
+  active        Boolean   @default(true)
+  raidTeam      Int?      // 1, 2, or 3 for 10-man splits
+  joinedDate    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id])
+  lootRecords   LootRecord[]
+  attendance    AttendanceRecord[]
+  bisStatus     PlayerBisStatus[]
+  raidQuests    RaidQuest[]
+  raidSplits    RaidSplitMember[]
+
+  @@index([class])
+  @@index([active])
+}
+
+// ============================================
+// ITEMS & LOOT
+// ============================================
+
+model Item {
+  id            String    @id @default(cuid())
+  name          String
+  wowheadId     Int?      // For tooltips/icons
+  slot          GearSlot
+  raid          String    // e.g., "Karazhan", "Black Temple"
+  boss          String
+  phase         Phase
+  lootPriority  String?   // Special priority notes
+  lootPoints    Int       @default(100)
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  lootRecords   LootRecord[]
+  bisSpecs      ItemBisSpec[]
+
+  @@unique([name, raid])
+  @@index([raid])
+  @@index([slot])
+  @@index([phase])
+}
+
+model ItemBisSpec {
+  id              String    @id @default(cuid())
+  itemId          String
+  item            Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  spec            String    // e.g., "DruidBalance"
+  isCurrentPhase  Boolean   @default(true)
+  isNextPhase     Boolean   @default(false)
+
+  @@unique([itemId, spec])
+  @@index([spec])
+}
+
+model LootRecord {
+  id            String        @id @default(cuid())
+  itemId        String
+  item          Item          @relation(fields: [itemId], references: [id])
+  playerId      String
+  player        Player        @relation(fields: [playerId], references: [id])
+  response      LootResponse
+  lootDate      DateTime
+  phase         Phase
+  lootPoints    Int
+
+  // RCLootCouncil import fields
+  rcTimestamp   DateTime?
+  rcSessionId   String?
+
+  createdAt     DateTime      @default(now())
+
+  @@index([playerId])
+  @@index([itemId])
+  @@index([lootDate])
+  @@index([rcSessionId])
+}
+
+// ============================================
+// BIS CONFIGURATION
+// ============================================
+
+model BisConfiguration {
+  id            String    @id @default(cuid())
+  spec          String    // e.g., "DruidBalance"
+  phase         Phase
+  slot          GearSlot
+  itemName      String
+  source        String?   // Boss/location
+  wowheadId     Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([spec, phase, slot])
+  @@index([spec])
+  @@index([phase])
+}
+
+model PlayerBisStatus {
+  id            String    @id @default(cuid())
+  playerId      String
+  player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  slot          GearSlot
+  phase         Phase
+  obtained      Boolean   @default(false)
+  obtainedDate  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([playerId, slot, phase])
+  @@index([playerId])
+}
+
+// ============================================
+// ATTENDANCE
+// ============================================
+
+model AttendanceRecord {
+  id              String    @id @default(cuid())
+  playerId        String
+  player          Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  raidDate        DateTime
+  raidName        String    // e.g., "Karazhan", "Black Temple"
+  attended        Boolean   @default(false)
+  fullyAttended   Boolean   @default(false) // Present for entire raid
+  createdAt       DateTime  @default(now())
+
+  @@unique([playerId, raidDate, raidName])
+  @@index([playerId])
+  @@index([raidDate])
+}
+
+// ============================================
+// RAID MANAGEMENT
+// ============================================
+
+model RaidSplit {
+  id            String    @id @default(cuid())
+  name          String    // e.g., "Karazhan Team 1"
+  raidNumber    Int       // 1, 2, or 3
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  members       RaidSplitMember[]
+
+  @@unique([raidNumber])
+}
+
+model RaidSplitMember {
+  id            String    @id @default(cuid())
+  splitId       String
+  split         RaidSplit @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  playerId      String
+  player        Player    @relation(fields: [playerId], references: [id])
+  role          Role
+
+  @@unique([splitId, playerId])
+  @@index([splitId])
+}
+
+model RaidQuest {
+  id            String    @id @default(cuid())
+  playerId      String
+  player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  questName     String    // e.g., "Magtheridon's Head", "Verdant Sphere"
+  phase         Phase
+  completed     Boolean   @default(false)
+  completedDate DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@unique([playerId, questName])
+}
+
+// ============================================
+// CONFIGURATION
+// ============================================
+
+model ClassConfig {
+  id            String    @id @default(cuid())
+  className     WowClass  @unique
+  colorHex      String    // e.g., "#FF7C0A" for Druid
+  tokenType     String?   // "Fallen Defender", "Fallen Hero", "Fallen Champion"
+}
+
+model TierSetConfig {
+  id            String    @id @default(cuid())
+  tier          String    // "T4", "T5", "T6"
+  className     WowClass
+  chestName     String?
+  handsName     String?
+  headName      String?
+  legsName      String?
+  shouldersName String?
+
+  @@unique([tier, className])
+}
