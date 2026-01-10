@@ -23,6 +23,47 @@ import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, SLOT_ICONS, ITE
 
 const WOW_CLASSES = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
 
+// WoWSims class background images
+const SPEC_BACKGROUNDS: Record<string, string> = {
+  // Druid
+  DruidBalance: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/balance_druid_background.jpg',
+  DruidFeral: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/feral_druid_background.jpg',
+  DruidGuardian: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/feral_druid_tank_background.jpg',
+  DruidRestoration: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/balance_druid_background.jpg',
+  // Hunter
+  HunterBeastMastery: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/hunter_background.jpg',
+  HunterMarksmanship: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/hunter_background.jpg',
+  HunterSurvival: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/hunter_background.jpg',
+  // Mage
+  MageArcane: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/mage_background.jpg',
+  MageFire: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/mage_background.jpg',
+  MageFrost: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/mage_background.jpg',
+  // Paladin
+  PaladinHoly: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/retribution_paladin.jpg',
+  PaladinProtection: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/retribution_paladin.jpg',
+  PaladinRetribution: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/retribution_paladin.jpg',
+  // Priest
+  PriestDiscipline: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/smite_priest_background.jpg',
+  PriestHoly: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/smite_priest_background.jpg',
+  PriestShadow: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/shadow_priest_background.jpg',
+  // Rogue
+  RogueAssassination: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/rogue_background.jpg',
+  RogueCombat: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/rogue_background.jpg',
+  RogueSubtlety: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/rogue_background.jpg',
+  // Shaman
+  ShamanElemental: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/elemental_shaman_background.jpg',
+  ShamanEnhancement: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/enhancement_shaman_background.jpg',
+  ShamanRestoration: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/elemental_shaman_background.jpg',
+  // Warlock
+  WarlockAffliction: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warlock_background.jpg',
+  WarlockDemonology: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warlock_background.jpg',
+  WarlockDestruction: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warlock_background.jpg',
+  // Warrior
+  WarriorArms: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warrior_background.jpg',
+  WarriorFury: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warrior_background.jpg',
+  WarriorProtection: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/protection_warrior_background.jpg',
+};
+
 // Left side slots (icon | text)
 const LEFT_SLOTS = [
   { slot: 'Head', label: 'Head' },
@@ -466,9 +507,18 @@ export default function BisListsPage() {
   };
 
   const bisCompletion = calculateBisCompletion();
+  const backgroundUrl = selectedPlayerData?.mainSpec ? SPEC_BACKGROUNDS[selectedPlayerData.mainSpec] : null;
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6 min-h-screen -m-6 p-6 transition-all duration-500"
+      style={{
+        backgroundImage: backgroundUrl ? `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url(${backgroundUrl})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
