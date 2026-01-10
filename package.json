@@ -2,6 +2,14 @@
   "name": "hooligans-guild",
   "version": "0.1.0",
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "prisma",
+      "@prisma/client",
+      "@prisma/engines",
+      "sharp"
+    ]
+  },
   "scripts": {
     "dev": "pnpm --filter @hooligans/web dev",
     "build": "pnpm --filter @hooligans/web build",
