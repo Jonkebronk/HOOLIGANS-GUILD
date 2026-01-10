@@ -33,12 +33,29 @@ const WOWSIMS_CLASS_COLORS: Record<string, string> = {
 // Class order for sidebar grouping
 const CLASS_ORDER = ['Warrior', 'Paladin', 'Hunter', 'Rogue', 'Priest', 'Shaman', 'Mage', 'Warlock', 'Druid'];
 
+// Role colors for the category headers
+const ROLE_COLORS: Record<string, string> = {
+  Tank: '#8B4513',
+  Healer: '#2E8B57',
+  Melee: '#8B0000',
+  Ranged: '#4B0082',
+};
+
+// Role icons
+const ROLE_ICONS: Record<string, string> = {
+  Tank: '/icons/roles/tank.png',
+  Healer: '/icons/roles/healer.png',
+  Melee: '/icons/roles/melee.png',
+  Ranged: '/icons/roles/ranged.png',
+};
+
 type Player = {
   id: string;
   name: string;
   class: string;
   mainSpec: string;
   role: string;
+  roleSubtype?: string;
   discordId?: string;
 };
 
@@ -152,6 +169,21 @@ export default function RaidSplitsPage() {
       grouped['Unknown'] = unknownPlayers;
     }
     return grouped;
+  };
+
+  // Group players by role for the role columns view
+  const groupPlayersByRole = (playerList: Player[]) => {
+    return {
+      Tank: playerList.filter(p => p.role === 'Tank'),
+      Healer: playerList.filter(p => p.role === 'Heal'),
+      Melee: playerList.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Melee'),
+      Ranged: playerList.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Ranged'),
+    };
+  };
+
+  // Get spec name from mainSpec
+  const getSpecName = (mainSpec: string, playerClass: string) => {
+    return mainSpec.replace(playerClass, '').replace(/([A-Z])/g, ' $1').trim();
   };
 
   // Drag handlers
@@ -559,11 +591,14 @@ export default function RaidSplitsPage() {
 
   const mainRaid = raids.find(r => r.id === 'main-25');
   const splitRaids = raids.filter(r => r.id.startsWith('split-10'));
-  const groupedUnassigned = groupPlayersByClass(unassignedPlayers);
-  const groupedAssigned = groupPlayersByClass(assignedTo25Man);
+  const roleGroupedPlayers = groupPlayersByRole(players);
 
   return (
-    <div className="min-h-screen bg-black text-white -m-6 p-4">
+    <div
+      className="min-h-screen bg-black text-white -m-6 p-4"
+      onDragOver={handleDragOver}
+      onDrop={handleDropToAvailable}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4 px-2">
         <div>
@@ -581,60 +616,186 @@ export default function RaidSplitsPage() {
         </Button>
       </div>
 
-      <div className="flex gap-4">
-        {/* Main Content */}
-        <div className="flex-1">
-          {/* 25-Man Raid */}
-          {mainRaid && renderRaidSection(mainRaid)}
+      {/* 25-Man Raid */}
+      {mainRaid && renderRaidSection(mainRaid)}
 
-          {/* 10-Man Splits */}
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
-              <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              {splitRaids.map(raid => renderRaidSection(raid, true))}
-            </div>
-          </div>
+      {/* 10-Man Splits */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
+          <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
         </div>
+        <div className="flex gap-2">
+          {splitRaids.map(raid => (
+            <div key={raid.id} className="flex-1">
+              {renderRaidSection(raid, true)}
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Sidebar - Available Players */}
-        <div
-          className="w-64 bg-[#0a0a0a] rounded-lg p-3 h-fit sticky top-4"
-          onDragOver={handleDragOver}
-          onDrop={handleDropToAvailable}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-gray-300">Available</span>
-            <span className="text-xs text-gray-500">{players.length} total</span>
+      {/* Available Players - Role Columns */}
+      <div className="mt-8">
+        <div className="grid grid-cols-4 gap-4">
+          {/* Tank Column */}
+          <div className="flex flex-col">
+            <div className="flex justify-center py-3">
+              <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
+                <img src={ROLE_ICONS.Tank} alt="Tank" className="w-8 h-8" />
+              </div>
+            </div>
+            <div
+              className="text-center py-2 font-bold text-white"
+              style={{ backgroundColor: ROLE_COLORS.Tank }}
+            >
+              Tank
+            </div>
+            <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
+              {roleGroupedPlayers.Tank.length === 0 ? (
+                <div className="py-4 text-center text-gray-500 text-sm">No players</div>
+              ) : (
+                roleGroupedPlayers.Tank.map((player, index) => (
+                  <div
+                    key={player.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, player, 'available')}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => addPlayerToRaid('main-25', player)}
+                    className="px-3 py-2 text-center border-b border-[#333] last:border-b-0 text-sm font-medium cursor-grab active:cursor-grabbing hover:bg-white/5"
+                    style={{
+                      color: WOWSIMS_CLASS_COLORS[player.class],
+                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                    }}
+                  >
+                    {getSpecName(player.mainSpec, player.class)}
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="text-center py-2 bg-[#1a1a1a] border-x border-b border-[#333] text-sm font-semibold">
+              {roleGroupedPlayers.Tank.length}
+            </div>
           </div>
 
-          {/* Unassigned players */}
-          {Object.keys(groupedUnassigned).length > 0 && (
-            <div className="mb-4">
-              <div className="text-xs text-gray-500 mb-2">Not in 25-Man</div>
-              {Object.entries(groupedUnassigned).map(([cls, classPlayers]) =>
-                renderClassGroup(cls, classPlayers, false)
+          {/* Healer Column */}
+          <div className="flex flex-col">
+            <div className="flex justify-center py-3">
+              <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
+                <img src={ROLE_ICONS.Healer} alt="Healer" className="w-8 h-8" />
+              </div>
+            </div>
+            <div
+              className="text-center py-2 font-bold text-white"
+              style={{ backgroundColor: ROLE_COLORS.Healer }}
+            >
+              Healer
+            </div>
+            <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
+              {roleGroupedPlayers.Healer.length === 0 ? (
+                <div className="py-4 text-center text-gray-500 text-sm">No players</div>
+              ) : (
+                roleGroupedPlayers.Healer.map((player, index) => (
+                  <div
+                    key={player.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, player, 'available')}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => addPlayerToRaid('main-25', player)}
+                    className="px-3 py-2 text-center border-b border-[#333] last:border-b-0 text-sm font-medium cursor-grab active:cursor-grabbing hover:bg-white/5"
+                    style={{
+                      color: WOWSIMS_CLASS_COLORS[player.class],
+                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                    }}
+                  >
+                    {getSpecName(player.mainSpec, player.class)}
+                  </div>
+                ))
               )}
             </div>
-          )}
+            <div className="text-center py-2 bg-[#1a1a1a] border-x border-b border-[#333] text-sm font-semibold">
+              {roleGroupedPlayers.Healer.length}
+            </div>
+          </div>
 
-          {/* Assigned to 25-man (for 10-man splits) */}
-          {Object.keys(groupedAssigned).length > 0 && (
-            <div>
-              <div className="text-xs text-gray-500 mb-2">In 25-Man (drag to 10-man)</div>
-              {Object.entries(groupedAssigned).map(([cls, classPlayers]) =>
-                renderClassGroup(cls, classPlayers, true)
+          {/* Melee Column */}
+          <div className="flex flex-col">
+            <div className="flex justify-center py-3">
+              <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
+                <img src={ROLE_ICONS.Melee} alt="Melee" className="w-8 h-8" />
+              </div>
+            </div>
+            <div
+              className="text-center py-2 font-bold text-white"
+              style={{ backgroundColor: ROLE_COLORS.Melee }}
+            >
+              Melee
+            </div>
+            <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
+              {roleGroupedPlayers.Melee.length === 0 ? (
+                <div className="py-4 text-center text-gray-500 text-sm">No players</div>
+              ) : (
+                roleGroupedPlayers.Melee.map((player, index) => (
+                  <div
+                    key={player.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, player, 'available')}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => addPlayerToRaid('main-25', player)}
+                    className="px-3 py-2 text-center border-b border-[#333] last:border-b-0 text-sm font-medium cursor-grab active:cursor-grabbing hover:bg-white/5"
+                    style={{
+                      color: WOWSIMS_CLASS_COLORS[player.class],
+                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                    }}
+                  >
+                    {getSpecName(player.mainSpec, player.class)}
+                  </div>
+                ))
               )}
             </div>
-          )}
-
-          {players.length === 0 && (
-            <div className="text-center py-4 text-sm text-gray-500">
-              No players
+            <div className="text-center py-2 bg-[#1a1a1a] border-x border-b border-[#333] text-sm font-semibold">
+              {roleGroupedPlayers.Melee.length}
             </div>
-          )}
+          </div>
+
+          {/* Ranged Column */}
+          <div className="flex flex-col">
+            <div className="flex justify-center py-3">
+              <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
+                <img src={ROLE_ICONS.Ranged} alt="Ranged" className="w-8 h-8" />
+              </div>
+            </div>
+            <div
+              className="text-center py-2 font-bold text-white"
+              style={{ backgroundColor: ROLE_COLORS.Ranged }}
+            >
+              Ranged
+            </div>
+            <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
+              {roleGroupedPlayers.Ranged.length === 0 ? (
+                <div className="py-4 text-center text-gray-500 text-sm">No players</div>
+              ) : (
+                roleGroupedPlayers.Ranged.map((player, index) => (
+                  <div
+                    key={player.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, player, 'available')}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => addPlayerToRaid('main-25', player)}
+                    className="px-3 py-2 text-center border-b border-[#333] last:border-b-0 text-sm font-medium cursor-grab active:cursor-grabbing hover:bg-white/5"
+                    style={{
+                      color: WOWSIMS_CLASS_COLORS[player.class],
+                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                    }}
+                  >
+                    {getSpecName(player.mainSpec, player.class)}
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="text-center py-2 bg-[#1a1a1a] border-x border-b border-[#333] text-sm font-semibold">
+              {roleGroupedPlayers.Ranged.length}
+            </div>
+          </div>
         </div>
       </div>
 
