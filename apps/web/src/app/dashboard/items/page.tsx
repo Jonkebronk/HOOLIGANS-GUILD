@@ -264,7 +264,15 @@ export default function ItemsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6 min-h-screen -m-6 p-6"
+      style={{
+        backgroundImage: 'url(https://raw.githubusercontent.com/wowsims/tbc/master/assets/tbc.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Items Database</h1>
