@@ -136,17 +136,26 @@ export default function ItemsPage() {
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
         // Refresh items list
         await fetchItems();
         setIsImportDialogOpen(false);
         setImportUrl('');
         setImportZone('');
-        alert(`Successfully imported ${data.imported} items from ${selectedRaid.name}`);
+
+        // Show detailed results
+        let message = `Imported ${data.imported} items from ${selectedRaid.name}`;
+        if (data.skipped > 0) {
+          message += `\n${data.skipped} items were already in the database`;
+        }
+        if (data.errors && data.errors.length > 0) {
+          message += `\n\nSome errors occurred:\n${data.errors.slice(0, 3).join('\n')}`;
+        }
+        alert(message);
       } else {
-        const error = await res.json();
-        setImportError(error.error || 'Failed to import items');
+        setImportError(data.error || 'Failed to import items');
       }
     } catch (error) {
       console.error('Failed to import:', error);
