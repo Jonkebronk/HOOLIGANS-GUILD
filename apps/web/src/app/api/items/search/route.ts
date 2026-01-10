@@ -20,13 +20,20 @@ export async function GET(request: Request) {
 
     // First try with slot filter
     if (slot && !query) {
-      // Handle slots that can be either position (Finger1/Finger2, etc.)
-      if (slot === 'Finger1' || slot === 'Finger2') {
-        where.slot = { in: ['Finger1', 'Finger2'] };
-      } else if (slot === 'Trinket1' || slot === 'Trinket2') {
-        where.slot = { in: ['Trinket1', 'Trinket2'] };
-      } else if (slot === 'Weapon1' || slot === 'Weapon2') {
-        where.slot = { in: ['Weapon1', 'Weapon2'] };
+      // Handle grouped slots - rings, trinkets, and weapons
+      if (slot === 'Finger1' || slot === 'Finger2' || slot === 'Finger') {
+        where.slot = 'Finger';
+      } else if (slot === 'Trinket1' || slot === 'Trinket2' || slot === 'Trinket') {
+        where.slot = 'Trinket';
+      } else if (slot === 'Weapon1' || slot === 'MainHand') {
+        // Main hand can use MainHand, OneHand, or TwoHand weapons
+        where.slot = { in: ['MainHand', 'OneHand', 'TwoHand'] };
+      } else if (slot === 'Weapon2' || slot === 'OffHand') {
+        // Off hand can use OffHand, OneHand, Shield, or HeldInOffhand
+        where.slot = { in: ['OffHand', 'OneHand', 'Shield', 'HeldInOffhand'] };
+      } else if (slot === 'Ranged') {
+        // Ranged slot includes ranged, wand, thrown, relic
+        where.slot = { in: ['Ranged', 'Wand', 'Thrown', 'Relic'] };
       } else {
         where.slot = slot;
       }

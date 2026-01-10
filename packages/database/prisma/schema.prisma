@@ -65,14 +65,19 @@ enum GearSlot {
   Waist
   Legs
   Feet
-  Finger1
-  Finger2
-  Trinket1
-  Trinket2
-  Weapon1
-  Weapon2
+  Finger
+  Trinket
+  MainHand
+  OneHand
+  TwoHand
+  OffHand
+  Shield
+  HeldInOffhand
   Ranged
-  Misc      // Recipes, patterns, formulas, etc.
+  Relic
+  Wand
+  Thrown
+  Misc
 }
 
 enum UserRole {
