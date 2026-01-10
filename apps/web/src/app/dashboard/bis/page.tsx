@@ -103,6 +103,7 @@ type Player = {
   class: string;
   mainSpec: string;
   role: string;
+  roleSubtype: string;
 };
 
 type Item = {
@@ -142,6 +143,7 @@ export default function BisListsPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<string>('');
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
   const [classFilter, setClassFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [bisConfig, setBisConfig] = useState<BisConfig[]>([]);
   const [currentGear, setCurrentGear] = useState<PlayerGear[]>([]);
   const [currentPhase] = useState<string>('P1');
