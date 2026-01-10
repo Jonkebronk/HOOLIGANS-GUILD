@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,34 +21,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Calendar, User } from 'lucide-react';
+import { Plus, Search, Filter, Package, Calendar, User, Loader2 } from 'lucide-react';
 import { CLASS_COLORS, RAIDS } from '@hooligans/shared';
 
-const mockLootRecords = [
-  { id: '1', itemName: 'Sunfire Robe', itemSlot: 'Chest', player: 'Smiker', playerClass: 'Druid', response: 'BiS', date: '2025-01-09', raid: 'Sunwell Plateau', boss: 'Kalecgos', points: 200 },
-  { id: '2', itemName: 'Blade of Harbingers', itemSlot: 'Main Hand', player: 'Johnnypapa', playerClass: 'Rogue', response: 'BiS', date: '2025-01-09', raid: 'Sunwell Plateau', boss: 'Felmyst', points: 200 },
-  { id: '3', itemName: 'Legguards of Endless Rage', itemSlot: 'Legs', player: 'Angrypickle', playerClass: 'Warrior', response: 'GreaterUpgrade', date: '2025-01-09', raid: 'Sunwell Plateau', boss: 'Brutallus', points: 100 },
-  { id: '4', itemName: 'Ring of Flowing Life', itemSlot: 'Finger', player: 'Quest', playerClass: 'Paladin', response: 'MinorUpgrade', date: '2025-01-08', raid: 'Black Temple', boss: 'Mother Shahraz', points: 50 },
-  { id: '5', itemName: 'Pillar of Ferocity', itemSlot: 'Two-Hand', player: 'Lejon', playerClass: 'Druid', response: 'BiS', date: '2025-01-08', raid: 'Black Temple', boss: 'Illidan Stormrage', points: 200 },
-  { id: '6', itemName: 'Shroud of the Final Stand', itemSlot: 'Back', player: 'Shredd', playerClass: 'Paladin', response: 'BiS', date: '2025-01-07', raid: 'Black Temple', boss: 'Illidan Stormrage', points: 200 },
-  { id: '7', itemName: 'Stanchion of Primal Instinct', itemSlot: 'Main Hand', player: 'Eonir', playerClass: 'Hunter', response: 'GreaterUpgrade', date: '2025-01-07', raid: 'Black Temple', boss: 'Reliquary of Souls', points: 100 },
-  { id: '8', itemName: 'Shadowmoon Destroyer Drape', itemSlot: 'Back', player: 'Wiz', playerClass: 'Druid', response: 'Offspec', date: '2025-01-06', raid: 'Black Temple', boss: 'Teron Gorefiend', points: 25 },
-];
+type LootRecord = {
+  id: string;
+  lootDate: string;
+  response: string;
+  lootPoints: number;
+  phase: string;
+  item: {
+    id: string;
+    name: string;
+    slot: string;
+    raid: string;
+    boss: string;
+  };
+  player: {
+    id: string;
+    name: string;
+    class: string;
+  };
+};
 
-const mockPlayers = [
-  { id: '1', name: 'Wiz', wowClass: 'Druid' },
-  { id: '2', name: 'Johnnypapa', wowClass: 'Rogue' },
-  { id: '3', name: 'Angrypickle', wowClass: 'Warrior' },
-  { id: '4', name: 'Kapnozug', wowClass: 'Paladin' },
-  { id: '5', name: 'Tel', wowClass: 'Shaman' },
-  { id: '6', name: 'Lejon', wowClass: 'Druid' },
-  { id: '7', name: 'Vicke', wowClass: 'Warrior' },
-  { id: '8', name: 'Eonir', wowClass: 'Hunter' },
-  { id: '9', name: 'Smiker', wowClass: 'Druid' },
-  { id: '10', name: 'Shredd', wowClass: 'Paladin' },
-  { id: '11', name: 'Quest', wowClass: 'Paladin' },
-  { id: '12', name: 'Bibitrix', wowClass: 'Priest' },
-];
+type Player = {
+  id: string;
+  name: string;
+  class: string;
+};
 
 const RESPONSE_TYPES = [
   { value: 'BiS', label: 'BiS', color: '#a855f7', points: 200 },
@@ -60,6 +60,9 @@ const RESPONSE_TYPES = [
 ];
 
 export default function LootCouncilPage() {
+  const [lootRecords, setLootRecords] = useState<LootRecord[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [raidFilter, setRaidFilter] = useState<string>('all');
   const [responseFilter, setResponseFilter] = useState<string>('all');
@@ -72,11 +75,39 @@ export default function LootCouncilPage() {
     boss: '',
   });
 
-  const filteredRecords = mockLootRecords.filter((record) => {
+  useEffect(() => {
+    Promise.all([fetchLootRecords(), fetchPlayers()]).finally(() => setLoading(false));
+  }, []);
+
+  const fetchLootRecords = async () => {
+    try {
+      const res = await fetch('/api/loot');
+      if (res.ok) {
+        const data = await res.json();
+        setLootRecords(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch loot records:', error);
+    }
+  };
+
+  const fetchPlayers = async () => {
+    try {
+      const res = await fetch('/api/players');
+      if (res.ok) {
+        const data = await res.json();
+        setPlayers(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch players:', error);
+    }
+  };
+
+  const filteredRecords = lootRecords.filter((record) => {
     const matchesSearch =
-      record.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.player.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRaid = raidFilter === 'all' || record.raid === raidFilter;
+      record.item?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      record.player?.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRaid = raidFilter === 'all' || record.item?.raid === raidFilter;
     const matchesResponse = responseFilter === 'all' || record.response === responseFilter;
     return matchesSearch && matchesRaid && matchesResponse;
   });
@@ -86,8 +117,17 @@ export default function LootCouncilPage() {
     return type ? { color: type.color } : {};
   };
 
-  const totalPoints = mockLootRecords.reduce((sum, r) => sum + r.points, 0);
-  const bisCount = mockLootRecords.filter(r => r.response === 'BiS').length;
+  const totalPoints = lootRecords.reduce((sum, r) => sum + (r.lootPoints || 0), 0);
+  const bisCount = lootRecords.filter(r => r.response === 'BiS').length;
+  const uniqueRecipients = new Set(lootRecords.map(r => r.player?.id)).size;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -120,9 +160,9 @@ export default function LootCouncilPage() {
                 <Select value={newLoot.player} onValueChange={(value) => setNewLoot({ ...newLoot, player: value })}>
                   <SelectTrigger><SelectValue placeholder="Select player" /></SelectTrigger>
                   <SelectContent>
-                    {mockPlayers.map((player) => (
-                      <SelectItem key={player.id} value={player.name}>
-                        <span style={{ color: CLASS_COLORS[player.wowClass] }}>{player.name}</span>
+                    {players.map((player) => (
+                      <SelectItem key={player.id} value={player.id}>
+                        <span style={{ color: CLASS_COLORS[player.class] }}>{player.name}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -171,7 +211,7 @@ export default function LootCouncilPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockLootRecords.length}</div>
+            <div className="text-2xl font-bold">{lootRecords.length}</div>
             <p className="text-xs text-muted-foreground">items distributed</p>
           </CardContent>
         </Card>
@@ -182,7 +222,9 @@ export default function LootCouncilPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-500">{bisCount}</div>
-            <p className="text-xs text-muted-foreground">{((bisCount / mockLootRecords.length) * 100).toFixed(0)}% of total</p>
+            <p className="text-xs text-muted-foreground">
+              {lootRecords.length > 0 ? `${((bisCount / lootRecords.length) * 100).toFixed(0)}% of total` : '0% of total'}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -201,7 +243,7 @@ export default function LootCouncilPage() {
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{new Set(mockLootRecords.map(r => r.player)).size}</div>
+            <div className="text-2xl font-bold">{uniqueRecipients}</div>
             <p className="text-xs text-muted-foreground">players received loot</p>
           </CardContent>
         </Card>
@@ -249,53 +291,70 @@ export default function LootCouncilPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Item</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Player</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Response</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Raid</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Boss</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-right py-3 px-4 font-medium text-muted-foreground">Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRecords.map((record) => (
-                  <tr key={record.id} className="border-b border-border/50 hover:bg-muted/50">
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-purple-400">{record.itemName}</div>
-                      <div className="text-xs text-muted-foreground">{record.itemSlot}</div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span style={{ color: CLASS_COLORS[record.playerClass] }}>{record.player}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className="px-2 py-1 rounded text-xs font-medium"
-                        style={{
-                          ...getResponseStyle(record.response),
-                          backgroundColor: `${getResponseStyle(record.response).color}20`
-                        }}
-                      >
-                        {RESPONSE_TYPES.find(r => r.value === record.response)?.label}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-muted-foreground">{record.raid}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{record.boss}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{record.date}</td>
-                    <td className="py-3 px-4 text-right font-medium">{record.points}</td>
+      {lootRecords.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Loot Records Yet</h3>
+              <p className="text-muted-foreground mb-4">Start recording loot distribution from your raids.</p>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />Record Loot
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Item</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Player</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Response</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Raid</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Boss</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
+                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Points</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                </thead>
+                <tbody>
+                  {filteredRecords.map((record) => (
+                    <tr key={record.id} className="border-b border-border/50 hover:bg-muted/50">
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-purple-400">{record.item?.name}</div>
+                        <div className="text-xs text-muted-foreground">{record.item?.slot}</div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span style={{ color: CLASS_COLORS[record.player?.class] }}>{record.player?.name}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className="px-2 py-1 rounded text-xs font-medium"
+                          style={{
+                            ...getResponseStyle(record.response),
+                            backgroundColor: `${getResponseStyle(record.response).color}20`
+                          }}
+                        >
+                          {RESPONSE_TYPES.find(r => r.value === record.response)?.label}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground">{record.item?.raid}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{record.item?.boss}</td>
+                      <td className="py-3 px-4 text-muted-foreground">
+                        {new Date(record.lootDate).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 text-right font-medium">{record.lootPoints}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

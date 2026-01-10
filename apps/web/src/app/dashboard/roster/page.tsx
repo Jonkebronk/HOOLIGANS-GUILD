@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,42 +21,100 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter } from 'lucide-react';
-import { CLASS_COLORS, CLASS_SPECS } from '@hooligans/shared';
+import { Plus, Search, Filter, Users, Loader2 } from 'lucide-react';
+import { CLASS_COLORS, CLASS_SPECS, SPEC_ROLES } from '@hooligans/shared';
 import { PlayerCard } from '@/components/roster/player-card';
 
-const mockPlayers = [
-  { id: '1', name: 'Wiz', wowClass: 'Druid', mainSpec: 'DruidGuardian', role: 'Tank', attendance: 100, bisPercent: 85, active: true },
-  { id: '2', name: 'Johnnypapa', wowClass: 'Rogue', mainSpec: 'RogueCombat', role: 'DPS', attendance: 100, bisPercent: 78, active: true },
-  { id: '3', name: 'Angrypickle', wowClass: 'Warrior', mainSpec: 'WarriorFury', role: 'DPS', attendance: 80, bisPercent: 92, active: true },
-  { id: '4', name: 'Kapnozug', wowClass: 'Paladin', mainSpec: 'PaladinRetribution', role: 'DPS', attendance: 94, bisPercent: 71, active: true },
-  { id: '5', name: 'Tel', wowClass: 'Shaman', mainSpec: 'ShamanEnhancement', role: 'DPS', attendance: 82, bisPercent: 65, active: true },
-  { id: '6', name: 'Lejon', wowClass: 'Druid', mainSpec: 'DruidFeral', role: 'DPS', attendance: 82, bisPercent: 58, active: true },
-  { id: '7', name: 'Vicke', wowClass: 'Warrior', mainSpec: 'WarriorFury', role: 'DPS', attendance: 81, bisPercent: 45, active: true },
-  { id: '8', name: 'Eonir', wowClass: 'Hunter', mainSpec: 'HunterBeastMastery', role: 'DPS', attendance: 100, bisPercent: 72, active: true },
-  { id: '9', name: 'Smiker', wowClass: 'Druid', mainSpec: 'DruidRestoration', role: 'Heal', attendance: 100, bisPercent: 88, active: true },
-  { id: '10', name: 'Shredd', wowClass: 'Paladin', mainSpec: 'PaladinProtection', role: 'Tank', attendance: 100, bisPercent: 91, active: true },
-  { id: '11', name: 'Quest', wowClass: 'Paladin', mainSpec: 'PaladinHoly', role: 'Heal', attendance: 100, bisPercent: 76, active: true },
-  { id: '12', name: 'Bibitrix', wowClass: 'Priest', mainSpec: 'PriestHoly', role: 'Heal', attendance: 100, bisPercent: 69, active: true },
-];
+type Player = {
+  id: string;
+  name: string;
+  class: string;
+  mainSpec: string;
+  offSpec?: string;
+  role: string;
+  roleSubtype: string;
+  notes?: string;
+  active: boolean;
+};
 
 const WOW_CLASSES = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
 
 export default function RosterPage() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [newPlayer, setNewPlayer] = useState({ name: '', wowClass: '', mainSpec: '', notes: '' });
 
-  const filteredPlayers = mockPlayers.filter((player) => {
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
+
+  const fetchPlayers = async () => {
+    try {
+      const res = await fetch('/api/players');
+      if (res.ok) {
+        const data = await res.json();
+        setPlayers(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch players:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddPlayer = async () => {
+    if (!newPlayer.name || !newPlayer.mainSpec) return;
+
+    setSaving(true);
+    try {
+      const specRole = SPEC_ROLES[newPlayer.mainSpec];
+      const res = await fetch('/api/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newPlayer.name,
+          wowClass: newPlayer.wowClass,
+          mainSpec: newPlayer.mainSpec,
+          role: specRole?.role || 'DPS',
+          roleSubtype: specRole?.subtype || 'DPS_Melee',
+          notes: newPlayer.notes || null,
+        }),
+      });
+
+      if (res.ok) {
+        const player = await res.json();
+        setPlayers([...players, player]);
+        setNewPlayer({ name: '', wowClass: '', mainSpec: '', notes: '' });
+        setIsAddDialogOpen(false);
+      }
+    } catch (error) {
+      console.error('Failed to add player:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filteredPlayers = players.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesClass = classFilter === 'all' || player.wowClass === classFilter;
+    const matchesClass = classFilter === 'all' || player.class === classFilter;
     const matchesRole = roleFilter === 'all' || player.role === roleFilter;
     return matchesSearch && matchesClass && matchesRole;
   });
 
   const availableSpecs = newPlayer.wowClass ? CLASS_SPECS[newPlayer.wowClass] || [] : [];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -97,10 +155,17 @@ export default function RosterPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes (optional)</Label>
+                <Input id="notes" value={newPlayer.notes} onChange={(e) => setNewPlayer({ ...newPlayer, notes: e.target.value })} placeholder="e.g., BiS wep P1-2" />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-              <Button disabled={!newPlayer.name || !newPlayer.mainSpec}>Add Player</Button>
+              <Button onClick={handleAddPlayer} disabled={!newPlayer.name || !newPlayer.mainSpec || saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Add Player
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -133,19 +198,50 @@ export default function RosterPage() {
         </CardContent>
       </Card>
 
-      <div className="flex gap-4 text-sm text-muted-foreground">
-        <span>Showing {filteredPlayers.length} of {mockPlayers.length} players</span>
-        <span>|</span>
-        <span>Tanks: {mockPlayers.filter(p => p.role === 'Tank').length}</span>
-        <span>|</span>
-        <span>Healers: {mockPlayers.filter(p => p.role === 'Heal').length}</span>
-        <span>|</span>
-        <span>DPS: {mockPlayers.filter(p => p.role === 'DPS').length}</span>
-      </div>
+      {players.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Players Yet</h3>
+              <p className="text-muted-foreground mb-4">Add your first guild member to get started.</p>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />Add Player
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="flex gap-4 text-sm text-muted-foreground">
+            <span>Showing {filteredPlayers.length} of {players.length} players</span>
+            <span>|</span>
+            <span>Tanks: {players.filter(p => p.role === 'Tank').length}</span>
+            <span>|</span>
+            <span>Healers: {players.filter(p => p.role === 'Heal').length}</span>
+            <span>|</span>
+            <span>DPS: {players.filter(p => p.role === 'DPS').length}</span>
+          </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filteredPlayers.map((player) => (<PlayerCard key={player.id} player={player} />))}
-      </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredPlayers.map((player) => (
+              <PlayerCard
+                key={player.id}
+                player={{
+                  id: player.id,
+                  name: player.name,
+                  wowClass: player.class,
+                  mainSpec: player.mainSpec,
+                  role: player.role,
+                  attendance: 0,
+                  bisPercent: 0,
+                  active: player.active,
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

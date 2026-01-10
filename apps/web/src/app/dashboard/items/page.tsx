@@ -21,28 +21,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Database, Sword, Upload, ExternalLink } from 'lucide-react';
+import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2 } from 'lucide-react';
 import { RAIDS, GEAR_SLOTS } from '@hooligans/shared';
 import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS } from '@/lib/wowhead';
 
-const mockItems = [
-  { id: '1', name: 'Sunfire Robe', slot: 'Chest', raid: 'Sunwell Plateau', boss: 'Kalecgos', phase: 'P5', wowheadId: 34364, icon: 'inv_chest_cloth_43', bisSpecs: ['DruidBalance', 'MageArcane', 'MageFire', 'WarlockDestruction'] },
-  { id: '2', name: 'Blade of Harbingers', slot: 'MainHand', raid: 'Sunwell Plateau', boss: 'Felmyst', phase: 'P5', wowheadId: 34331, icon: 'inv_sword_113', bisSpecs: ['RogueCombat', 'WarriorFury'] },
-  { id: '3', name: 'Legguards of Endless Rage', slot: 'Legs', raid: 'Sunwell Plateau', boss: 'Brutallus', phase: 'P5', wowheadId: 34180, icon: 'inv_pants_plate_24', bisSpecs: ['WarriorFury', 'PaladinRetribution'] },
-  { id: '4', name: 'Ring of Flowing Life', slot: 'Finger', raid: 'Black Temple', boss: 'Mother Shahraz', phase: 'P3', wowheadId: 32528, icon: 'inv_jewelry_ring_55', bisSpecs: ['PaladinHoly', 'DruidRestoration'] },
-  { id: '5', name: 'Pillar of Ferocity', slot: 'TwoHand', raid: 'Black Temple', boss: 'Illidan Stormrage', phase: 'P3', wowheadId: 32332, icon: 'inv_staff_54', bisSpecs: ['DruidFeral'] },
-  { id: '6', name: 'Shroud of the Final Stand', slot: 'Back', raid: 'Black Temple', boss: 'Illidan Stormrage', phase: 'P3', wowheadId: 32331, icon: 'inv_misc_cape_naxxramas_01', bisSpecs: ['PaladinProtection', 'WarriorProtection'] },
-  { id: '7', name: 'Stanchion of Primal Instinct', slot: 'MainHand', raid: 'Black Temple', boss: 'Reliquary of Souls', phase: 'P3', wowheadId: 32500, icon: 'inv_weapon_shortblade_62', bisSpecs: ['HunterBeastMastery', 'HunterSurvival'] },
-  { id: '8', name: 'Warglaive of Azzinoth (MH)', slot: 'MainHand', raid: 'Black Temple', boss: 'Illidan Stormrage', phase: 'P3', wowheadId: 32837, icon: 'inv_weapon_glave_01', bisSpecs: ['RogueCombat', 'WarriorFury'] },
-  { id: '9', name: 'Warglaive of Azzinoth (OH)', slot: 'OffHand', raid: 'Black Temple', boss: 'Illidan Stormrage', phase: 'P3', wowheadId: 32838, icon: 'inv_weapon_glave_01', bisSpecs: ['RogueCombat', 'WarriorFury'] },
-  { id: '10', name: 'Gronnstalker Helmet', slot: 'Head', raid: 'Hyjal Summit', boss: 'Archimonde', phase: 'P3', wowheadId: 31003, icon: 'inv_helmet_96', bisSpecs: ['HunterBeastMastery', 'HunterMarksmanship', 'HunterSurvival'] },
-  { id: '11', name: 'Thunderheart Chestguard', slot: 'Chest', raid: 'Black Temple', boss: 'Illidan Stormrage', phase: 'P3', wowheadId: 31042, icon: 'inv_chest_leather_20', bisSpecs: ['DruidFeral', 'DruidGuardian'] },
-  { id: '12', name: 'Lightbringer Chestguard', slot: 'Chest', raid: 'Black Temple', boss: 'Illidan Stormrage', phase: 'P3', wowheadId: 30991, icon: 'inv_chest_plate20', bisSpecs: ['PaladinProtection'] },
-];
+type Item = {
+  id: string;
+  name: string;
+  slot: string;
+  raid: string;
+  boss: string;
+  phase: string;
+  wowheadId: number;
+  icon?: string;
+  bisSpecs: { id: string; spec: string }[];
+};
 
 const PHASES = ['P1', 'P2', 'P3', 'P4', 'P5'];
 
 export default function ItemsPage() {
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [raidFilter, setRaidFilter] = useState<string>('all');
   const [slotFilter, setSlotFilter] = useState<string>('all');
@@ -60,10 +60,59 @@ export default function ItemsPage() {
   });
 
   useEffect(() => {
-    refreshWowheadTooltips();
+    fetchItems();
   }, []);
 
-  const filteredItems = mockItems.filter((item) => {
+  useEffect(() => {
+    refreshWowheadTooltips();
+  }, [items]);
+
+  const fetchItems = async () => {
+    try {
+      const res = await fetch('/api/items');
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch items:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddItem = async () => {
+    if (!newItem.wowheadId || !newItem.name) return;
+
+    setSaving(true);
+    try {
+      const res = await fetch('/api/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newItem.name,
+          wowheadId: parseInt(newItem.wowheadId),
+          slot: newItem.slot,
+          raid: newItem.raid,
+          boss: newItem.boss || null,
+          phase: newItem.phase,
+        }),
+      });
+
+      if (res.ok) {
+        const item = await res.json();
+        setItems([...items, item]);
+        setNewItem({ name: '', slot: '', raid: '', boss: '', phase: '', wowheadId: '' });
+        setIsAddDialogOpen(false);
+      }
+    } catch (error) {
+      console.error('Failed to add item:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRaid = raidFilter === 'all' || item.raid === raidFilter;
     const matchesSlot = slotFilter === 'all' || item.slot === slotFilter;
@@ -74,6 +123,17 @@ export default function ItemsPage() {
   const formatSpec = (spec: string) => {
     return spec.replace(/([A-Z])/g, ' $1').trim();
   };
+
+  const bisItemsCount = items.filter(i => i.bisSpecs && i.bisSpecs.length > 0).length;
+  const uniqueRaids = new Set(items.map(i => i.raid)).size;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -129,6 +189,15 @@ export default function ItemsPage() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
+                  <Label htmlFor="name">Item Name</Label>
+                  <Input
+                    id="name"
+                    value={newItem.name}
+                    onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                    placeholder="e.g., Warglaive of Azzinoth"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="wowheadId">Wowhead Item ID</Label>
                   <Input
                     id="wowheadId"
@@ -178,7 +247,10 @@ export default function ItemsPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button disabled={!newItem.wowheadId}>Add Item</Button>
+                <Button onClick={handleAddItem} disabled={!newItem.wowheadId || !newItem.name || saving}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Add Item
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -192,7 +264,7 @@ export default function ItemsPage() {
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockItems.length}</div>
+            <div className="text-2xl font-bold">{items.length}</div>
             <p className="text-xs text-muted-foreground">items in database</p>
           </CardContent>
         </Card>
@@ -202,9 +274,7 @@ export default function ItemsPage() {
             <Sword className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-500">
-              {mockItems.filter(i => i.bisSpecs.length > 0).length}
-            </div>
+            <div className="text-2xl font-bold text-purple-500">{bisItemsCount}</div>
             <p className="text-xs text-muted-foreground">items marked as BiS</p>
           </CardContent>
         </Card>
@@ -214,7 +284,7 @@ export default function ItemsPage() {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{new Set(mockItems.map(i => i.raid)).size}</div>
+            <div className="text-2xl font-bold">{uniqueRaids}</div>
             <p className="text-xs text-muted-foreground">different raids</p>
           </CardContent>
         </Card>
@@ -271,64 +341,86 @@ export default function ItemsPage() {
         </CardContent>
       </Card>
 
-      <div className="text-sm text-muted-foreground">
-        Showing {filteredItems.length} of {mockItems.length} items
-      </div>
+      {items.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Items Yet</h3>
+              <p className="text-muted-foreground mb-4">Add items manually or import from Wowhead zone pages.</p>
+              <div className="flex gap-2 justify-center">
+                <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2" />Import Zone
+                </Button>
+                <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />Add Item
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredItems.length} of {items.length} items
+          </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filteredItems.map((item) => (
-          <Card key={item.id} className="hover:border-purple-500/50 transition-colors">
-            <CardContent className="pt-4">
-              <div className="flex items-start gap-3">
-                <a
-                  href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-wowhead={`item=${item.wowheadId}&domain=tbc`}
-                >
-                  <img
-                    src={getItemIconUrl(item.icon, 'large')}
-                    alt={item.name}
-                    className="w-12 h-12 rounded border-2 border-purple-500"
-                  />
-                </a>
-                <div className="flex-1 min-w-0">
-                  <a
-                    href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-wowhead={`item=${item.wowheadId}&domain=tbc`}
-                    className="font-semibold text-purple-400 hover:underline truncate block"
-                  >
-                    {item.name}
-                  </a>
-                  <p className="text-sm text-muted-foreground">{item.slot}</p>
-                  <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-muted mt-1">{item.phase}</span>
-                </div>
-              </div>
-              <div className="mt-3 text-sm text-muted-foreground">
-                {item.raid} - {item.boss}
-              </div>
-              {item.bisSpecs.length > 0 && (
-                <div className="mt-2">
-                  <div className="flex flex-wrap gap-1">
-                    {item.bisSpecs.slice(0, 2).map((spec) => (
-                      <span key={spec} className="px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-400">
-                        {formatSpec(spec)}
-                      </span>
-                    ))}
-                    {item.bisSpecs.length > 2 && (
-                      <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
-                        +{item.bisSpecs.length - 2}
-                      </span>
-                    )}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredItems.map((item) => (
+              <Card key={item.id} className="hover:border-purple-500/50 transition-colors">
+                <CardContent className="pt-4">
+                  <div className="flex items-start gap-3">
+                    <a
+                      href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-wowhead={`item=${item.wowheadId}&domain=tbc`}
+                    >
+                      <img
+                        src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'large')}
+                        alt={item.name}
+                        className="w-12 h-12 rounded border-2 border-purple-500"
+                      />
+                    </a>
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-wowhead={`item=${item.wowheadId}&domain=tbc`}
+                        className="font-semibold text-purple-400 hover:underline truncate block"
+                      >
+                        {item.name}
+                      </a>
+                      <p className="text-sm text-muted-foreground">{item.slot}</p>
+                      <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-muted mt-1">{item.phase}</span>
+                    </div>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    {item.raid}{item.boss ? ` - ${item.boss}` : ''}
+                  </div>
+                  {item.bisSpecs && item.bisSpecs.length > 0 && (
+                    <div className="mt-2">
+                      <div className="flex flex-wrap gap-1">
+                        {item.bisSpecs.slice(0, 2).map((bisSpec) => (
+                          <span key={bisSpec.id} className="px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-400">
+                            {formatSpec(bisSpec.spec)}
+                          </span>
+                        ))}
+                        {item.bisSpecs.length > 2 && (
+                          <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
+                            +{item.bisSpecs.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

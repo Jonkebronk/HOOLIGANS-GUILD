@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,45 +20,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users, X, Camera, Copy, RotateCcw, Download, Send, Plus } from 'lucide-react';
+import { Users, X, Camera, Copy, RotateCcw, Download, Send, Plus, Loader2 } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl } from '@/lib/wowhead';
 
 type Player = {
   id: string;
   name: string;
-  wowClass: string;
-  spec: string;
-  role: 'Tank' | 'Heal' | 'DPS';
+  class: string;
+  mainSpec: string;
+  role: string;
 };
-
-const mockAvailablePlayers: Player[] = [
-  { id: '1', name: 'Wiz', wowClass: 'Druid', spec: 'DruidGuardian', role: 'Tank' },
-  { id: '2', name: 'Johnnypapa', wowClass: 'Rogue', spec: 'RogueCombat', role: 'DPS' },
-  { id: '3', name: 'Ragefury', wowClass: 'Warrior', spec: 'WarriorFury', role: 'DPS' },
-  { id: '4', name: 'Kapnozug', wowClass: 'Paladin', spec: 'PaladinRetribution', role: 'DPS' },
-  { id: '5', name: 'Tel', wowClass: 'Shaman', spec: 'ShamanEnhancement', role: 'DPS' },
-  { id: '6', name: 'Lejon', wowClass: 'Druid', spec: 'DruidFeral', role: 'DPS' },
-  { id: '7', name: 'Vicke', wowClass: 'Warrior', spec: 'WarriorFury', role: 'DPS' },
-  { id: '8', name: 'Eonir', wowClass: 'Hunter', spec: 'HunterBeastMastery', role: 'DPS' },
-  { id: '9', name: 'Smiker', wowClass: 'Druid', spec: 'DruidRestoration', role: 'Heal' },
-  { id: '10', name: 'Shredd', wowClass: 'Paladin', spec: 'PaladinProtection', role: 'Tank' },
-  { id: '11', name: 'Quest', wowClass: 'Paladin', spec: 'PaladinHoly', role: 'Heal' },
-  { id: '12', name: 'Bibitrix', wowClass: 'Priest', spec: 'PriestHoly', role: 'Heal' },
-  { id: '13', name: 'Shadowstep', wowClass: 'Rogue', spec: 'RogueCombat', role: 'DPS' },
-  { id: '14', name: 'Frostbolt', wowClass: 'Mage', spec: 'MageFrost', role: 'DPS' },
-  { id: '15', name: 'Darkfire', wowClass: 'Warlock', spec: 'WarlockDestruction', role: 'DPS' },
-  { id: '16', name: 'Moonkin', wowClass: 'Druid', spec: 'DruidBalance', role: 'DPS' },
-  { id: '17', name: 'Holybolt', wowClass: 'Priest', spec: 'PriestHoly', role: 'Heal' },
-  { id: '18', name: 'Thunderaxe', wowClass: 'Warrior', spec: 'WarriorProtection', role: 'Tank' },
-  { id: '19', name: 'Arcaneblast', wowClass: 'Mage', spec: 'MageArcane', role: 'DPS' },
-  { id: '20', name: 'Chainlightning', wowClass: 'Shaman', spec: 'ShamanElemental', role: 'DPS' },
-];
 
 type GroupSlot = Player | null;
 type RaidGroups = GroupSlot[][];
 
 export default function RaidSplitsPage() {
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
   const [raidSize, setRaidSize] = useState<'10' | '25'>('25');
   const [raidName, setRaidName] = useState('25-Man Raid 1');
   const [isDiscordDialogOpen, setIsDiscordDialogOpen] = useState(false);
@@ -72,10 +51,26 @@ export default function RaidSplitsPage() {
     Array(numGroups).fill(null).map(() => Array(slotsPerGroup).fill(null))
   );
 
-  const [availablePlayers, setAvailablePlayers] = useState<Player[]>(mockAvailablePlayers);
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
+
+  const fetchPlayers = async () => {
+    try {
+      const res = await fetch('/api/players');
+      if (res.ok) {
+        const data = await res.json();
+        setPlayers(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch players:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const assignedPlayerIds = new Set(groups.flat().filter(Boolean).map(p => p!.id));
-  const unassignedPlayers = availablePlayers.filter(p => !assignedPlayerIds.has(p.id));
+  const unassignedPlayers = players.filter(p => !assignedPlayerIds.has(p.id));
 
   const totalAssigned = groups.flat().filter(Boolean).length;
   const maxPlayers = numGroups * slotsPerGroup;
@@ -110,6 +105,38 @@ export default function RaidSplitsPage() {
     setMessageTitle(`${raidName} - Raid Composition`);
     setIsDiscordDialogOpen(true);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (players.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Raid Compositions</h1>
+            <p className="text-muted-foreground">Build and manage raid groups</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Players Yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Add players to your roster first to build raid compositions.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -161,13 +188,13 @@ export default function RaidSplitsPage() {
                           {slot ? (
                             <>
                               <img
-                                src={getSpecIconUrl(slot.spec)}
-                                alt={slot.spec}
+                                src={getSpecIconUrl(slot.mainSpec)}
+                                alt={slot.mainSpec}
                                 className="w-6 h-6 rounded"
                               />
                               <span
                                 className="flex-1 text-sm font-medium truncate"
-                                style={{ color: CLASS_COLORS[slot.wowClass] }}
+                                style={{ color: CLASS_COLORS[slot.class] }}
                               >
                                 {slot.name}
                               </span>
@@ -213,19 +240,19 @@ export default function RaidSplitsPage() {
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 text-left"
                 >
                   <img
-                    src={getSpecIconUrl(player.spec)}
-                    alt={player.spec}
+                    src={getSpecIconUrl(player.mainSpec)}
+                    alt={player.mainSpec}
                     className="w-6 h-6 rounded"
                   />
                   <div className="flex-1 min-w-0">
                     <span
                       className="text-sm font-medium truncate block"
-                      style={{ color: CLASS_COLORS[player.wowClass] }}
+                      style={{ color: CLASS_COLORS[player.class] }}
                     >
                       {player.name}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {player.spec.replace(player.wowClass, '')}
+                      {player.mainSpec?.replace(player.class, '')}
                     </span>
                   </div>
                 </button>

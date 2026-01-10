@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,44 +21,62 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Calendar, Users, TrendingUp, CheckCircle } from 'lucide-react';
+import { Plus, Search, Calendar, Users, TrendingUp, CheckCircle, Loader2 } from 'lucide-react';
 import { CLASS_COLORS, RAIDS } from '@hooligans/shared';
 import { getSpecIconUrl } from '@/lib/wowhead';
 
-const mockPlayers = [
-  { id: '1', name: 'Wiz', wowClass: 'Druid', spec: 'DruidGuardian', attendance: 100, raids: 20, attended: 20 },
-  { id: '2', name: 'Johnnypapa', wowClass: 'Rogue', spec: 'RogueCombat', attendance: 100, raids: 20, attended: 20 },
-  { id: '3', name: 'Ragefury', wowClass: 'Warrior', spec: 'WarriorFury', attendance: 80, raids: 20, attended: 16 },
-  { id: '4', name: 'Kapnozug', wowClass: 'Paladin', spec: 'PaladinRetribution', attendance: 94, raids: 18, attended: 17 },
-  { id: '5', name: 'Tel', wowClass: 'Shaman', spec: 'ShamanEnhancement', attendance: 82, raids: 17, attended: 14 },
-  { id: '6', name: 'Lejon', wowClass: 'Druid', spec: 'DruidFeral', attendance: 82, raids: 17, attended: 14 },
-  { id: '7', name: 'Vicke', wowClass: 'Warrior', spec: 'WarriorFury', attendance: 81, raids: 16, attended: 13 },
-  { id: '8', name: 'Eonir', wowClass: 'Hunter', spec: 'HunterBeastMastery', attendance: 100, raids: 20, attended: 20 },
-  { id: '9', name: 'Smiker', wowClass: 'Druid', spec: 'DruidRestoration', attendance: 100, raids: 20, attended: 20 },
-  { id: '10', name: 'Shredd', wowClass: 'Paladin', spec: 'PaladinProtection', attendance: 100, raids: 20, attended: 20 },
-  { id: '11', name: 'Quest', wowClass: 'Paladin', spec: 'PaladinHoly', attendance: 100, raids: 20, attended: 20 },
-  { id: '12', name: 'Bibitrix', wowClass: 'Priest', spec: 'PriestHoly', attendance: 100, raids: 20, attended: 20 },
-];
-
-const mockRaids = [
-  { id: '1', name: 'Sunwell Plateau', date: '2025-01-09', attendees: 25, total: 25 },
-  { id: '2', name: 'Sunwell Plateau', date: '2025-01-07', attendees: 24, total: 25 },
-  { id: '3', name: 'Black Temple', date: '2025-01-06', attendees: 25, total: 25 },
-  { id: '4', name: 'Black Temple', date: '2025-01-04', attendees: 23, total: 25 },
-  { id: '5', name: 'Hyjal Summit', date: '2025-01-02', attendees: 25, total: 25 },
-];
+type PlayerWithAttendance = {
+  id: string;
+  name: string;
+  class: string;
+  mainSpec: string;
+  totalRaids: number;
+  attendedRaids: number;
+  attendancePercent: number;
+};
 
 export default function AttendancePage() {
+  const [players, setPlayers] = useState<PlayerWithAttendance[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newRaid, setNewRaid] = useState({ name: '', date: '' });
 
-  const filteredPlayers = mockPlayers
-    .filter((player) => player.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort((a, b) => b.attendance - a.attendance);
+  useEffect(() => {
+    fetchAttendance();
+  }, []);
 
-  const avgAttendance = Math.round(mockPlayers.reduce((sum, p) => sum + p.attendance, 0) / mockPlayers.length);
-  const perfectAttendance = mockPlayers.filter(p => p.attendance === 100).length;
+  const fetchAttendance = async () => {
+    try {
+      const res = await fetch('/api/attendance');
+      if (res.ok) {
+        const data = await res.json();
+        setPlayers(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch attendance:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredPlayers = players
+    .filter((player) => player.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => b.attendancePercent - a.attendancePercent);
+
+  const avgAttendance = players.length > 0
+    ? Math.round(players.reduce((sum, p) => sum + p.attendancePercent, 0) / players.length)
+    : 0;
+  const perfectAttendance = players.filter(p => p.attendancePercent === 100).length;
+  const totalRaidsRecorded = players.length > 0 ? Math.max(...players.map(p => p.totalRaids)) : 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -106,7 +124,9 @@ export default function AttendancePage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">{avgAttendance}%</div>
+            <div className={`text-2xl font-bold ${avgAttendance >= 80 ? 'text-green-500' : avgAttendance >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
+              {avgAttendance}%
+            </div>
             <p className="text-xs text-muted-foreground">across all raiders</p>
           </CardContent>
         </Card>
@@ -126,7 +146,7 @@ export default function AttendancePage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockRaids.length}</div>
+            <div className="text-2xl font-bold">{totalRaidsRecorded}</div>
             <p className="text-xs text-muted-foreground">this phase</p>
           </CardContent>
         </Card>
@@ -136,14 +156,27 @@ export default function AttendancePage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockPlayers.length}</div>
+            <div className="text-2xl font-bold">{players.length}</div>
             <p className="text-xs text-muted-foreground">on roster</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      {players.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center">
+              <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Attendance Data Yet</h3>
+              <p className="text-muted-foreground mb-4">Add players to your roster and start recording raid attendance.</p>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />Record Raid
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Player Attendance</CardTitle>
@@ -157,45 +190,23 @@ export default function AttendancePage() {
             <div className="space-y-2">
               {filteredPlayers.map((player) => (
                 <div key={player.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30 hover:bg-muted/50">
-                  <img src={getSpecIconUrl(player.spec)} alt={player.spec} className="w-8 h-8 rounded" style={{ borderColor: CLASS_COLORS[player.wowClass], borderWidth: 2 }} />
+                  <img src={getSpecIconUrl(player.mainSpec)} alt={player.mainSpec} className="w-8 h-8 rounded" style={{ borderColor: CLASS_COLORS[player.class], borderWidth: 2 }} />
                   <div className="flex-1">
-                    <span style={{ color: CLASS_COLORS[player.wowClass] }} className="font-medium">{player.name}</span>
-                    <p className="text-xs text-muted-foreground">{player.attended}/{player.raids} raids</p>
+                    <span style={{ color: CLASS_COLORS[player.class] }} className="font-medium">{player.name}</span>
+                    <p className="text-xs text-muted-foreground">{player.attendedRaids}/{player.totalRaids} raids</p>
                   </div>
                   <div className="text-right">
-                    <span className={`text-lg font-bold ${player.attendance >= 90 ? 'text-green-500' : player.attendance >= 75 ? 'text-yellow-500' : 'text-red-500'}`}>{player.attendance}%</span>
+                    <span className={`text-lg font-bold ${player.attendancePercent >= 90 ? 'text-green-500' : player.attendancePercent >= 75 ? 'text-yellow-500' : 'text-red-500'}`}>{player.attendancePercent}%</span>
                   </div>
                   <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${player.attendance >= 90 ? 'bg-green-500' : player.attendance >= 75 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${player.attendance}%` }} />
+                    <div className={`h-full rounded-full ${player.attendancePercent >= 90 ? 'bg-green-500' : player.attendancePercent >= 75 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${player.attendancePercent}%` }} />
                   </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader><CardTitle>Recent Raids</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {mockRaids.map((raid) => (
-                <div key={raid.id} className="p-3 rounded-lg bg-muted/30">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{raid.name}</span>
-                    <span className="text-sm text-muted-foreground">{raid.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${(raid.attendees / raid.total) * 100}%` }} />
-                    </div>
-                    <span className="text-sm text-muted-foreground">{raid.attendees}/{raid.total}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      )}
     </div>
   );
 }
