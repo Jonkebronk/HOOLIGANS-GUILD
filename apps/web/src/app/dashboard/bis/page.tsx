@@ -281,33 +281,50 @@ export default function BisListsPage() {
         className={`flex items-center gap-3 py-2 px-2 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}
       >
         {/* Item icon or empty slot */}
-        <div
-          className="relative"
-          data-wowhead={item?.wowheadId ? `item=${item.wowheadId}&domain=tbc` : undefined}
-        >
-          <img
-            src={item ? getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium') : getItemIconUrl(slotIcon, 'medium')}
-            alt={item?.name || label}
-            className="w-10 h-10 rounded"
-            style={{
-              borderWidth: 2,
-              borderStyle: 'solid',
-              borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#1eff00') : '#333',
-              opacity: item ? 1 : 0.4,
-            }}
-          />
-        </div>
+        {item?.wowheadId ? (
+          <a
+            href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+            onClick={(e) => e.preventDefault()}
+            className="relative block"
+          >
+            <img
+              src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
+              alt={item.name}
+              className="w-10 h-10 rounded"
+              style={{
+                borderWidth: 2,
+                borderStyle: 'solid',
+                borderColor: ITEM_QUALITY_COLORS[item.quality] || '#1eff00',
+              }}
+            />
+          </a>
+        ) : (
+          <div className="relative">
+            <img
+              src={getItemIconUrl(slotIcon, 'medium')}
+              alt={label}
+              className="w-10 h-10 rounded"
+              style={{
+                borderWidth: 2,
+                borderStyle: 'solid',
+                borderColor: '#333',
+                opacity: 0.4,
+              }}
+            />
+          </div>
+        )}
 
         {/* Item name and slot label */}
         <div className={`flex-1 min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
           {item ? (
-            <span
-              className="font-medium text-sm block truncate"
+            <a
+              href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+              onClick={(e) => e.preventDefault()}
+              className="font-medium text-sm block truncate hover:underline"
               style={{ color: ITEM_QUALITY_COLORS[item.quality] || '#a335ee' }}
-              data-wowhead={`item=${item.wowheadId}&domain=tbc`}
             >
               {item.name}
-            </span>
+            </a>
           ) : (
             <span className="text-sm text-muted-foreground">{label}</span>
           )}
