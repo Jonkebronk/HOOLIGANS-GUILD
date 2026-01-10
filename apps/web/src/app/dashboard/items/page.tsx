@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2 } from 'lucide-react';
+import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2 } from 'lucide-react';
 import { RAIDS, GEAR_SLOTS } from '@hooligans/shared';
 import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 
@@ -59,6 +59,8 @@ export default function ItemsPage() {
   const [importUrl, setImportUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState('');
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     slot: '',
@@ -176,6 +178,33 @@ export default function ItemsPage() {
       console.error('Failed to fetch items:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteRaid = async () => {
+    if (raidFilter === 'all') return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/items?raid=${encodeURIComponent(raidFilter)}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        await fetchItems();
+        setIsDeleteDialogOpen(false);
+        setRaidFilter('all');
+        alert(`Deleted ${data.deleted} items from ${raidFilter}`);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to delete items');
+      }
+    } catch (error) {
+      console.error('Failed to delete raid items:', error);
+      alert('Failed to delete items. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -472,6 +501,36 @@ export default function ItemsPage() {
                 ))}
               </SelectContent>
             </Select>
+            {raidFilter !== 'all' && (
+              <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />Delete Raid
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete All Items from {raidFilter}?</DialogTitle>
+                    <DialogDescription>
+                      This will permanently delete all {filteredItems.filter(i => i.raid === raidFilter).length} items from {raidFilter}. This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={isDeleting}>
+                      Cancel
+                    </Button>
+                    <Button variant="destructive" onClick={handleDeleteRaid} disabled={isDeleting}>
+                      {isDeleting ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4 mr-2" />
+                      )}
+                      {isDeleting ? 'Deleting...' : 'Delete All'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </CardContent>
       </Card>

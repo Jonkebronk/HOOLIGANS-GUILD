@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash2, UserX } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
-import { getSpecIconUrl } from '@/lib/wowhead';
+import { getClassIconUrl } from '@/lib/wowhead';
 import { cn } from '@/lib/utils';
 
 interface PlayerCardProps {
@@ -61,10 +61,10 @@ export function PlayerCard({ player, onEdit, onDelete, onToggleActive }: PlayerC
         {/* Header Row */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            {/* Spec Icon */}
+            {/* Class Icon */}
             <img
-              src={getSpecIconUrl(player.mainSpec)}
-              alt={player.mainSpec}
+              src={getClassIconUrl(player.wowClass)}
+              alt={player.wowClass}
               className="w-10 h-10 rounded-full"
               style={{
                 border: `2px solid ${classColor}`,
