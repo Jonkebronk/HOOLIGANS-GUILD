@@ -221,7 +221,8 @@ export async function POST(request: Request) {
     }
 
     let imported = 0;
-    let skipped = 0;
+    let alreadyExists = 0;
+    let fetchFailed = 0;
     const errors: string[] = [];
 
     // Process each item
@@ -233,7 +234,7 @@ export async function POST(request: Request) {
         });
 
         if (existing) {
-          skipped++;
+          alreadyExists++;
           continue;
         }
 
@@ -241,20 +242,14 @@ export async function POST(request: Request) {
         const details = await fetchItemDetails(itemId);
 
         if (details) {
-          // Skip items without a valid gear slot (non-equipment items)
-          if (!details.slot) {
-            skipped++;
-            continue;
-          }
-
-          // Create item in database
+          // Create item in database - use Misc for non-gear items
           await prisma.item.create({
             data: {
               name: details.name,
               wowheadId: itemId,
               icon: details.icon,
               quality: details.quality,
-              slot: details.slot,
+              slot: details.slot || 'Misc', // Default to Misc for recipes, patterns, etc.
               raid: raidName,
               boss: 'Unknown', // Boss info not available from zone import
               phase: phase,
@@ -262,7 +257,10 @@ export async function POST(request: Request) {
           });
           imported++;
         } else {
-          errors.push(`Failed to fetch details for item ${itemId}`);
+          fetchFailed++;
+          if (errors.length < 10) {
+            errors.push(`Failed to fetch details for item ${itemId}`);
+          }
         }
 
         // Rate limiting - 50ms between requests
@@ -276,10 +274,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       imported,
-      skipped,
+      alreadyExists,
+      fetchFailed,
       total: itemIds.length,
       errors: errors.length > 0 ? errors : undefined,
-      message: `Successfully imported ${imported} items from ${raidName}. ${skipped} items were already in the database.`,
+      message: `Imported ${imported} items from ${raidName}. ${alreadyExists} already in database, ${fetchFailed} failed to fetch.`,
     });
 
   } catch (error) {

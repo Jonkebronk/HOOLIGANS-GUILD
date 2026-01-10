@@ -72,6 +72,7 @@ enum GearSlot {
   Weapon1
   Weapon2
   Ranged
+  Misc      // Recipes, patterns, formulas, etc.
 }
 
 enum UserRole {
