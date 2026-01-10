@@ -37,19 +37,16 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-card border-r border-border">
       {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center px-6 border-b border-border">
-        <Link href="/dashboard" className="flex items-center gap-2">
+      <div className="flex h-16 shrink-0 items-center justify-center border-b border-border">
+        <Link href="/dashboard" className="flex items-center gap-3">
           <Image
             src="/images/hlg-icon.png"
             alt="HOOLIGANS"
-            width={32}
-            height={32}
+            width={36}
+            height={36}
             className="rounded-lg"
           />
-          <div>
-            <span className="font-bold text-foreground">HOOLIGANS</span>
-            <p className="text-xs text-muted-foreground">Loot Council</p>
-          </div>
+          <span className="font-bold text-lg text-foreground">HOOLIGANS</span>
         </Link>
       </div>
 
