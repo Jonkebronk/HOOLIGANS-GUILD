@@ -81,6 +81,7 @@ enum GearSlot {
   Relic
   Wand
   Thrown
+  Misc
 }
 
 enum UserRole {
