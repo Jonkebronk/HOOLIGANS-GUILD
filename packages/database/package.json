@@ -6,7 +6,7 @@
   "types": "./src/index.ts",
   "scripts": {
     "generate": "prisma generate",
-    "push": "prisma db push",
+    "push": "prisma db push --accept-data-loss",
     "studio": "prisma studio",
     "migrate": "prisma migrate dev"
   },
