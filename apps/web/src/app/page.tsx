@@ -1,21 +1,36 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8">
-      <div className="text-center space-y-8 max-w-2xl">
-        {/* Guild Logo/Title */}
-        <div className="space-y-4">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            HOOLIGANS
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Loot Council - Team Sweden
-          </p>
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-8">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/login-bg.png"
+          alt="Big League Hooligans"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+
+      <div className="relative z-10 text-center space-y-8 max-w-2xl">
+        {/* Guild Logo */}
+        <div className="flex justify-center">
+          <Image
+            src="/images/logo.png"
+            alt="HOOLIGANS Logo"
+            width={200}
+            height={200}
+            className="drop-shadow-2xl"
+            priority
+          />
         </div>
 
         {/* Description */}
-        <p className="text-muted-foreground leading-relaxed">
+        <p className="text-muted-foreground leading-relaxed text-lg">
           Manage your guild&apos;s loot distribution with transparency and fairness.
           Track BiS progress, attendance, and make informed loot decisions.
         </p>
@@ -24,7 +39,7 @@ export default function Home() {
         <div className="flex gap-4 justify-center">
           <Link
             href="/login"
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="px-6 py-3 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-lg font-medium transition-colors"
           >
             Sign in with Discord
           </Link>
@@ -50,7 +65,7 @@ export default function Home() {
 
 function FeatureCard({ title, description }: { title: string; description: string }) {
   return (
-    <div className="p-4 bg-card rounded-lg border border-border hover:border-primary/50 transition-colors">
+    <div className="p-4 bg-card/80 backdrop-blur-sm rounded-lg border border-border hover:border-primary/50 transition-colors">
       <h3 className="font-semibold text-foreground">{title}</h3>
       <p className="text-sm text-muted-foreground">{description}</p>
     </div>
