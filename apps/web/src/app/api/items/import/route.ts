@@ -152,11 +152,11 @@ async function fetchItemDetails(itemId: number): Promise<{
 
     const data = await response.json();
 
-    // Extract slot from tooltip HTML comments (like GDKP module)
+    // Extract slot from tooltip HTML - look for <td>SlotName</td> pattern
     let slot: GearSlot | null = null;
     if (data.tooltip) {
-      // Look for slot in HTML comments like <!--Head--> or <!--Main Hand-->
-      const slotMatch = data.tooltip.match(/<!--(Head|Neck|Shoulder|Back|Chest|Wrist|Hands|Waist|Legs|Feet|Finger|Trinket|One-Hand|Two-Hand|Main Hand|Off Hand|Ranged|Relic|Thrown|Wand|Shield|Held In Off-hand|Idol|Libram|Totem|Gun|Bow|Crossbow)-->/i);
+      // Wowhead puts slot in <td>Legs</td> or <td>Two-Hand</td> format
+      const slotMatch = data.tooltip.match(/<td>(Head|Neck|Shoulder|Back|Chest|Wrist|Hands|Waist|Legs|Feet|Finger|Trinket|One-Hand|Two-Hand|Main Hand|Off Hand|Ranged|Relic|Thrown|Wand|Shield|Held In Off-hand|Idol|Libram|Totem|Gun|Bow|Crossbow)<\/td>/i);
       if (slotMatch) {
         slot = SLOT_TEXT_MAP[slotMatch[1]] || null;
       }
