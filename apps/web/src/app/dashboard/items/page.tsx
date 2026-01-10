@@ -56,6 +56,7 @@ export default function ItemsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importZone, setImportZone] = useState('');
+  const [importUrl, setImportUrl] = useState('');
   const [newItem, setNewItem] = useState({
     name: '',
     slot: '',
@@ -73,6 +74,33 @@ export default function ItemsPage() {
   useEffect(() => {
     refreshWowheadTooltips();
   }, [items]);
+
+  // Parse zone ID from Wowhead URL like https://www.wowhead.com/tbc/zone=3457/karazhan
+  const parseZoneFromUrl = (url: string): string | null => {
+    const match = url.match(/zone=(\d+)/);
+    return match ? match[1] : null;
+  };
+
+  const handleUrlChange = (url: string) => {
+    setImportUrl(url);
+    const zoneId = parseZoneFromUrl(url);
+    if (zoneId) {
+      // Check if this zone ID matches any of our TBC_RAIDS
+      const matchingRaid = TBC_RAIDS.find(raid => raid.id === zoneId);
+      if (matchingRaid) {
+        setImportZone(zoneId);
+      }
+    }
+  };
+
+  const handleZoneSelectChange = (zoneId: string) => {
+    setImportZone(zoneId);
+    // Update URL field to show the Wowhead URL for this zone
+    const raid = TBC_RAIDS.find(r => r.id === zoneId);
+    if (raid) {
+      setImportUrl(`https://www.wowhead.com/tbc/zone=${zoneId}/${raid.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`);
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -162,8 +190,27 @@ export default function ItemsPage() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
+                  <Label>Wowhead Zone URL</Label>
+                  <Input
+                    placeholder="https://www.wowhead.com/tbc/zone=3457/karazhan"
+                    value={importUrl}
+                    onChange={(e) => handleUrlChange(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Paste a Wowhead zone URL or select from the dropdown below
+                  </p>
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <Label>Select Raid Zone</Label>
-                  <Select value={importZone} onValueChange={setImportZone}>
+                  <Select value={importZone} onValueChange={handleZoneSelectChange}>
                     <SelectTrigger><SelectValue placeholder="Select zone to import" /></SelectTrigger>
                     <SelectContent>
                       {TBC_RAIDS.map((raid) => (
