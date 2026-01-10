@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma, GearSlot } from '@hooligans/database';
 
-// Map Wowhead inventory types to GearSlot enum
+// Map Wowhead inventory types to GearSlot enum (not currently used, using text extraction instead)
 const INVENTORY_TYPE_MAP: Record<number, GearSlot> = {
   1: 'Head',
   2: 'Neck',
@@ -12,20 +12,20 @@ const INVENTORY_TYPE_MAP: Record<number, GearSlot> = {
   8: 'Feet',
   9: 'Wrist',
   10: 'Hands',
-  11: 'Finger1',
-  12: 'Trinket1',
-  13: 'Weapon1',     // One-Hand
-  14: 'Weapon2',     // Off Hand / Shield
+  11: 'Finger',
+  12: 'Trinket',
+  13: 'OneHand',
+  14: 'OffHand',
   15: 'Ranged',
   16: 'Back',
-  17: 'Weapon1',     // Two-Hand
+  17: 'TwoHand',
   20: 'Chest',       // Robe
-  21: 'Weapon1',     // Main Hand
-  22: 'Weapon2',     // Off Hand
-  23: 'Weapon2',     // Held In Off-hand
-  25: 'Ranged',      // Thrown
+  21: 'MainHand',
+  22: 'OffHand',
+  23: 'HeldInOffhand',
+  25: 'Thrown',
   26: 'Ranged',
-  28: 'Ranged',      // Relic/Idol/etc
+  28: 'Relic',
 };
 
 // Map slot text to GearSlot enum
