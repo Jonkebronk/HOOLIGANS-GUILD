@@ -559,22 +559,34 @@ export default function BisListsPage() {
             ) : searchResults.length > 0 ? (
               <div className="space-y-1">
                 {searchResults.map((item) => (
-                  <button
+                  <div
                     key={item.id}
-                    onClick={() => handleSelectItem(item)}
-                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSelectItem(item);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelectItem(item);
+                      }
+                    }}
+                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left cursor-pointer"
                   >
                     <img
                       src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
                       alt={item.name}
-                      className="w-9 h-9 rounded"
+                      className="w-9 h-9 rounded pointer-events-none"
                       style={{
                         borderWidth: 2,
                         borderStyle: 'solid',
                         borderColor: ITEM_QUALITY_COLORS[item.quality] || '#a335ee'
                       }}
                     />
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pointer-events-none">
                       <div
                         className="font-medium truncate"
                         style={{ color: ITEM_QUALITY_COLORS[item.quality] || '#a335ee' }}
@@ -585,7 +597,7 @@ export default function BisListsPage() {
                         {item.raid} - {item.boss}
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             ) : (
