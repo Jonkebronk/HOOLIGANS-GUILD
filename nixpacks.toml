@@ -12,3 +12,4 @@ cmds = [
 
 [start]
 cmd = "pnpm db:push && pnpm start"
+
