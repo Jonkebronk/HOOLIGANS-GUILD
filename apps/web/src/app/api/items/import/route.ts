@@ -242,16 +242,29 @@ export async function POST(request: Request) {
         const details = await fetchItemDetails(itemId);
 
         if (details) {
-          // Create item in database - use Misc for non-gear items
-          await prisma.item.create({
-            data: {
+          // Use upsert to handle duplicates - unique constraint is on (name, raid)
+          await prisma.item.upsert({
+            where: {
+              name_raid: {
+                name: details.name,
+                raid: raidName,
+              },
+            },
+            update: {
+              wowheadId: itemId,
+              icon: details.icon,
+              quality: details.quality,
+              slot: details.slot || 'Misc',
+              phase: phase,
+            },
+            create: {
               name: details.name,
               wowheadId: itemId,
               icon: details.icon,
               quality: details.quality,
-              slot: details.slot || 'Misc', // Default to Misc for recipes, patterns, etc.
+              slot: details.slot || 'Misc',
               raid: raidName,
-              boss: 'Unknown', // Boss info not available from zone import
+              boss: 'Unknown',
               phase: phase,
             },
           });
