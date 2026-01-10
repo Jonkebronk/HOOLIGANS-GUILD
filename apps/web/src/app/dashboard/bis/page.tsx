@@ -281,7 +281,10 @@ export default function BisListsPage() {
         className={`flex items-center gap-3 py-2 px-2 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}
       >
         {/* Item icon or empty slot */}
-        <div className="relative">
+        <div
+          className="relative"
+          data-wowhead={item?.wowheadId ? `item=${item.wowheadId}&domain=tbc` : undefined}
+        >
           <img
             src={item ? getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium') : getItemIconUrl(slotIcon, 'medium')}
             alt={item?.name || label}
@@ -301,6 +304,7 @@ export default function BisListsPage() {
             <span
               className="font-medium text-sm block truncate"
               style={{ color: ITEM_QUALITY_COLORS[item.quality] || '#a335ee' }}
+              data-wowhead={`item=${item.wowheadId}&domain=tbc`}
             >
               {item.name}
             </span>
