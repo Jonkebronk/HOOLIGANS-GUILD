@@ -17,26 +17,20 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Target, Search, X } from 'lucide-react';
+import { Loader2, Target, Search, X, ExternalLink } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, SLOT_ICONS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 
 const WOW_CLASSES = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
 
-// Left column slots (top to bottom)
-const LEFT_SLOTS = [
+// All gear slots in order
+const ALL_SLOTS = [
   { slot: 'Head', label: 'Head' },
   { slot: 'Neck', label: 'Neck' },
   { slot: 'Shoulder', label: 'Shoulders' },
   { slot: 'Back', label: 'Back' },
   { slot: 'Chest', label: 'Chest' },
   { slot: 'Wrist', label: 'Wrists' },
-  { slot: 'Weapon1', label: 'Main Hand' },
-  { slot: 'Weapon2', label: 'Off Hand' },
-];
-
-// Right column slots (top to bottom)
-const RIGHT_SLOTS = [
   { slot: 'Hands', label: 'Hands' },
   { slot: 'Waist', label: 'Waist' },
   { slot: 'Legs', label: 'Legs' },
@@ -45,6 +39,8 @@ const RIGHT_SLOTS = [
   { slot: 'Finger2', label: 'Ring 2' },
   { slot: 'Trinket1', label: 'Trinket 1' },
   { slot: 'Trinket2', label: 'Trinket 2' },
+  { slot: 'Weapon1', label: 'Main Hand' },
+  { slot: 'Weapon2', label: 'Off Hand' },
   { slot: 'Ranged', label: 'Ranged' },
 ];
 
@@ -75,16 +71,31 @@ type BisConfig = {
   item: Item | null;
 };
 
+type PlayerGear = {
+  id: string;
+  slot: string;
+  itemId: string | null;
+  item: Item | null;
+  wowheadId: number | null;
+  itemName: string | null;
+  icon: string | null;
+};
+
+type DialogContext = 'current' | 'bis';
+
 export default function BisListsPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState<string>('');
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
   const [classFilter, setClassFilter] = useState<string>('all');
   const [bisConfig, setBisConfig] = useState<BisConfig[]>([]);
+  const [currentGear, setCurrentGear] = useState<PlayerGear[]>([]);
   const [currentPhase] = useState<string>('P1');
 
   // Item selection dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogContext, setDialogContext] = useState<DialogContext>('bis');
   const [selectedSlot, setSelectedSlot] = useState<{ slot: string; label: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Item[]>([]);
@@ -95,6 +106,13 @@ export default function BisListsPage() {
   }, []);
 
   const selectedPlayerData = players.find(p => p.name === selectedPlayer);
+
+  // Update selectedPlayerId when player changes
+  useEffect(() => {
+    if (selectedPlayerData) {
+      setSelectedPlayerId(selectedPlayerData.id);
+    }
+  }, [selectedPlayerData]);
 
   // Fetch BiS config when player changes
   const fetchBisConfig = useCallback(async (spec: string) => {
@@ -109,15 +127,31 @@ export default function BisListsPage() {
     }
   }, [currentPhase]);
 
+  // Fetch current gear when player changes
+  const fetchCurrentGear = useCallback(async (playerId: string) => {
+    try {
+      const res = await fetch(`/api/players/${playerId}/gear`);
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentGear(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch current gear:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (selectedPlayerData?.mainSpec) {
       fetchBisConfig(selectedPlayerData.mainSpec);
     }
-  }, [selectedPlayerData?.mainSpec, fetchBisConfig]);
+    if (selectedPlayerId) {
+      fetchCurrentGear(selectedPlayerId);
+    }
+  }, [selectedPlayerData?.mainSpec, selectedPlayerId, fetchBisConfig, fetchCurrentGear]);
 
   useEffect(() => {
     refreshWowheadTooltips();
-  }, [selectedPlayer, bisConfig]);
+  }, [selectedPlayer, bisConfig, currentGear]);
 
   const fetchPlayers = async () => {
     try {
@@ -175,14 +209,15 @@ export default function BisListsPage() {
     return bisConfig.find(b => b.slot === slot) || null;
   };
 
-  // Get all BiS items for the raids table
-  const getAllBisItems = () => {
-    return bisConfig.filter(b => b.item !== null).map(b => b.item!);
+  // Get current gear for a slot
+  const getCurrentGearItem = (slot: string): PlayerGear | null => {
+    return currentGear.find(g => g.slot === slot) || null;
   };
 
-  // Handle slot click
-  const handleSlotClick = (slot: string, label: string) => {
+  // Handle slot click - opens dialog with context
+  const handleSlotClick = (slot: string, label: string, context: DialogContext) => {
     setSelectedSlot({ slot, label });
+    setDialogContext(context);
     setSearchQuery('');
     setSearchResults([]);
     setDialogOpen(true);
@@ -190,51 +225,128 @@ export default function BisListsPage() {
 
   // Handle item selection
   const handleSelectItem = async (item: Item) => {
-    if (!selectedPlayerData?.mainSpec || !selectedSlot) return;
+    if (!selectedSlot) return;
 
     try {
-      const res = await fetch('/api/bis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          spec: selectedPlayerData.mainSpec,
-          phase: currentPhase,
-          slot: selectedSlot.slot,
-          itemId: item.id,
-        }),
-      });
+      if (dialogContext === 'bis') {
+        if (!selectedPlayerData?.mainSpec) return;
 
-      if (res.ok) {
-        // Refresh BiS config
-        await fetchBisConfig(selectedPlayerData.mainSpec);
-        setDialogOpen(false);
+        const res = await fetch('/api/bis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            spec: selectedPlayerData.mainSpec,
+            phase: currentPhase,
+            slot: selectedSlot.slot,
+            itemId: item.id,
+          }),
+        });
+
+        if (res.ok) {
+          await fetchBisConfig(selectedPlayerData.mainSpec);
+        }
+      } else {
+        // Update current gear
+        const res = await fetch(`/api/players/${selectedPlayerId}/gear`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slot: selectedSlot.slot,
+            itemId: item.id,
+            wowheadId: item.wowheadId,
+            itemName: item.name,
+            icon: item.icon,
+          }),
+        });
+
+        if (res.ok) {
+          await fetchCurrentGear(selectedPlayerId);
+        }
       }
+      setDialogOpen(false);
     } catch (error) {
-      console.error('Failed to save BiS selection:', error);
+      console.error('Failed to save selection:', error);
     }
   };
 
-  // Handle clear BiS for slot
+  // Handle clear slot
   const handleClearSlot = async () => {
-    if (!selectedPlayerData?.mainSpec || !selectedSlot) return;
+    if (!selectedSlot) return;
 
     try {
-      const params = new URLSearchParams();
-      params.set('spec', selectedPlayerData.mainSpec);
-      params.set('phase', currentPhase);
-      params.set('slot', selectedSlot.slot);
+      if (dialogContext === 'bis') {
+        if (!selectedPlayerData?.mainSpec) return;
 
-      const res = await fetch(`/api/bis?${params}`, {
-        method: 'DELETE',
-      });
+        const params = new URLSearchParams();
+        params.set('spec', selectedPlayerData.mainSpec);
+        params.set('phase', currentPhase);
+        params.set('slot', selectedSlot.slot);
 
-      if (res.ok) {
-        await fetchBisConfig(selectedPlayerData.mainSpec);
-        setDialogOpen(false);
+        const res = await fetch(`/api/bis?${params}`, { method: 'DELETE' });
+        if (res.ok) {
+          await fetchBisConfig(selectedPlayerData.mainSpec);
+        }
+      } else {
+        const res = await fetch(`/api/players/${selectedPlayerId}/gear?slot=${selectedSlot.slot}`, {
+          method: 'DELETE',
+        });
+        if (res.ok) {
+          await fetchCurrentGear(selectedPlayerId);
+        }
       }
+      setDialogOpen(false);
     } catch (error) {
-      console.error('Failed to clear BiS selection:', error);
+      console.error('Failed to clear slot:', error);
     }
+  };
+
+  // Export to WoWSims
+  const handleExportToWowSims = (gearType: 'current' | 'bis') => {
+    if (!selectedPlayerData) return;
+
+    const gear = gearType === 'current' ? currentGear : bisConfig;
+    const specMap: Record<string, string> = {
+      'HunterBeastMastery': 'hunter/beast_mastery',
+      'HunterMarksmanship': 'hunter/marksmanship',
+      'HunterSurvival': 'hunter/survival',
+      'MageArcane': 'mage/arcane',
+      'MageFire': 'mage/fire',
+      'MageFrost': 'mage/frost',
+      'WarlockAffliction': 'warlock/affliction',
+      'WarlockDemonology': 'warlock/demonology',
+      'WarlockDestruction': 'warlock/destruction',
+      'PriestShadow': 'priest/shadow',
+      'DruidBalance': 'druid/balance',
+      'DruidFeral': 'druid/feral',
+      'ShamanElemental': 'shaman/elemental',
+      'ShamanEnhancement': 'shaman/enhancement',
+      'RogueCombat': 'rogue/combat',
+      'RogueAssassination': 'rogue/assassination',
+      'WarriorFury': 'warrior/fury',
+      'WarriorArms': 'warrior/arms',
+      'PaladinRetribution': 'paladin/retribution',
+    };
+
+    const specPath = specMap[selectedPlayerData.mainSpec] || 'hunter/beast_mastery';
+    const wowsimsUrl = `https://wowsims.github.io/tbc/${specPath}/`;
+
+    window.open(wowsimsUrl, '_blank');
+  };
+
+  // Calculate BiS completion percentage
+  const calculateBisCompletion = () => {
+    if (bisConfig.length === 0) return 0;
+
+    let matches = 0;
+    for (const bis of bisConfig) {
+      if (!bis.item) continue;
+      const current = getCurrentGearItem(bis.slot);
+      if (current?.item?.id === bis.item.id || current?.wowheadId === bis.item.wowheadId) {
+        matches++;
+      }
+    }
+
+    return Math.round((matches / bisConfig.length) * 100);
   };
 
   if (loading) {
@@ -250,8 +362,8 @@ export default function BisListsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">BiS Lists</h1>
-            <p className="text-muted-foreground">Track Best in Slot gear progress</p>
+            <h1 className="text-2xl font-bold text-foreground">Gear Comparison</h1>
+            <p className="text-muted-foreground">Compare current gear vs BiS</p>
           </div>
         </div>
         <Card>
@@ -260,7 +372,7 @@ export default function BisListsPage() {
               <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Players Yet</h3>
               <p className="text-muted-foreground mb-4">
-                Add players to your roster first to track their BiS progress.
+                Add players to your roster first to track their gear progress.
               </p>
             </div>
           </CardContent>
@@ -269,41 +381,47 @@ export default function BisListsPage() {
     );
   }
 
-  const renderGearSlot = (slot: string, label: string, align: 'left' | 'right') => {
-    const bisItem = getBisItem(slot);
-    const item = bisItem?.item;
+  const renderGearSlot = (slot: string, label: string, context: DialogContext) => {
+    const gearItem = context === 'current' ? getCurrentGearItem(slot) : getBisItem(slot);
+    const item = context === 'current'
+      ? (gearItem as PlayerGear | null)?.item
+      : (gearItem as BisConfig | null)?.item;
+    const wowheadId = item?.wowheadId || (context === 'current' ? (gearItem as PlayerGear | null)?.wowheadId : null);
+    const itemName = item?.name || (context === 'current' ? (gearItem as PlayerGear | null)?.itemName : null);
+    const icon = item?.icon || (context === 'current' ? (gearItem as PlayerGear | null)?.icon : null);
     const slotIcon = SLOT_ICONS[slot] || 'inv_misc_questionmark';
+    const hasItem = !!wowheadId || !!item;
 
     return (
       <div
-        key={slot}
-        onClick={() => handleSlotClick(slot, label)}
-        className={`flex items-center gap-3 py-2 px-2 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}
+        key={`${context}-${slot}`}
+        onClick={() => handleSlotClick(slot, label, context)}
+        className="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
       >
-        {/* Item icon or empty slot */}
-        {item?.wowheadId ? (
+        {/* Item icon */}
+        {hasItem && wowheadId ? (
           <a
-            href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+            href={`https://www.wowhead.com/tbc/item=${wowheadId}`}
             onClick={(e) => e.preventDefault()}
-            className="relative block"
+            className="relative block flex-shrink-0"
           >
             <img
-              src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
-              alt={item.name}
-              className="w-10 h-10 rounded"
+              src={getItemIconUrl(icon || 'inv_misc_questionmark', 'medium')}
+              alt={itemName || label}
+              className="w-8 h-8 rounded"
               style={{
                 borderWidth: 2,
                 borderStyle: 'solid',
-                borderColor: ITEM_QUALITY_COLORS[item.quality] || '#1eff00',
+                borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee',
               }}
             />
           </a>
         ) : (
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             <img
               src={getItemIconUrl(slotIcon, 'medium')}
               alt={label}
-              className="w-10 h-10 rounded"
+              className="w-8 h-8 rounded"
               style={{
                 borderWidth: 2,
                 borderStyle: 'solid',
@@ -314,33 +432,45 @@ export default function BisListsPage() {
           </div>
         )}
 
-        {/* Item name and slot label */}
-        <div className={`flex-1 min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
-          {item ? (
-            <a
-              href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-              onClick={(e) => e.preventDefault()}
-              className="font-medium text-sm block truncate hover:underline"
-              style={{ color: ITEM_QUALITY_COLORS[item.quality] || '#a335ee' }}
+        {/* Item name */}
+        <div className="flex-1 min-w-0">
+          {hasItem ? (
+            <span
+              className="text-xs font-medium block truncate"
+              style={{ color: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee' }}
             >
-              {item.name}
-            </a>
+              {itemName}
+            </span>
           ) : (
-            <span className="text-sm text-muted-foreground">{label}</span>
+            <span className="text-xs text-muted-foreground">{label}</span>
           )}
         </div>
       </div>
     );
   };
 
+  const bisCompletion = calculateBisCompletion();
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">BiS Lists</h1>
-          <p className="text-muted-foreground">Track Best in Slot gear progress</p>
+          <h1 className="text-2xl font-bold text-foreground">Gear Comparison</h1>
+          <p className="text-muted-foreground">Compare current gear vs BiS</p>
         </div>
+        {selectedPlayerData && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExportToWowSims('current')}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Sim Current
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExportToWowSims('bis')}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Sim BiS
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-4">
@@ -384,9 +514,6 @@ export default function BisListsPage() {
                     <span style={{ color: CLASS_COLORS[player.class] }} className="font-medium truncate">
                       {player.name}
                     </span>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      0%
-                    </span>
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {player.mainSpec?.replace(player.class, '')}
@@ -407,19 +534,21 @@ export default function BisListsPage() {
                   <img
                     src={getSpecIconUrl(selectedPlayerData.mainSpec)}
                     alt={selectedPlayerData.mainSpec}
-                    className="w-16 h-16 rounded-lg"
+                    className="w-14 h-14 rounded-lg"
                     style={{ borderColor: CLASS_COLORS[selectedPlayerData.class], borderWidth: 3 }}
                   />
                   <div>
-                    <h2 className="text-2xl font-bold" style={{ color: CLASS_COLORS[selectedPlayerData.class] }}>
+                    <h2 className="text-xl font-bold" style={{ color: CLASS_COLORS[selectedPlayerData.class] }}>
                       {selectedPlayer}
                     </h2>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm text-muted-foreground">
                       {selectedPlayerData.mainSpec?.replace(selectedPlayerData.class, '')} {selectedPlayerData.class}
                     </p>
                   </div>
                   <div className="ml-auto text-right">
-                    <div className="text-3xl font-bold text-muted-foreground">0%</div>
+                    <div className="text-2xl font-bold" style={{ color: bisCompletion === 100 ? '#1eff00' : bisCompletion > 50 ? '#ffcc00' : '#ff6b6b' }}>
+                      {bisCompletion}%
+                    </div>
                     <p className="text-xs text-muted-foreground">BiS Complete</p>
                   </div>
                 </div>
@@ -427,118 +556,37 @@ export default function BisListsPage() {
             </Card>
           )}
 
-          {/* Gear Display - Sixty Upgrades Style */}
-          <Card>
-            <CardContent className="py-6">
-              {selectedPlayerData ? (
-                <div className="grid grid-cols-3 gap-4">
-                  {/* Left Column - Slots */}
-                  <div className="space-y-1">
-                    {LEFT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'left'))}
-                  </div>
-
-                  {/* Center - Character Display */}
-                  <div className="flex items-center justify-center">
-                    <div className="relative">
-                      {/* Character silhouette/icon */}
-                      <div
-                        className="w-48 h-64 rounded-lg flex items-center justify-center"
-                        style={{
-                          background: `linear-gradient(180deg, ${CLASS_COLORS[selectedPlayerData.class]}20 0%, transparent 100%)`,
-                          border: `2px solid ${CLASS_COLORS[selectedPlayerData.class]}40`,
-                        }}
-                      >
-                        <img
-                          src={getSpecIconUrl(selectedPlayerData.mainSpec)}
-                          alt={selectedPlayerData.mainSpec}
-                          className="w-24 h-24 rounded-full opacity-50"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column - Slots */}
-                  <div className="space-y-1">
-                    {RIGHT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'right'))}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>Select a player to view their BiS list</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Raids Table */}
+          {/* Side-by-Side Gear Comparison */}
           {selectedPlayerData && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">RAIDS</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {getAllBisItems().length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="text-left text-xs text-muted-foreground uppercase border-b border-border">
-                          <th className="pb-3 font-medium">Item</th>
-                          <th className="pb-3 font-medium">Zone</th>
-                          <th className="pb-3 font-medium">Boss</th>
-                          <th className="pb-3 font-medium text-right">Drop Chance</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border/50">
-                        {getAllBisItems().map((item) => (
-                          <tr key={item.id} className="hover:bg-muted/30">
-                            <td className="py-3">
-                              <div className="flex items-center gap-3">
-                                <a
-                                  href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  data-wowhead={`item=${item.wowheadId}&domain=tbc`}
-                                >
-                                  <img
-                                    src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
-                                    alt={item.name}
-                                    className="w-9 h-9 rounded"
-                                    style={{
-                                      borderWidth: 2,
-                                      borderStyle: 'solid',
-                                      borderColor: ITEM_QUALITY_COLORS[item.quality] || '#a335ee'
-                                    }}
-                                  />
-                                </a>
-                                <a
-                                  href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  data-wowhead={`item=${item.wowheadId}&domain=tbc`}
-                                  className="font-medium hover:underline"
-                                  style={{ color: ITEM_QUALITY_COLORS[item.quality] || '#a335ee' }}
-                                >
-                                  {item.name}
-                                </a>
-                              </div>
-                            </td>
-                            <td className="py-3 text-muted-foreground">{item.raid}</td>
-                            <td className="py-3 text-muted-foreground">{item.boss}</td>
-                            <td className="py-3 text-right text-muted-foreground">-</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Current Gear Column */}
+              <Card>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    Current Gear
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-0.5">
+                    {ALL_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'current'))}
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p className="text-sm">
-                      Click on gear slots above to configure BiS items for this spec.
-                    </p>
+                </CardContent>
+              </Card>
+
+              {/* BiS List Column */}
+              <Card>
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    BiS List
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-0.5">
+                    {ALL_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'bis'))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       </div>
@@ -547,7 +595,9 @@ export default function BisListsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Select BiS: {selectedSlot?.label}</DialogTitle>
+            <DialogTitle>
+              Select {dialogContext === 'current' ? 'Current' : 'BiS'}: {selectedSlot?.label}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex items-center gap-2">
@@ -560,7 +610,8 @@ export default function BisListsPage() {
                 className="pl-9"
               />
             </div>
-            {getBisItem(selectedSlot?.slot || '') && (
+            {((dialogContext === 'bis' && getBisItem(selectedSlot?.slot || '')) ||
+              (dialogContext === 'current' && getCurrentGearItem(selectedSlot?.slot || ''))) && (
               <Button variant="outline" size="sm" onClick={handleClearSlot}>
                 <X className="h-4 w-4 mr-1" />
                 Clear

@@ -180,9 +180,30 @@ model Player {
   bisStatus     PlayerBisStatus[]
   raidQuests    RaidQuest[]
   raidSplits    RaidSplitMember[]
+  currentGear   PlayerGear[]
 
   @@index([class])
   @@index([active])
+}
+
+model PlayerGear {
+  id            String    @id @default(cuid())
+  playerId      String
+  player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  slot          GearSlot
+  itemId        String?
+  item          Item?     @relation(fields: [itemId], references: [id])
+  wowheadId     Int?      // For items not in our DB
+  itemName      String?   // For items not in our DB
+  icon          String?   // Icon name for display
+  enchantId     Int?
+  gem1Id        Int?
+  gem2Id        Int?
+  gem3Id        Int?
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([playerId, slot])
+  @@index([playerId])
 }
 
 // ============================================
@@ -206,6 +227,7 @@ model Item {
   // Relations
   lootRecords   LootRecord[]
   bisSpecs      ItemBisSpec[]
+  playerGear    PlayerGear[]
 
   @@unique([name, raid])
   @@index([raid])
