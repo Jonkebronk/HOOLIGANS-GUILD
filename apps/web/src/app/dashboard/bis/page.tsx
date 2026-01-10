@@ -345,35 +345,52 @@ export default function BisListsPage() {
     }
   };
 
-  // Export to WoWSims
+  // Export to WoWSims - maps specs to wowsims.com URL paths
   const handleExportToWowSims = (gearType: 'current' | 'bis') => {
     if (!selectedPlayerData) return;
 
-    const gear = gearType === 'current' ? currentGear : bisConfig;
     const specMap: Record<string, string> = {
-      'HunterBeastMastery': 'hunter/beast_mastery',
-      'HunterMarksmanship': 'hunter/marksmanship',
-      'HunterSurvival': 'hunter/survival',
-      'MageArcane': 'mage/arcane',
-      'MageFire': 'mage/fire',
-      'MageFrost': 'mage/frost',
-      'WarlockAffliction': 'warlock/affliction',
-      'WarlockDemonology': 'warlock/demonology',
-      'WarlockDestruction': 'warlock/destruction',
-      'PriestShadow': 'priest/shadow',
-      'DruidBalance': 'druid/balance',
-      'DruidFeral': 'druid/feral',
-      'ShamanElemental': 'shaman/elemental',
-      'ShamanEnhancement': 'shaman/enhancement',
-      'RogueCombat': 'rogue/combat',
-      'RogueAssassination': 'rogue/assassination',
-      'WarriorFury': 'warrior/fury',
-      'WarriorArms': 'warrior/arms',
-      'PaladinRetribution': 'paladin/retribution',
+      // Druid
+      'DruidBalance': 'balance_druid',
+      'DruidFeral': 'feral_druid',
+      'DruidGuardian': 'feral_tank_druid',
+      'DruidRestoration': 'balance_druid', // No resto sim, use balance
+      // Hunter (all specs use same sim)
+      'HunterBeastMastery': 'hunter',
+      'HunterMarksmanship': 'hunter',
+      'HunterSurvival': 'hunter',
+      // Mage (all specs use same sim)
+      'MageArcane': 'mage',
+      'MageFire': 'mage',
+      'MageFrost': 'mage',
+      // Paladin
+      'PaladinRetribution': 'retribution_paladin',
+      'PaladinProtection': 'protection_paladin',
+      'PaladinHoly': 'retribution_paladin', // No holy sim
+      // Priest
+      'PriestShadow': 'shadow_priest',
+      'PriestDiscipline': 'smite_priest',
+      'PriestHoly': 'smite_priest',
+      // Rogue (all specs use same sim)
+      'RogueCombat': 'rogue',
+      'RogueAssassination': 'rogue',
+      'RogueSubtlety': 'rogue',
+      // Shaman
+      'ShamanElemental': 'elemental_shaman',
+      'ShamanEnhancement': 'enhancement_shaman',
+      'ShamanRestoration': 'elemental_shaman', // No resto sim
+      // Warlock (all specs use same sim)
+      'WarlockAffliction': 'warlock',
+      'WarlockDemonology': 'warlock',
+      'WarlockDestruction': 'warlock',
+      // Warrior
+      'WarriorArms': 'warrior',
+      'WarriorFury': 'warrior',
+      'WarriorProtection': 'protection_warrior',
     };
 
-    const specPath = specMap[selectedPlayerData.mainSpec] || 'hunter/beast_mastery';
-    const wowsimsUrl = `https://wowsims.github.io/tbc/${specPath}/`;
+    const specPath = specMap[selectedPlayerData.mainSpec] || 'hunter';
+    const wowsimsUrl = `https://wowsims.com/tbc/${specPath}/`;
 
     window.open(wowsimsUrl, '_blank');
   };
