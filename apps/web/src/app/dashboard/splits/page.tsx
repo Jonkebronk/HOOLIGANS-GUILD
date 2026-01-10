@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera } from 'lucide-react';
+import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, CopyPlus, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { getSpecIconUrl } from '@/lib/wowhead';
 
@@ -346,6 +346,29 @@ export default function RaidSplitsPage() {
     });
   };
 
+  // Duplicate 25-man to a 10-man split (first 10 players)
+  const duplicateTo10Man = (targetRaidId: string) => {
+    const mainRaid = raids.find(r => r.id === 'main-25');
+    if (!mainRaid) return;
+
+    // Get first 10 players from 25-man
+    const players25 = mainRaid.groups.flat().filter(Boolean).slice(0, 10);
+
+    setRaids(prevRaids => {
+      return prevRaids.map(raid => {
+        if (raid.id !== targetRaidId) return raid;
+
+        // Create new 10-man groups (2 groups of 5)
+        const newGroups: RaidGroups = [
+          players25.slice(0, 5).concat(Array(5 - Math.min(5, players25.length)).fill(null)),
+          players25.slice(5, 10).concat(Array(5 - Math.max(0, players25.length - 5)).fill(null)),
+        ];
+
+        return { ...raid, groups: newGroups };
+      });
+    });
+  };
+
   // Update raid name
   const updateRaidName = (raidId: string, name: string) => {
     setRaids(prevRaids => prevRaids.map(raid =>
@@ -446,7 +469,7 @@ export default function RaidSplitsPage() {
     return (
       <div
         key={slotKey}
-        className={`h-7 flex items-center transition-all cursor-pointer ${
+        className={`h-6 flex items-center transition-all cursor-pointer ${
           slot ? '' : 'border border-[#333]'
         } ${isDragOver ? 'ring-2 ring-white/50' : ''}`}
         style={{
@@ -458,18 +481,26 @@ export default function RaidSplitsPage() {
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, raidId, groupIndex, slotIndex)}
         onDragEnd={handleDragEnd}
-        onClick={() => slot && removePlayerFromSlot(raidId, groupIndex, slotIndex)}
       >
         {slot && (
           <>
             <img
               src={getSpecIconUrl(slot.mainSpec)}
               alt={slot.mainSpec}
-              className="w-6 h-6 pointer-events-none"
+              className="w-5 h-5 pointer-events-none"
             />
-            <span className="flex-1 text-xs font-medium text-black px-1 truncate pointer-events-none">
-              {slot.name}
+            <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">
+              {getSpecName(slot.mainSpec, slot.class)}
             </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                removePlayerFromSlot(raidId, groupIndex, slotIndex);
+              }}
+              className="px-1 text-red-800 hover:text-red-600"
+            >
+              <X className="w-3 h-3" />
+            </button>
           </>
         )}
       </div>
@@ -481,41 +512,53 @@ export default function RaidSplitsPage() {
     const totalAssigned = getRaidCount(raid.id);
     const maxPlayers = getRaidMax(raid.id);
     const is25Man = raid.size === '25';
+    const is10Man = raid.size === '10';
 
     return (
-      <div key={raid.id} className={compact ? '' : 'mb-6'}>
+      <div key={raid.id} className={compact ? '' : 'mb-4'}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <Input
               value={raid.name}
               onChange={(e) => updateRaidName(raid.id, e.target.value)}
-              className="w-36 h-7 text-sm bg-transparent border-none text-white font-medium hover:bg-white/10 focus:bg-white/10 px-1"
+              className="w-28 h-6 text-xs bg-transparent border-none text-white font-medium hover:bg-white/10 focus:bg-white/10 px-1"
             />
             <span className="text-xs text-gray-400">{totalAssigned}/{maxPlayers}</span>
           </div>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10">
+          <div className="flex gap-0.5">
+            {is10Man && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-5 w-5 text-green-500 hover:text-green-400 hover:bg-white/10"
+                onClick={() => duplicateTo10Man(raid.id)}
+                title="Copy from 25-man"
+              >
+                <CopyPlus className="h-3 w-3" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white hover:bg-white/10">
               <Copy className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => clearRaid(raid.id)}>
+            <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => clearRaid(raid.id)}>
               <RotateCcw className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white hover:bg-white/10">
               <Camera className="h-3 w-3" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white hover:bg-white/10">
               <Download className="h-3 w-3" />
             </Button>
           </div>
         </div>
 
         {/* Groups Grid */}
-        <div className={`grid gap-3 ${is25Man ? 'grid-cols-5' : 'grid-cols-2'}`}>
+        <div className={`grid ${is25Man ? 'grid-cols-5 gap-2' : 'grid-cols-2 gap-1'}`}>
           {raid.groups.map((group, groupIndex) => (
-            <div key={groupIndex}>
-              <div className="text-xs text-gray-500 mb-1">Group {groupIndex + 1}</div>
-              <div className="space-y-0.5">
+            <div key={groupIndex} className={is25Man ? 'max-w-[180px]' : 'max-w-[140px]'}>
+              <div className="text-[10px] text-gray-500 mb-0.5">Group {groupIndex + 1}</div>
+              <div className="space-y-px">
                 {group.map((slot, slotIndex) => renderPlayerSlot(slot, raid.id, groupIndex, slotIndex))}
               </div>
             </div>
@@ -625,7 +668,7 @@ export default function RaidSplitsPage() {
           <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
           <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-8">
           {splitRaids.map(raid => (
             <div key={raid.id} className="flex-1">
               {renderRaidSection(raid, true)}
@@ -654,20 +697,24 @@ export default function RaidSplitsPage() {
               {roleGroupedPlayers.Tank.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 text-sm">No players</div>
               ) : (
-                roleGroupedPlayers.Tank.map((player, index) => (
+                roleGroupedPlayers.Tank.map((player) => (
                   <div
                     key={player.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="px-3 py-2 text-center border-b border-[#333] last:border-b-0 text-sm font-medium cursor-grab active:cursor-grabbing hover:bg-white/5"
-                    style={{
-                      color: WOWSIMS_CLASS_COLORS[player.class],
-                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                    }}
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+                    style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
-                    {getSpecName(player.mainSpec, player.class)}
+                    <img
+                      src={getSpecIconUrl(player.mainSpec)}
+                      alt={player.mainSpec}
+                      className="w-6 h-6 pointer-events-none"
+                    />
+                    <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">
+                      {player.name}
+                    </span>
                   </div>
                 ))
               )}
@@ -694,20 +741,24 @@ export default function RaidSplitsPage() {
               {roleGroupedPlayers.Healer.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 text-sm">No players</div>
               ) : (
-                roleGroupedPlayers.Healer.map((player, index) => (
+                roleGroupedPlayers.Healer.map((player) => (
                   <div
                     key={player.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="px-3 py-2 text-center border-b border-[#333] last:border-b-0 text-sm font-medium cursor-grab active:cursor-grabbing hover:bg-white/5"
-                    style={{
-                      color: WOWSIMS_CLASS_COLORS[player.class],
-                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                    }}
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+                    style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
-                    {getSpecName(player.mainSpec, player.class)}
+                    <img
+                      src={getSpecIconUrl(player.mainSpec)}
+                      alt={player.mainSpec}
+                      className="w-6 h-6 pointer-events-none"
+                    />
+                    <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">
+                      {player.name}
+                    </span>
                   </div>
                 ))
               )}
@@ -734,20 +785,24 @@ export default function RaidSplitsPage() {
               {roleGroupedPlayers.Melee.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 text-sm">No players</div>
               ) : (
-                roleGroupedPlayers.Melee.map((player, index) => (
+                roleGroupedPlayers.Melee.map((player) => (
                   <div
                     key={player.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="px-3 py-2 text-center border-b border-[#333] last:border-b-0 text-sm font-medium cursor-grab active:cursor-grabbing hover:bg-white/5"
-                    style={{
-                      color: WOWSIMS_CLASS_COLORS[player.class],
-                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                    }}
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+                    style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
-                    {getSpecName(player.mainSpec, player.class)}
+                    <img
+                      src={getSpecIconUrl(player.mainSpec)}
+                      alt={player.mainSpec}
+                      className="w-6 h-6 pointer-events-none"
+                    />
+                    <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">
+                      {player.name}
+                    </span>
                   </div>
                 ))
               )}
@@ -774,20 +829,24 @@ export default function RaidSplitsPage() {
               {roleGroupedPlayers.Ranged.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 text-sm">No players</div>
               ) : (
-                roleGroupedPlayers.Ranged.map((player, index) => (
+                roleGroupedPlayers.Ranged.map((player) => (
                   <div
                     key={player.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="px-3 py-2 text-center border-b border-[#333] last:border-b-0 text-sm font-medium cursor-grab active:cursor-grabbing hover:bg-white/5"
-                    style={{
-                      color: WOWSIMS_CLASS_COLORS[player.class],
-                      backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                    }}
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+                    style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
-                    {getSpecName(player.mainSpec, player.class)}
+                    <img
+                      src={getSpecIconUrl(player.mainSpec)}
+                      alt={player.mainSpec}
+                      className="w-6 h-6 pointer-events-none"
+                    />
+                    <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">
+                      {player.name}
+                    </span>
                   </div>
                 ))
               )}
