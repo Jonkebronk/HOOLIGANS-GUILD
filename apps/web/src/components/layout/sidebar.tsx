@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -38,9 +39,13 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex h-16 shrink-0 items-center px-6 border-b border-border">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">H</span>
-          </div>
+          <Image
+            src="/images/hlg-icon.png"
+            alt="HOOLIGANS"
+            width={32}
+            height={32}
+            className="rounded-lg"
+          />
           <div>
             <span className="font-bold text-foreground">HOOLIGANS</span>
             <p className="text-xs text-muted-foreground">Loot Council</p>
