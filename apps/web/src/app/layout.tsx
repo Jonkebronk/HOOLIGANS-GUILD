@@ -22,7 +22,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <script src="https://wow.zamimg.com/js/tooltips.js" async />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `const whTooltips = {colorLinks: true, iconizeLinks: true, renameLinks: false, dataEnv: 5};`,
+          }}
+        />
+        <script src="https://wow.zamimg.com/js/tooltips.js" />
       </head>
       <body className={inter.className}>
         <SessionProvider>
