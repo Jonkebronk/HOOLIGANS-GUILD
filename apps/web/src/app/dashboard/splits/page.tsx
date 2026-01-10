@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users, X, Camera, Copy, RotateCcw, Download, Send, Plus, Loader2 } from 'lucide-react';
+import { Users, X, Camera, Copy, RotateCcw, Download, Send, Plus, Loader2, Upload, FileText } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl } from '@/lib/wowhead';
 
@@ -30,6 +31,15 @@ type Player = {
   class: string;
   mainSpec: string;
   role: string;
+  discordId?: string;
+};
+
+type RaidHelperSignup = {
+  name: string;
+  discordId?: string;
+  class?: string;
+  spec?: string;
+  role?: string;
 };
 
 type GroupSlot = Player | null;
@@ -43,6 +53,14 @@ export default function RaidSplitsPage() {
   const [isDiscordDialogOpen, setIsDiscordDialogOpen] = useState(false);
   const [discordChannel, setDiscordChannel] = useState('');
   const [messageTitle, setMessageTitle] = useState('');
+
+  // Raid-Helper import state
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importMode, setImportMode] = useState<'event' | 'paste'>('event');
+  const [eventId, setEventId] = useState('');
+  const [pasteText, setPasteText] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importedSignups, setImportedSignups] = useState<RaidHelperSignup[]>([]);
 
   const numGroups = raidSize === '25' ? 5 : 2;
   const slotsPerGroup = 5;
@@ -104,6 +122,77 @@ export default function RaidSplitsPage() {
   const openDiscordDialog = () => {
     setMessageTitle(`${raidName} - Raid Composition`);
     setIsDiscordDialogOpen(true);
+  };
+
+  const handleImportFromRaidHelper = async () => {
+    setIsImporting(true);
+    try {
+      if (importMode === 'event' && eventId) {
+        // Extract event ID from URL if full URL is pasted
+        let cleanEventId = eventId;
+        if (eventId.includes('/')) {
+          const match = eventId.match(/events?\/(\d+)/);
+          if (match) cleanEventId = match[1];
+        }
+
+        const res = await fetch(`/api/raid-helper?eventId=${cleanEventId}`);
+        if (res.ok) {
+          const event = await res.json();
+          // Transform signups from Raid-Helper format
+          if (event.signUps) {
+            const signups: RaidHelperSignup[] = event.signUps.map((s: Record<string, unknown>) => ({
+              name: s.name || s.specName || 'Unknown',
+              discordId: s.odUserId || s.userId,
+              class: s.className,
+              spec: s.specName,
+              role: s.role,
+            }));
+            setImportedSignups(signups);
+          }
+        } else {
+          alert('Failed to fetch event. Check the event ID.');
+        }
+      } else if (importMode === 'paste' && pasteText) {
+        const res = await fetch('/api/raid-helper', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'parse', text: pasteText }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setImportedSignups(data.signups || []);
+        }
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('Failed to import signups');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const applyImportedSignups = () => {
+    // Create temporary players from imported signups
+    const tempPlayers: Player[] = importedSignups.map((signup, index) => ({
+      id: `imported-${index}`,
+      name: signup.name,
+      class: signup.class || 'Unknown',
+      mainSpec: signup.spec || signup.class || 'Unknown',
+      role: signup.role || 'DPS',
+      discordId: signup.discordId,
+    }));
+
+    // Add to available players (merge with existing)
+    setPlayers(prev => {
+      const existingNames = new Set(prev.map(p => p.name.toLowerCase()));
+      const newPlayers = tempPlayers.filter(p => !existingNames.has(p.name.toLowerCase()));
+      return [...prev, ...newPlayers];
+    });
+
+    setIsImportDialogOpen(false);
+    setImportedSignups([]);
+    setEventId('');
+    setPasteText('');
   };
 
   if (loading) {
@@ -226,9 +315,16 @@ export default function RaidSplitsPage() {
         <Card className="lg:col-span-1">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Available Characters</CardTitle>
-              <span className="text-sm text-muted-foreground">{unassignedPlayers.length} available</span>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Available Characters
+              </CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
+                <Upload className="h-4 w-4 mr-1" />
+                Import
+              </Button>
             </div>
+            <span className="text-sm text-muted-foreground">{unassignedPlayers.length} available</span>
           </CardHeader>
           <CardContent className="max-h-[600px] overflow-y-auto">
             <div className="space-y-0.5">
@@ -302,6 +398,116 @@ export default function RaidSplitsPage() {
             <Button disabled={!discordChannel}>
               <Send className="h-4 w-4 mr-2" />Send Screenshot
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Raid-Helper Import Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Import from Raid-Helper
+            </DialogTitle>
+            <DialogDescription>
+              Import signups from a Raid-Helper event or paste signup text from Discord.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex gap-2">
+              <Button
+                variant={importMode === 'event' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setImportMode('event')}
+              >
+                Event ID
+              </Button>
+              <Button
+                variant={importMode === 'paste' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setImportMode('paste')}
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                Paste Text
+              </Button>
+            </div>
+
+            {importMode === 'event' ? (
+              <div className="space-y-2">
+                <Label>Raid-Helper Event ID or URL</Label>
+                <Input
+                  value={eventId}
+                  onChange={(e) => setEventId(e.target.value)}
+                  placeholder="e.g., 123456789 or full event URL"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Find the event ID in the Raid-Helper message or dashboard URL
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Paste Raid-Helper Signups</Label>
+                <Textarea
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  placeholder="Paste the signup list from Discord here..."
+                  className="min-h-[150px] font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Copy the signup list from the Raid-Helper Discord message
+                </p>
+              </div>
+            )}
+
+            {importedSignups.length > 0 && (
+              <div className="space-y-2">
+                <Label>Preview ({importedSignups.length} signups)</Label>
+                <div className="max-h-[150px] overflow-y-auto border rounded-md p-2 space-y-1">
+                  {importedSignups.slice(0, 10).map((signup, i) => (
+                    <div key={i} className="text-sm flex items-center gap-2">
+                      <span className="font-medium">{signup.name}</span>
+                      {signup.class && (
+                        <span className="text-xs text-muted-foreground">
+                          {signup.class} {signup.spec}
+                        </span>
+                      )}
+                      {signup.discordId && (
+                        <span className="text-xs text-green-500">✓ Discord ID</span>
+                      )}
+                    </div>
+                  ))}
+                  {importedSignups.length > 10 && (
+                    <div className="text-xs text-muted-foreground">
+                      ...and {importedSignups.length - 10} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+              Cancel
+            </Button>
+            {importedSignups.length > 0 ? (
+              <Button onClick={applyImportedSignups}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add {importedSignups.length} Players
+              </Button>
+            ) : (
+              <Button
+                onClick={handleImportFromRaidHelper}
+                disabled={isImporting || (importMode === 'event' ? !eventId : !pasteText)}
+              >
+                {isImporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {isImporting ? 'Importing...' : 'Fetch Signups'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

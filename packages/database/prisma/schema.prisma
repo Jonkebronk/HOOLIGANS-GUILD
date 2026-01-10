@@ -171,6 +171,7 @@ model Player {
   roleSubtype   RoleSubtype
   notes         String?   // e.g., "BiS wep P1-2", "pass on crafting"
   active        Boolean   @default(true)
+  discordId     String?   // Discord user ID for @mentions
   raidTeam      Int?      // 1, 2, or 3 for 10-man splits
   joinedDate    DateTime  @default(now())
   createdAt     DateTime  @default(now())
