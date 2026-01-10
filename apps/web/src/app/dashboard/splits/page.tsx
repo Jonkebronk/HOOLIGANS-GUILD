@@ -181,16 +181,20 @@ export default function RaidSplitsPage() {
                       {group.map((slot, slotIndex) => (
                         <div
                           key={slotIndex}
-                          className={`flex items-center gap-2 p-2 rounded-lg border ${
-                            slot ? 'bg-muted/50 border-border' : 'border-dashed border-muted-foreground/30'
+                          className={`flex items-center gap-2 p-1.5 rounded-md ${
+                            slot ? 'border border-border' : 'border border-dashed border-muted-foreground/30'
                           }`}
+                          style={slot ? {
+                            background: `linear-gradient(90deg, ${CLASS_COLORS[slot.class]}25 0%, transparent 100%)`,
+                            borderLeft: `3px solid ${CLASS_COLORS[slot.class]}`,
+                          } : undefined}
                         >
                           {slot ? (
                             <>
                               <img
                                 src={getSpecIconUrl(slot.mainSpec)}
                                 alt={slot.mainSpec}
-                                className="w-6 h-6 rounded"
+                                className="w-7 h-7 rounded"
                               />
                               <span
                                 className="flex-1 text-sm font-medium truncate"
@@ -200,13 +204,13 @@ export default function RaidSplitsPage() {
                               </span>
                               <button
                                 onClick={() => removePlayerFromGroup(groupIndex, slotIndex)}
-                                className="text-red-500 hover:text-red-400"
+                                className="text-red-500 hover:text-red-400 p-0.5"
                               >
                                 <X className="h-4 w-4" />
                               </button>
                             </>
                           ) : (
-                            <span className="text-sm text-muted-foreground/50 w-full text-center">Empty</span>
+                            <span className="text-sm text-muted-foreground/50 w-full text-center py-1">Empty</span>
                           )}
                         </div>
                       ))}
@@ -227,7 +231,7 @@ export default function RaidSplitsPage() {
             </div>
           </CardHeader>
           <CardContent className="max-h-[600px] overflow-y-auto">
-            <div className="grid grid-cols-2 gap-1">
+            <div className="space-y-1">
               {unassignedPlayers.map((player) => (
                 <button
                   key={player.id}
@@ -237,12 +241,12 @@ export default function RaidSplitsPage() {
                       addPlayerToGroup(groupWithSpace, player);
                     }
                   }}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 text-left"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 text-left w-full"
                 >
                   <img
                     src={getSpecIconUrl(player.mainSpec)}
                     alt={player.mainSpec}
-                    className="w-6 h-6 rounded"
+                    className="w-8 h-8 rounded"
                   />
                   <div className="flex-1 min-w-0">
                     <span
@@ -251,8 +255,8 @@ export default function RaidSplitsPage() {
                     >
                       {player.name}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {player.mainSpec?.replace(player.class, '')}
+                    <span className="text-xs text-muted-foreground truncate block">
+                      {player.mainSpec?.replace(player.class, '').trim()}
                     </span>
                   </div>
                 </button>
