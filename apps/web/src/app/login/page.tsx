@@ -21,56 +21,71 @@ export default async function LoginPage({
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
-      {/* Background Image */}
+      {/* Background Image - Dark Portal */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/login-bg.png"
-          alt="Big League Hooligans"
+          src="/images/login-bg.jpg"
+          alt="The Dark Portal"
           fill
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-black/40" />
       </div>
 
-      {/* Login Card */}
-      <Card className="relative z-10 w-full max-w-md bg-background/95 backdrop-blur-sm border-border/50">
-        <CardHeader className="text-center">
-          <CardDescription className="text-base">
-            Sign in to access the Loot Council platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-              {error === 'OAuthSignin' && 'Error starting the sign in process.'}
-              {error === 'OAuthCallback' && 'Error during the OAuth callback.'}
-              {error === 'OAuthAccountNotLinked' && 'This account is linked to another sign in method.'}
-              {error === 'default' && 'An error occurred during sign in.'}
-              {!['OAuthSignin', 'OAuthCallback', 'OAuthAccountNotLinked', 'default'].includes(error) && error}
-            </div>
-          )}
+      {/* Login Content */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* HLG Icon */}
+        <div className="mb-6">
+          <Image
+            src="/images/hlg-icon.png"
+            alt="HOOLIGANS"
+            width={120}
+            height={120}
+            className="drop-shadow-2xl"
+            style={{ filter: 'brightness(0)' }}
+          />
+        </div>
 
-          <form
-            action={async () => {
-              'use server';
-              await signIn('discord', { redirectTo: callbackUrl });
-            }}
-          >
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white font-medium transition-colors"
+        {/* Login Card */}
+        <Card className="w-full max-w-md bg-black/80 backdrop-blur-sm border-border/30">
+          <CardHeader className="text-center pb-2">
+            <CardDescription className="text-base text-gray-300">
+              Sign in to access the Loot Council platform
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                {error === 'OAuthSignin' && 'Error starting the sign in process.'}
+                {error === 'OAuthCallback' && 'Error during the OAuth callback.'}
+                {error === 'OAuthAccountNotLinked' && 'This account is linked to another sign in method.'}
+                {error === 'default' && 'An error occurred during sign in.'}
+                {!['OAuthSignin', 'OAuthCallback', 'OAuthAccountNotLinked', 'default'].includes(error) && error}
+              </div>
+            )}
+
+            <form
+              action={async () => {
+                'use server';
+                await signIn('discord', { redirectTo: callbackUrl });
+              }}
             >
-              <DiscordIcon className="h-5 w-5" />
-              Sign in with Discord
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white font-medium transition-colors"
+              >
+                <DiscordIcon className="h-5 w-5" />
+                Sign in with Discord
+              </button>
+            </form>
 
-          <p className="text-center text-xs text-muted-foreground">
-            By signing in, you agree to our guild rules and loot council decisions.
-          </p>
-        </CardContent>
-      </Card>
+            <p className="text-center text-xs text-gray-500">
+              By signing in, you agree to our guild rules and loot council decisions.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
