@@ -456,21 +456,68 @@ export default function BisListsPage() {
     setImportDialogOpen(true);
   };
 
-  // Import gear from JSON
+  // Map WoWSims slot names to our slot names
+  const mapWowSimsSlot = (slot: string): string | null => {
+    const slotMap: Record<string, string> = {
+      'head': 'Head',
+      'neck': 'Neck',
+      'shoulder': 'Shoulder',
+      'back': 'Back',
+      'chest': 'Chest',
+      'wrist': 'Wrist',
+      'hands': 'Hands',
+      'waist': 'Waist',
+      'legs': 'Legs',
+      'feet': 'Feet',
+      'finger1': 'Finger1',
+      'finger2': 'Finger2',
+      'trinket1': 'Trinket1',
+      'trinket2': 'Trinket2',
+      'mainHand': 'MainHand',
+      'offHand': 'OffHand',
+      'ranged': 'Ranged',
+    };
+    return slotMap[slot] || slot;
+  };
+
+  // Import gear from JSON (supports our format and WoWSims addon format)
   const handleImportJson = async () => {
     if (!selectedPlayerId || !importJson) return;
 
     setImportLoading(true);
     try {
       const data = JSON.parse(importJson);
-      const gearItems = data.gear || data.equipment || [];
+      let gearItems: Array<{ slot: string; wowheadId: number; name?: string; icon?: string }> = [];
 
+      // Check for WoWSims addon format (has "equipment" object with slot keys)
+      if (data.equipment && typeof data.equipment === 'object') {
+        // WoWSims addon format: { equipment: { head: { id: 123 }, neck: { id: 456 }, ... } }
+        for (const [slotKey, itemData] of Object.entries(data.equipment)) {
+          const item = itemData as { id?: number; enchant?: number; gems?: number[] };
+          if (item && item.id) {
+            const mappedSlot = mapWowSimsSlot(slotKey);
+            if (mappedSlot) {
+              gearItems.push({
+                slot: mappedSlot,
+                wowheadId: item.id,
+              });
+            }
+          }
+        }
+      } else if (data.gear && Array.isArray(data.gear)) {
+        // Our format: { gear: [{ slot: "Head", wowheadId: 123, name: "Item" }, ...] }
+        gearItems = data.gear;
+      } else if (Array.isArray(data)) {
+        // Simple array format
+        gearItems = data;
+      }
+
+      let importedCount = 0;
       for (const item of gearItems) {
-        if (!item.wowheadId && !item.id) continue;
+        if (!item.wowheadId) continue;
 
         const slot = item.slot;
-        const wowheadId = item.wowheadId || item.id;
-        const itemName = item.name || `Item ${wowheadId}`;
+        if (!slot) continue;
 
         if (importTarget === 'current') {
           await fetch(`/api/players/${selectedPlayerId}/gear`, {
@@ -478,13 +525,13 @@ export default function BisListsPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               slot,
-              wowheadId,
-              itemName,
+              wowheadId: item.wowheadId,
+              itemName: item.name || `Item ${item.wowheadId}`,
               icon: item.icon,
             }),
           });
+          importedCount++;
         }
-        // BiS import would need different API endpoint
       }
 
       // Refresh data
@@ -494,6 +541,7 @@ export default function BisListsPage() {
 
       setImportDialogOpen(false);
       setImportJson('');
+      alert(`Imported ${importedCount} items successfully!`);
     } catch (error) {
       console.error('Failed to import:', error);
       alert('Failed to import. Please check the JSON format.');
@@ -940,7 +988,7 @@ export default function BisListsPage() {
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                Paste exported JSON from this app or WoWSims format
+                Supports: This app export, WoWSims Exporter addon JSON
               </p>
             </div>
           </div>
