@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import Image from 'next/image';
+import { signIn } from '@/lib/auth';
 
 export default function Home() {
   return (
@@ -17,12 +17,19 @@ export default function Home() {
       </div>
 
       <div className="relative z-10 text-center">
-        <Link
-          href="/login"
-          className="px-8 py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-lg font-medium transition-colors text-lg shadow-lg"
+        <form
+          action={async () => {
+            'use server';
+            await signIn('discord', { redirectTo: '/dashboard' });
+          }}
         >
-          Sign in with Discord
-        </Link>
+          <button
+            type="submit"
+            className="px-8 py-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-lg font-medium transition-colors text-lg shadow-lg"
+          >
+            Sign in with Discord
+          </button>
+        </form>
       </div>
     </div>
   );
