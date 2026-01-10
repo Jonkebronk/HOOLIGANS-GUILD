@@ -577,15 +577,12 @@ export default function ItemsPage() {
                       />
                     </a>
                     <div className="flex-1 min-w-0">
-                      <a
-                        href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium hover:underline truncate block"
+                      <span
+                        className="font-medium truncate block"
                         style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                       >
                         {item.name}
-                      </a>
+                      </span>
                     </div>
                     <div className="hidden sm:block w-24 text-sm text-muted-foreground">
                       {item.slot}
