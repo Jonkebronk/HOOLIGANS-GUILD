@@ -109,7 +109,15 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6 min-h-screen -m-6 p-6"
+      style={{
+        backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url(/images/login-bg.png)`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground">Welcome back! Here is your guild overview.</p>
