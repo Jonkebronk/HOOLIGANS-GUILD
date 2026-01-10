@@ -32,33 +32,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
-    async signIn({ user, account, profile }) {
-      if (account?.provider === 'discord' && profile) {
-        // Update Discord-specific fields
+  },
+  events: {
+    async linkAccount({ user, account, profile }) {
+      if (account.provider === 'discord' && profile) {
         const discordProfile = profile as {
           id: string;
           username: string;
-          discriminator: string;
-          avatar: string | null;
         };
-
-        await prisma.user.upsert({
-          where: { id: user.id! },
-          update: {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
             discordId: discordProfile.id,
-            discordName: `${discordProfile.username}`,
-          },
-          create: {
-            id: user.id!,
-            discordId: discordProfile.id,
-            discordName: `${discordProfile.username}`,
-            email: user.email,
-            name: user.name,
-            image: user.image,
+            discordName: discordProfile.username,
           },
         });
       }
-      return true;
     },
   },
   pages: {
