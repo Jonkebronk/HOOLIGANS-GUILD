@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2 } from 'lucide-react';
 import { RAIDS, GEAR_SLOTS } from '@hooligans/shared';
-import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS } from '@/lib/wowhead';
+import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 
 type Item = {
   id: string;
@@ -34,10 +34,16 @@ type Item = {
   phase: string;
   wowheadId: number;
   icon?: string;
+  quality: number;
   bisSpecs: { id: string; spec: string }[];
 };
 
 const PHASES = ['P1', 'P2', 'P3', 'P4', 'P5'];
+const QUALITIES = [
+  { value: '3', label: 'Rare (Blue)', color: ITEM_QUALITY_COLORS[3] },
+  { value: '4', label: 'Epic (Purple)', color: ITEM_QUALITY_COLORS[4] },
+  { value: '5', label: 'Legendary (Orange)', color: ITEM_QUALITY_COLORS[5] },
+];
 
 export default function ItemsPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -57,6 +63,7 @@ export default function ItemsPage() {
     boss: '',
     phase: '',
     wowheadId: '',
+    quality: '4', // Default to epic
   });
 
   useEffect(() => {
@@ -96,13 +103,14 @@ export default function ItemsPage() {
           raid: newItem.raid,
           boss: newItem.boss || null,
           phase: newItem.phase,
+          quality: parseInt(newItem.quality),
         }),
       });
 
       if (res.ok) {
         const item = await res.json();
         setItems([...items, item]);
-        setNewItem({ name: '', slot: '', raid: '', boss: '', phase: '', wowheadId: '' });
+        setNewItem({ name: '', slot: '', raid: '', boss: '', phase: '', wowheadId: '', quality: '4' });
         setIsAddDialogOpen(false);
       }
     } catch (error) {
@@ -233,16 +241,31 @@ export default function ItemsPage() {
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="raid">Raid</Label>
-                  <Select value={newItem.raid} onValueChange={(value) => setNewItem({ ...newItem, raid: value })}>
-                    <SelectTrigger><SelectValue placeholder="Select raid" /></SelectTrigger>
-                    <SelectContent>
-                      {RAIDS.map((raid) => (
-                        <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="raid">Raid</Label>
+                    <Select value={newItem.raid} onValueChange={(value) => setNewItem({ ...newItem, raid: value })}>
+                      <SelectTrigger><SelectValue placeholder="Select raid" /></SelectTrigger>
+                      <SelectContent>
+                        {RAIDS.map((raid) => (
+                          <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quality">Quality</Label>
+                    <Select value={newItem.quality} onValueChange={(value) => setNewItem({ ...newItem, quality: value })}>
+                      <SelectTrigger><SelectValue placeholder="Select quality" /></SelectTrigger>
+                      <SelectContent>
+                        {QUALITIES.map((q) => (
+                          <SelectItem key={q.value} value={q.value}>
+                            <span style={{ color: q.color }}>{q.label}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -367,7 +390,7 @@ export default function ItemsPage() {
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredItems.map((item) => (
-              <Card key={item.id} className="hover:border-purple-500/50 transition-colors">
+              <Card key={item.id} className="hover:opacity-80 transition-opacity" style={{ borderColor: `${ITEM_QUALITY_COLORS[item.quality]}40` }}>
                 <CardContent className="pt-4">
                   <div className="flex items-start gap-3">
                     <a
@@ -379,7 +402,8 @@ export default function ItemsPage() {
                       <img
                         src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'large')}
                         alt={item.name}
-                        className="w-12 h-12 rounded border-2 border-purple-500"
+                        className="w-12 h-12 rounded"
+                        style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                       />
                     </a>
                     <div className="flex-1 min-w-0">
@@ -388,7 +412,8 @@ export default function ItemsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         data-wowhead={`item=${item.wowheadId}&domain=tbc`}
-                        className="font-semibold text-purple-400 hover:underline truncate block"
+                        className="font-semibold hover:underline truncate block"
+                        style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                       >
                         {item.name}
                       </a>

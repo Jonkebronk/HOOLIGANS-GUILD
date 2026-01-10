@@ -1,58 +1,113 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Sword, Calendar, TrendingUp } from 'lucide-react';
+import { Users, Sword, Calendar, TrendingUp, Loader2 } from 'lucide-react';
+import { CLASS_COLORS } from '@hooligans/shared';
+import { getItemIconUrl, ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
 
-const stats = [
-  {
-    name: 'Active Raiders',
-    value: '25',
-    description: '+2 this month',
-    icon: Users,
-    color: 'text-primary',
-  },
-  {
-    name: 'Items Distributed',
-    value: '142',
-    description: 'This phase',
-    icon: Sword,
-    color: 'text-quality-epic',
-  },
-  {
-    name: 'Avg Attendance',
-    value: '94%',
-    description: 'Last 30 days',
-    icon: Calendar,
-    color: 'text-accent',
-  },
-  {
-    name: 'BiS Completion',
-    value: '67%',
-    description: 'Guild average',
-    icon: TrendingUp,
-    color: 'text-wow-hunter',
-  },
-];
+type LootRecord = {
+  id: string;
+  lootDate: string;
+  response: string;
+  item: {
+    id: string;
+    name: string;
+    wowheadId: number;
+    icon?: string;
+    quality: number;
+  };
+  player: {
+    id: string;
+    name: string;
+    class: string;
+  };
+};
 
-const recentLoot = [
-  { item: 'Warglaive of Azzinoth', player: 'Angrypickle', wowClass: 'Warrior', response: 'BiS', date: '2025-01-10' },
-  { item: 'Skull of Guldan', player: 'Sulu', wowClass: 'Mage', response: 'BiS', date: '2025-01-10' },
-  { item: 'Bulwark of Azzinoth', player: 'Shredd', wowClass: 'Paladin', response: 'BiS', date: '2025-01-09' },
-  { item: 'Memento of Tyrande', player: 'Smiker', wowClass: 'Druid', response: 'Greater Upgrade', date: '2025-01-09' },
-  { item: 'Madness of the Betrayer', player: 'Tlx', wowClass: 'Priest', response: 'BiS', date: '2025-01-08' },
-];
+type Player = {
+  id: string;
+  name: string;
+  class: string;
+};
 
-const classColors: Record<string, string> = {
-  Druid: 'text-wow-druid',
-  Hunter: 'text-wow-hunter',
-  Mage: 'text-wow-mage',
-  Paladin: 'text-wow-paladin',
-  Priest: 'text-wow-priest',
-  Rogue: 'text-wow-rogue',
-  Shaman: 'text-wow-shaman',
-  Warlock: 'text-wow-warlock',
-  Warrior: 'text-wow-warrior',
+const RESPONSE_LABELS: Record<string, string> = {
+  BiS: 'BiS',
+  GreaterUpgrade: 'Greater Upgrade',
+  MinorUpgrade: 'Minor Upgrade',
+  Offspec: 'Offspec',
+  PvP: 'PvP',
+  Disenchant: 'Disenchant',
 };
 
 export default function DashboardPage() {
+  const [recentLoot, setRecentLoot] = useState<LootRecord[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([fetchRecentLoot(), fetchPlayers()]).finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    refreshWowheadTooltips();
+  }, [recentLoot]);
+
+  const fetchRecentLoot = async () => {
+    try {
+      const res = await fetch('/api/loot');
+      if (res.ok) {
+        const data = await res.json();
+        // Get the 5 most recent
+        setRecentLoot(data.slice(0, 5));
+      }
+    } catch (error) {
+      console.error('Failed to fetch loot:', error);
+    }
+  };
+
+  const fetchPlayers = async () => {
+    try {
+      const res = await fetch('/api/players');
+      if (res.ok) {
+        const data = await res.json();
+        setPlayers(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch players:', error);
+    }
+  };
+
+  const stats = [
+    {
+      name: 'Active Raiders',
+      value: players.length.toString(),
+      description: 'on roster',
+      icon: Users,
+      color: 'text-primary',
+    },
+    {
+      name: 'Items Distributed',
+      value: recentLoot.length > 0 ? recentLoot.length.toString() : '0',
+      description: 'recent items',
+      icon: Sword,
+      color: 'text-quality-epic',
+    },
+    {
+      name: 'Avg Attendance',
+      value: '0%',
+      description: 'Last 30 days',
+      icon: Calendar,
+      color: 'text-accent',
+    },
+    {
+      name: 'BiS Completion',
+      value: '0%',
+      description: 'Guild average',
+      icon: TrendingUp,
+      color: 'text-wow-hunter',
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -84,23 +139,62 @@ export default function DashboardPage() {
             <CardDescription>Latest items distributed by the loot council</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentLoot.map((loot, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-quality-epic">{loot.item}</p>
-                    <p className="text-sm">
-                      <span className={classColors[loot.wowClass]}>{loot.player}</span>
-                      <span className="text-muted-foreground"> - {loot.response}</span>
-                    </p>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : recentLoot.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No loot recorded yet
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentLoot.map((loot) => (
+                  <div
+                    key={loot.id}
+                    className="flex items-center gap-3 py-2 border-b border-border last:border-0"
+                  >
+                    {/* Item Icon */}
+                    <a
+                      href={`https://www.wowhead.com/tbc/item=${loot.item.wowheadId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-wowhead={`item=${loot.item.wowheadId}&domain=tbc`}
+                    >
+                      <img
+                        src={getItemIconUrl(loot.item.icon || 'inv_misc_questionmark', 'medium')}
+                        alt={loot.item.name}
+                        className="w-9 h-9 rounded"
+                        style={{
+                          borderWidth: 2,
+                          borderStyle: 'solid',
+                          borderColor: ITEM_QUALITY_COLORS[loot.item.quality] || ITEM_QUALITY_COLORS[4]
+                        }}
+                      />
+                    </a>
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={`https://www.wowhead.com/tbc/item=${loot.item.wowheadId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-wowhead={`item=${loot.item.wowheadId}&domain=tbc`}
+                        className="font-medium hover:underline block truncate"
+                        style={{ color: ITEM_QUALITY_COLORS[loot.item.quality] || ITEM_QUALITY_COLORS[4] }}
+                      >
+                        {loot.item.name}
+                      </a>
+                      <p className="text-sm">
+                        <span style={{ color: CLASS_COLORS[loot.player?.class] }}>{loot.player?.name}</span>
+                        <span className="text-muted-foreground"> - {RESPONSE_LABELS[loot.response] || loot.response}</span>
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(loot.lootDate).toLocaleDateString()}
+                    </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{loot.date}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

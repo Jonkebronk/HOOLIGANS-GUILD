@@ -187,6 +187,8 @@ model Item {
   id            String    @id @default(cuid())
   name          String
   wowheadId     Int?      // For tooltips/icons
+  icon          String?   // Icon name for ZamImg CDN
+  quality       Int       @default(4) // 0=Poor, 1=Common, 2=Uncommon, 3=Rare, 4=Epic, 5=Legendary
   slot          GearSlot
   raid          String    // e.g., "Karazhan", "Black Temple"
   boss          String

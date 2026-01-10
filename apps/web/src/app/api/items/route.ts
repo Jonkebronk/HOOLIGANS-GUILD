@@ -19,12 +19,14 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, wowheadId, slot, raid, boss, phase, lootPriority, bisSpecs } = body;
+    const { name, wowheadId, icon, quality, slot, raid, boss, phase, lootPriority, bisSpecs } = body;
 
     const item = await prisma.item.create({
       data: {
         name,
         wowheadId,
+        icon,
+        quality: quality ?? 4, // Default to epic
         slot,
         raid,
         boss,
