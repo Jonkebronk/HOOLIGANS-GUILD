@@ -213,14 +213,26 @@ export default function RosterPage() {
         </Card>
       ) : (
         <>
-          <div className="flex gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <span>Showing {filteredPlayers.length} of {players.length} players</span>
-            <span>|</span>
-            <span>Tanks: {players.filter(p => p.role === 'Tank').length}</span>
-            <span>|</span>
-            <span>Healers: {players.filter(p => p.role === 'Heal').length}</span>
-            <span>|</span>
-            <span>DPS: {players.filter(p => p.role === 'DPS').length}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5" title="Tanks">
+                <img src="/icons/roles/tank.png" alt="Tank" className="w-5 h-5" />
+                <span>{players.filter(p => p.role === 'Tank').length}</span>
+              </div>
+              <div className="flex items-center gap-1.5" title="Healers">
+                <img src="/icons/roles/healer.png" alt="Healer" className="w-5 h-5" />
+                <span>{players.filter(p => p.role === 'Heal').length}</span>
+              </div>
+              <div className="flex items-center gap-1.5" title="Melee DPS">
+                <img src="/icons/roles/melee.png" alt="Melee" className="w-5 h-5" />
+                <span>{players.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Melee').length}</span>
+              </div>
+              <div className="flex items-center gap-1.5" title="Ranged DPS">
+                <img src="/icons/roles/ranged.png" alt="Ranged" className="w-5 h-5" />
+                <span>{players.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Ranged').length}</span>
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -233,6 +245,7 @@ export default function RosterPage() {
                   wowClass: player.class,
                   mainSpec: player.mainSpec,
                   role: player.role,
+                  roleSubtype: player.roleSubtype,
                   attendance: 0,
                   bisPercent: 0,
                   active: player.active,

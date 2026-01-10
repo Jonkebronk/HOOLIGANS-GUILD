@@ -20,6 +20,7 @@ interface PlayerCardProps {
     wowClass: string;
     mainSpec: string;
     role: string;
+    roleSubtype?: string;
     attendance: number;
     bisPercent: number;
     active: boolean;
@@ -28,6 +29,13 @@ interface PlayerCardProps {
   onDelete?: (id: string) => void;
   onToggleActive?: (id: string) => void;
 }
+
+const ROLE_ICONS: Record<string, string> = {
+  Tank: '/icons/roles/tank.png',
+  Heal: '/icons/roles/healer.png',
+  DPS_Melee: '/icons/roles/melee.png',
+  DPS_Ranged: '/icons/roles/ranged.png',
+};
 
 const ROLE_COLORS = {
   Tank: { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500' },
@@ -104,15 +112,12 @@ export function PlayerCard({ player, onEdit, onDelete, onToggleActive }: PlayerC
 
         {/* Role & Status Badges */}
         <div className="flex items-center gap-2 mb-4">
-          <span
-            className={cn(
-              'text-xs font-medium px-2 py-0.5 rounded',
-              roleStyle.bg,
-              roleStyle.text
-            )}
-          >
-            {player.role}
-          </span>
+          <img
+            src={ROLE_ICONS[player.roleSubtype || player.role] || ROLE_ICONS.DPS_Melee}
+            alt={player.role}
+            className="w-6 h-6"
+            title={player.roleSubtype === 'DPS_Ranged' ? 'Ranged DPS' : player.roleSubtype === 'DPS_Melee' ? 'Melee DPS' : player.role}
+          />
           {player.active ? (
             <span className="text-xs px-2 py-0.5 rounded bg-green-500/20 text-green-400">
               Active
