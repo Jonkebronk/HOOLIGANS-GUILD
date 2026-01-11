@@ -681,98 +681,96 @@ export default function ItemsPage() {
                 {filteredItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer group"
+                    className="px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer group"
                     onClick={() => handleOpenEditDialog(item)}
                   >
-                    <a
-                      href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-wh-icon-size="0"
-                      className="flex-shrink-0"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <img
-                        src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
-                        alt={item.name}
-                        className="w-9 h-9 rounded"
-                        style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
-                      />
-                    </a>
-                    <div className="flex-1 min-w-0">
+                    {/* Top Row: Item Info */}
+                    <div className="flex items-center gap-4">
                       <a
                         href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         data-wh-icon-size="0"
-                        className="font-medium truncate block hover:underline"
-                        style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                        className="flex-shrink-0"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {item.name}
+                        <img
+                          src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
+                          alt={item.name}
+                          className="w-9 h-9 rounded"
+                          style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                        />
                       </a>
-                      {item.lootPriority && (
-                        <span className="text-xs text-yellow-500">{item.lootPriority}</span>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <a
+                          href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          data-wh-icon-size="0"
+                          className="font-medium truncate block hover:underline"
+                          style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {item.name}
+                        </a>
+                      </div>
+                      <div className="hidden sm:block w-24 text-sm text-muted-foreground">
+                        {item.slot}
+                      </div>
+                      <div className="hidden md:block w-32 text-sm text-muted-foreground truncate">
+                        {item.raid}
+                      </div>
+                      <div className="hidden lg:block w-24 text-sm text-muted-foreground">
+                        {item.boss || '-'}
+                      </div>
+                      <div className="w-12 text-center">
+                        <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-muted">{item.phase}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => { e.stopPropagation(); handleOpenEditDialog(item); }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <div className="hidden sm:block w-24 text-sm text-muted-foreground">
-                      {item.slot}
-                    </div>
-                    <div className="hidden md:block w-32 text-sm text-muted-foreground truncate">
-                      {item.raid}
-                    </div>
-                    <div className="hidden lg:block w-24 text-sm text-muted-foreground">
-                      {item.boss || '-'}
-                    </div>
-                    <div className="w-12 text-center">
-                      <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-muted">{item.phase}</span>
-                    </div>
-                    {/* BiS For (Current Phase) */}
-                    <div className="hidden xl:flex gap-1 w-32">
-                      {item.bisFor ? (
-                        <>
-                          {item.bisFor.split(',').slice(0, 2).map((name, idx) => (
-                            <span key={idx} className="px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-400 truncate">
-                              {name.trim()}
-                            </span>
-                          ))}
-                          {item.bisFor.split(',').length > 2 && (
-                            <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
-                              +{item.bisFor.split(',').length - 2}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-xs text-muted-foreground/50">-</span>
-                      )}
-                    </div>
-                    {/* BiS Next Phase */}
-                    <div className="hidden xl:flex gap-1 w-32">
-                      {item.bisNextPhase ? (
-                        <>
-                          {item.bisNextPhase.split(',').slice(0, 2).map((name, idx) => (
-                            <span key={idx} className="px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-400 truncate">
-                              {name.trim()}
-                            </span>
-                          ))}
-                          {item.bisNextPhase.split(',').length > 2 && (
-                            <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
-                              +{item.bisNextPhase.split(',').length - 2}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-xs text-muted-foreground/50">-</span>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => { e.stopPropagation(); handleOpenEditDialog(item); }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    {/* Bottom Row: Loot Council Info */}
+                    {(item.lootPriority || item.bisFor || item.bisNextPhase || (item.lootRecords && item.lootRecords.length > 0)) && (
+                      <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 ml-13 pl-[52px] text-xs">
+                        {item.lootPriority && (
+                          <div>
+                            <span className="text-muted-foreground">Loot Priority: </span>
+                            <span className="text-yellow-500">{item.lootPriority}</span>
+                          </div>
+                        )}
+                        {item.bisFor && (
+                          <div>
+                            <span className="text-muted-foreground">BiS: </span>
+                            <span className="text-purple-400">{item.bisFor}</span>
+                          </div>
+                        )}
+                        {item.bisNextPhase && (
+                          <div>
+                            <span className="text-muted-foreground">BiS Next Phase: </span>
+                            <span className="text-blue-400">{item.bisNextPhase}</span>
+                          </div>
+                        )}
+                        {item.lootRecords && item.lootRecords.length > 0 && (
+                          <div>
+                            <span className="text-muted-foreground">Looted by: </span>
+                            {item.lootRecords.filter(r => r.player).map((record, idx) => (
+                              <span key={record.id}>
+                                {idx > 0 && ', '}
+                                <span style={{ color: CLASS_COLORS[record.player!.class] }}>
+                                  {record.player!.name}
+                                </span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

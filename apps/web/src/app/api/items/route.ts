@@ -40,6 +40,19 @@ export async function GET() {
     const items = await prisma.item.findMany({
       include: {
         bisSpecs: true,
+        lootRecords: {
+          include: {
+            player: {
+              select: {
+                id: true,
+                name: true,
+                class: true,
+              },
+            },
+          },
+          orderBy: { lootDate: 'desc' },
+          take: 5,
+        },
       },
       orderBy: { name: 'asc' },
     });
