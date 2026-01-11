@@ -516,15 +516,16 @@ export default function RaidSplitsPage() {
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, raidId, groupIndex, slotIndex)}
         onDragEnd={handleDragEnd}
+        onDoubleClick={() => slot && removePlayerFromSlot(raidId, groupIndex, slotIndex)}
       >
         {slot && (
           <>
             <img
               src={getSpecIconUrl(slot.mainSpec, slot.class)}
               alt={slot.mainSpec}
-              className="w-7 h-7 ml-0.5 pointer-events-none"
+              className="w-7 h-7 ml-0.5"
             />
-            <span className="flex-1 text-sm font-bold text-black pl-2 truncate pointer-events-none">
+            <span className="flex-1 text-sm font-bold text-black pl-2 truncate">
               {slot.name}
             </span>
             <button
@@ -681,7 +682,8 @@ export default function RaidSplitsPage() {
 
   const mainRaid = raids.find(r => r.id === 'main-25');
   const splitRaids = raids.filter(r => r.id.startsWith('split-10'));
-  const roleGroupedPlayers = groupPlayersByRole(players);
+  // Only show unassigned players in role columns
+  const roleGroupedPlayers = groupPlayersByRole(unassignedPlayers);
 
   return (
     <div
