@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { getSpecIconUrl, normalizeSpecName } from '@/lib/wowhead';
 import { SPEC_ROLES } from '@hooligans/shared';
+import { useTeam } from '@/components/providers/team-provider';
 
 // WoWSims TBC class colors
 const WOWSIMS_CLASS_COLORS: Record<string, string> = {
@@ -89,6 +90,7 @@ type RaidConfig = {
 const SLOTS_PER_GROUP = 5;
 
 export default function RaidSplitsPage() {
+  const { selectedTeam } = useTeam();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -159,12 +161,15 @@ export default function RaidSplitsPage() {
   ]);
 
   useEffect(() => {
-    fetchPlayers();
-  }, []);
+    if (selectedTeam) {
+      fetchPlayers();
+    }
+  }, [selectedTeam]);
 
   const fetchPlayers = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/players');
+      const res = await fetch(`/api/players?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setPlayers(data);
