@@ -274,9 +274,12 @@ model Item {
   raid          String    // e.g., "Karazhan", "Black Temple"
   boss          String
   phase         Phase
-  lootPriority  String?   // Special priority notes
+  lootPriority  String?   // Special priority notes (e.g., "Tanks > Melee DPS")
+  bisFor        String?   // Who is this BiS for (e.g., "Rogues, Fury Warriors")
+  bisNextPhase  String?   // Who will need this next phase
   lootPoints    Int       @default(100)
   createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt @default(now())
 
   // Relations
   lootRecords   LootRecord[]

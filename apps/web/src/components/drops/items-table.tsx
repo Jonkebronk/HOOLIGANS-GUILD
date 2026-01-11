@@ -114,7 +114,7 @@ export function ItemsTable({
                       target="_blank"
                       rel="noopener noreferrer"
                       data-wowhead={`item=${item.wowheadId}&domain=tbc`}
-                      data-wh-icon-size={item.icon ? '0' : 'small'}
+                      data-wh-icon-size="0"
                       className="hover:underline truncate"
                       style={{ color: ITEM_QUALITY_COLORS[item.quality || 4] }}
                     >

@@ -58,7 +58,8 @@
       "Bash(railway variables:*)",
       "Bash(set \"DATABASE_URL=postgresql://postgres:jNVXoyktblSPdMELeAFhFfDZLtVIfBJx@mainline.proxy.rlwy.net:22404/railway\")",
       "Bash(del \"C:\\\\Users\\\\johnn\\\\HOOLIGANS Guild\\\\packages\\\\database\\\\.env\")",
-      "Bash(dir \"C:\\\\Users\\\\johnn\\\\HOOLIGANS Guild\\\\apps\\\\web\\\\public\\\\teams\")"
+      "Bash(dir \"C:\\\\Users\\\\johnn\\\\HOOLIGANS Guild\\\\apps\\\\web\\\\public\\\\teams\")",
+      "Bash(DATABASE_URL=\"postgresql://postgres:jNVXoyktblSPdMELeAFhFfDZLtVIfBJx@mainline.proxy.rlwy.net:22404/railway\" npx prisma db push:*)"
     ]
   }
 }

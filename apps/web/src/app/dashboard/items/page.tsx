@@ -21,9 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2 } from 'lucide-react';
-import { RAIDS, GEAR_SLOTS } from '@hooligans/shared';
+import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { RAIDS, GEAR_SLOTS, CLASS_COLORS } from '@hooligans/shared';
 import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
+
+type LootRecord = {
+  id: string;
+  lootDate: string;
+  player: {
+    id: string;
+    name: string;
+    class: string;
+  } | null;
+};
 
 type Item = {
   id: string;
@@ -35,7 +46,11 @@ type Item = {
   wowheadId: number;
   icon?: string;
   quality: number;
+  lootPriority?: string | null;
+  bisFor?: string | null;
+  bisNextPhase?: string | null;
   bisSpecs: { id: string; spec: string }[];
+  lootRecords?: LootRecord[];
 };
 
 const PHASES = ['P1', 'P2', 'P3', 'P4', 'P5'];
@@ -61,6 +76,11 @@ export default function ItemsPage() {
   const [importError, setImportError] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [editForm, setEditForm] = useState({ lootPriority: '', bisFor: '', bisNextPhase: '' });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [loadingItemDetails, setLoadingItemDetails] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     slot: '',
