@@ -147,6 +147,7 @@ model Team {
   raidSplits    RaidSplit[]
   lootRecords   LootRecord[]
   attendance    AttendanceRecord[]
+  rosterAssignments RosterAssignment[]
 
   @@index([name])
 }
@@ -435,12 +436,15 @@ model RosterAssignment {
   slotIndex     Int       // 0-4
   playerId      String
   player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId        String
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  @@unique([raidId, groupIndex, slotIndex]) // One player per slot
+  @@unique([teamId, raidId, groupIndex, slotIndex]) // One player per slot per team
   @@index([playerId])
   @@index([raidId])
+  @@index([teamId])
 }
 
 // ============================================

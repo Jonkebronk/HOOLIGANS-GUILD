@@ -572,23 +572,19 @@ export default function ItemsPage() {
               <div className="divide-y divide-border">
                 {filteredItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors">
-                    <a
-                      href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-wh-icon-size="false"
-                    >
-                      <img
-                        src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
-                        alt={item.name}
-                        className="w-9 h-9 rounded flex-shrink-0"
-                        style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
-                      />
-                    </a>
+                    <img
+                      src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
+                      alt={item.name}
+                      className="w-9 h-9 rounded flex-shrink-0 cursor-pointer"
+                      style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                      onClick={() => window.open(`https://www.wowhead.com/tbc/item=${item.wowheadId}`, '_blank')}
+                    />
                     <div className="flex-1 min-w-0">
                       <span
-                        className="font-medium truncate block"
+                        className="font-medium truncate block cursor-pointer hover:underline"
                         style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                        data-wowhead={`item=${item.wowheadId}&domain=tbc`}
+                        onClick={() => window.open(`https://www.wowhead.com/tbc/item=${item.wowheadId}`, '_blank')}
                       >
                         {item.name}
                       </span>

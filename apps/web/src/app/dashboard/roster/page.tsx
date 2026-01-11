@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { getSpecIconUrl } from '@/lib/wowhead';
 import { CLASS_SPECS, SPEC_ROLES } from '@hooligans/shared';
+import { useTeam } from '@/components/providers/team-provider';
 
 // WoWSims TBC class colors
 const WOWSIMS_CLASS_COLORS: Record<string, string> = {
@@ -83,6 +84,7 @@ type RaidConfig = {
 const SLOTS_PER_GROUP = 5;
 
 export default function RosterPage() {
+  const { selectedTeam } = useTeam();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -168,8 +170,10 @@ export default function RosterPage() {
   ]);
 
   useEffect(() => {
-    fetchPlayersAndAssignments();
-  }, []);
+    if (selectedTeam) {
+      fetchPlayersAndAssignments();
+    }
+  }, [selectedTeam]);
 
   // Fetch players only
   const fetchPlayers = async () => {
@@ -265,11 +269,13 @@ export default function RosterPage() {
   };
 
   const fetchPlayersAndAssignments = async () => {
+    if (!selectedTeam) return;
+
     try {
       // Fetch players and assignments in parallel
       const [playersRes, assignmentsRes] = await Promise.all([
-        fetch('/api/players'),
-        fetch('/api/roster-assignments'),
+        fetch(`/api/players?teamId=${selectedTeam.id}`),
+        fetch(`/api/roster-assignments?teamId=${selectedTeam.id}`),
       ]);
 
       if (playersRes.ok) {
@@ -279,7 +285,7 @@ export default function RosterPage() {
         // Apply saved assignments if available
         if (assignmentsRes.ok) {
           const assignmentsData = await assignmentsRes.json();
-          if (assignmentsData.length > 0) {
+          if (Array.isArray(assignmentsData) && assignmentsData.length > 0) {
             setRaids(prevRaids => {
               const newRaids = prevRaids.map(raid => ({
                 ...raid,
@@ -311,11 +317,13 @@ export default function RosterPage() {
 
   // Save assignment to database
   const saveAssignment = async (raidId: string, groupIndex: number, slotIndex: number, playerId: string) => {
+    if (!selectedTeam) return;
+
     try {
       await fetch('/api/roster-assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ raidId, groupIndex, slotIndex, playerId }),
+        body: JSON.stringify({ raidId, groupIndex, slotIndex, playerId, teamId: selectedTeam.id }),
       });
     } catch (error) {
       console.error('Failed to save assignment:', error);
@@ -324,8 +332,10 @@ export default function RosterPage() {
 
   // Delete assignment from database
   const deleteAssignment = async (raidId: string, groupIndex: number, slotIndex: number) => {
+    if (!selectedTeam) return;
+
     try {
-      await fetch(`/api/roster-assignments?raidId=${raidId}&groupIndex=${groupIndex}&slotIndex=${slotIndex}`, {
+      await fetch(`/api/roster-assignments?teamId=${selectedTeam.id}&raidId=${raidId}&groupIndex=${groupIndex}&slotIndex=${slotIndex}`, {
         method: 'DELETE',
       });
     } catch (error) {
@@ -335,8 +345,10 @@ export default function RosterPage() {
 
   // Clear all assignments for a raid
   const clearRaidAssignments = async (raidId: string) => {
+    if (!selectedTeam) return;
+
     try {
-      await fetch(`/api/roster-assignments?raidId=${raidId}`, {
+      await fetch(`/api/roster-assignments?teamId=${selectedTeam.id}&raidId=${raidId}`, {
         method: 'DELETE',
       });
     } catch (error) {

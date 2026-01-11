@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
 
-// GET all roster assignments
-export async function GET() {
+// GET roster assignments for a team
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const teamId = searchParams.get('teamId');
+
+    if (!teamId) {
+      return NextResponse.json({ error: 'teamId is required' }, { status: 400 });
+    }
+
     const assignments = await prisma.rosterAssignment.findMany({
+      where: { teamId },
       include: {
         player: true,
       },
@@ -20,12 +28,17 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { raidId, groupIndex, slotIndex, playerId } = body;
+    const { raidId, groupIndex, slotIndex, playerId, teamId } = body;
+
+    if (!teamId) {
+      return NextResponse.json({ error: 'teamId is required' }, { status: 400 });
+    }
 
     // Upsert the assignment
     const assignment = await prisma.rosterAssignment.upsert({
       where: {
-        raidId_groupIndex_slotIndex: {
+        teamId_raidId_groupIndex_slotIndex: {
+          teamId,
           raidId,
           groupIndex,
           slotIndex,
@@ -35,6 +48,7 @@ export async function POST(request: Request) {
         playerId,
       },
       create: {
+        teamId,
         raidId,
         groupIndex,
         slotIndex,
@@ -56,22 +70,21 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const teamId = searchParams.get('teamId');
     const raidId = searchParams.get('raidId');
     const groupIndex = searchParams.get('groupIndex');
     const slotIndex = searchParams.get('slotIndex');
-    const clearAll = searchParams.get('clearAll');
 
-    if (clearAll === 'true') {
-      // Clear all assignments
-      await prisma.rosterAssignment.deleteMany({});
-      return NextResponse.json({ success: true, message: 'All assignments cleared' });
+    if (!teamId) {
+      return NextResponse.json({ error: 'teamId is required' }, { status: 400 });
     }
 
     if (raidId && groupIndex !== null && slotIndex !== null) {
       // Delete specific slot assignment
       await prisma.rosterAssignment.delete({
         where: {
-          raidId_groupIndex_slotIndex: {
+          teamId_raidId_groupIndex_slotIndex: {
+            teamId,
             raidId,
             groupIndex: parseInt(groupIndex),
             slotIndex: parseInt(slotIndex),
@@ -82,9 +95,9 @@ export async function DELETE(request: Request) {
     }
 
     if (raidId) {
-      // Clear all assignments for a specific raid
+      // Clear all assignments for a specific raid in a team
       await prisma.rosterAssignment.deleteMany({
-        where: { raidId },
+        where: { teamId, raidId },
       });
       return NextResponse.json({ success: true, message: `Cleared all assignments for ${raidId}` });
     }
