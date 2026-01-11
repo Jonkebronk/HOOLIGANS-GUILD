@@ -469,9 +469,9 @@ export default function RaidSplitsPage() {
     return (
       <div
         key={slotKey}
-        className={`h-7 flex items-center transition-all cursor-pointer ${
-          slot ? '' : 'border border-[#444] bg-[#2a2a2a]'
-        } ${isDragOver ? 'ring-2 ring-white/50' : ''}`}
+        className={`h-8 flex items-center transition-all cursor-pointer ${
+          slot ? '' : 'bg-[#1a1a1a] border border-[#333]'
+        } ${isDragOver ? 'ring-2 ring-yellow-400/50' : ''}`}
         style={{
           backgroundColor: slot ? classColor || '#333' : undefined,
         }}
@@ -487,9 +487,9 @@ export default function RaidSplitsPage() {
             <img
               src={getSpecIconUrl(slot.mainSpec)}
               alt={slot.mainSpec}
-              className="w-6 h-6 pointer-events-none"
+              className="w-7 h-7 ml-0.5 pointer-events-none"
             />
-            <span className="flex-1 text-xs font-medium text-black px-1.5 truncate pointer-events-none">
+            <span className="flex-1 text-sm font-bold text-black pl-2 truncate pointer-events-none">
               {getSpecName(slot.mainSpec, slot.class)}
             </span>
             <button
@@ -497,9 +497,9 @@ export default function RaidSplitsPage() {
                 e.stopPropagation();
                 removePlayerFromSlot(raidId, groupIndex, slotIndex);
               }}
-              className="px-1.5 text-red-800 hover:text-red-600"
+              className="px-2 text-red-700 hover:text-red-500"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           </>
         )}
@@ -515,54 +515,66 @@ export default function RaidSplitsPage() {
     const is10Man = raid.size === '10';
 
     return (
-      <div key={raid.id} className={compact ? '' : 'mb-4'}>
+      <div key={raid.id} className={compact ? '' : 'mb-6'}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <Input
               value={raid.name}
               onChange={(e) => updateRaidName(raid.id, e.target.value)}
-              className="w-28 h-6 text-xs bg-transparent border-none text-white font-medium hover:bg-white/10 focus:bg-white/10 px-1"
+              className="w-32 h-6 text-sm bg-transparent border-none text-white font-medium hover:bg-white/10 focus:bg-white/10 px-1"
             />
             <span className="text-xs text-gray-400">{totalAssigned}/{maxPlayers}</span>
           </div>
-          <div className="flex gap-0.5">
-            {is10Man && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-5 w-5 text-green-500 hover:text-green-400 hover:bg-white/10"
-                onClick={() => duplicateTo10Man(raid.id)}
-                title="Copy from 25-man"
-              >
-                <CopyPlus className="h-3 w-3" />
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white hover:bg-white/10">
-              <Copy className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => clearRaid(raid.id)}>
-              <RotateCcw className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white hover:bg-white/10">
-              <Camera className="h-3 w-3" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400 hover:text-white hover:bg-white/10">
-              <Download className="h-3 w-3" />
-            </Button>
-          </div>
+        </div>
+
+        {/* Group Headers Row */}
+        <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'}`}>
+          {raid.groups.map((_, groupIndex) => (
+            <div key={groupIndex} className="w-[150px]">
+              <div className="text-yellow-500 text-xs font-medium pb-1 border-b-2 border-yellow-500">
+                Group {groupIndex + 1}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Groups Grid */}
-        <div className={`flex ${is25Man ? 'gap-1' : 'gap-1'}`}>
+        <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'} mt-1`}>
           {raid.groups.map((group, groupIndex) => (
-            <div key={groupIndex} className="w-[160px]">
-              <div className="text-[10px] text-gray-500 mb-0.5">Group {groupIndex + 1}</div>
-              <div className="space-y-px">
+            <div key={groupIndex} className="w-[150px] bg-[#111] border border-[#333]">
+              <div className="space-y-px p-0.5">
                 {group.map((slot, slotIndex) => renderPlayerSlot(slot, raid.id, groupIndex, slotIndex))}
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-1 mt-2">
+          {is10Man && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20"
+              onClick={() => duplicateTo10Man(raid.id)}
+              title="Copy from 25-man"
+            >
+              <CopyPlus className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20">
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => clearRaid(raid.id)}>
+            <RotateCcw className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20">
+            <Camera className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20">
+            <Download className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </div>
     );
