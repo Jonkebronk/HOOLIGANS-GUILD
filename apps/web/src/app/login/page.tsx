@@ -40,8 +40,8 @@ export default async function LoginPage({
           <Image
             src="/hlg-logo.png"
             alt="HOOLIGANS"
-            width={280}
-            height={280}
+            width={220}
+            height={220}
             className="drop-shadow-2xl"
           />
         </div>
