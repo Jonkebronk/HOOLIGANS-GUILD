@@ -506,8 +506,8 @@ export default function RaidSplitsPage() {
     return (
       <div
         key={slotKey}
-        className={`h-8 flex items-center transition-all cursor-pointer ${
-          slot ? '' : 'bg-[#1a1a1a] border border-[#333]'
+        className={`h-8 flex items-center transition-all cursor-pointer border border-[#444] ${
+          slot ? '' : 'bg-[#1a1a1a]'
         } ${isDragOver ? 'ring-2 ring-yellow-400/50' : ''}`}
         style={{
           backgroundColor: slot ? classColor || '#333' : undefined,
@@ -527,7 +527,7 @@ export default function RaidSplitsPage() {
               className="w-7 h-7 ml-0.5 pointer-events-none"
             />
             <span className="flex-1 text-sm font-bold text-black pl-2 truncate pointer-events-none">
-              {getSpecName(slot.mainSpec, slot.class)}
+              {slot.name}
             </span>
             <button
               onClick={(e) => {
@@ -579,7 +579,7 @@ export default function RaidSplitsPage() {
         {/* Groups Grid */}
         <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'} mt-1`}>
           {raid.groups.map((group, groupIndex) => (
-            <div key={groupIndex} className="w-[150px] bg-[#111] border border-[#333]">
+            <div key={groupIndex} className="w-[150px] bg-[#111] border-2 border-[#444] rounded">
               <div className="space-y-px p-0.5">
                 {group.map((slot, slotIndex) => renderPlayerSlot(slot, raid.id, groupIndex, slotIndex))}
               </div>
@@ -730,7 +730,7 @@ export default function RaidSplitsPage() {
             Import
           </Button>
         </div>
-        <div className="flex justify-center gap-1">
+        <div className="flex justify-center gap-3">
           {/* Tank Column */}
           <div className="flex flex-col w-[220px]">
             <div className="flex justify-center py-3">
@@ -754,7 +754,7 @@ export default function RaidSplitsPage() {
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-b border-black/20"
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
@@ -797,7 +797,7 @@ export default function RaidSplitsPage() {
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-b border-black/20"
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
@@ -840,7 +840,7 @@ export default function RaidSplitsPage() {
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-b border-black/20"
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
@@ -883,7 +883,7 @@ export default function RaidSplitsPage() {
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-b border-black/20"
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
