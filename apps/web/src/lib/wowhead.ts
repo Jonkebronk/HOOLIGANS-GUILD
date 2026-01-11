@@ -161,7 +161,7 @@ export function getSpecIconUrl(spec: string, playerClass?: string) {
     DruidFeral: 'ability_druid_catform',
     DruidGuardian: 'ability_racial_bearform',
     DruidRestoration: 'spell_nature_healingtouch',
-    DruidDreamstate: 'spell_arcane_starfire',
+    DruidDreamstate: 'spell_nature_faeriefire',
     // Hunter
     HunterBeastMastery: 'ability_hunter_beasttaming',
     HunterMarksmanship: 'ability_marksmanship',
