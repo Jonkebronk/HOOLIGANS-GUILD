@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { SPEC_ROLES } from '@hooligans/shared';
 
 export async function GET(request: Request) {
   try {
@@ -24,14 +25,19 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // Bulk import mode: create multiple pending players from Discord IDs
-    if (body.mode === 'bulk' && Array.isArray(body.discordIds)) {
-      const discordIds = body.discordIds as string[];
+    // Bulk import mode: create multiple players from Discord members with optional class/spec
+    if (body.mode === 'bulk' && (Array.isArray(body.members) || Array.isArray(body.discordIds))) {
       const teamId = body.teamId;
       const createdPlayers = [];
       const skipped = [];
 
-      for (const discordId of discordIds) {
+      // Support both old format (discordIds) and new format (members with class/spec)
+      const members: { discordId: string; wowClass?: string | null; mainSpec?: string | null }[] =
+        body.members || body.discordIds.map((id: string) => ({ discordId: id }));
+
+      for (const member of members) {
+        const { discordId, wowClass, mainSpec } = member;
+
         // Skip if already exists in this team
         const existing = await prisma.player.findFirst({
           where: { discordId, ...(teamId && { teamId }) },
@@ -41,16 +47,20 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Create pending player with placeholder name
+        // Determine if player has class/spec configured
+        const hasConfig = wowClass && mainSpec;
+        const specRole = mainSpec ? SPEC_ROLES[mainSpec] : null;
+
+        // Create player - either configured or pending
         const player = await prisma.player.create({
           data: {
-            name: `Pending-${discordId.slice(-6)}`,
-            class: 'Warrior', // Default, will be updated
-            mainSpec: 'WarriorFury', // Default, will be updated
-            role: 'DPS',
-            roleSubtype: 'DPS_Melee',
+            name: hasConfig ? `Pending-${discordId.slice(-6)}` : `Pending-${discordId.slice(-6)}`,
+            class: wowClass || 'Warrior',
+            mainSpec: mainSpec || 'WarriorFury',
+            role: specRole?.role || 'DPS',
+            roleSubtype: specRole?.subtype || 'DPS_Melee',
             discordId,
-            notes: 'PENDING - needs configuration',
+            notes: hasConfig ? null : 'PENDING - needs configuration',
             ...(teamId && { teamId }),
           },
         });

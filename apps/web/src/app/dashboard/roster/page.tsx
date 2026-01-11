@@ -106,6 +106,7 @@ export default function RosterPage() {
   const [loadingRoles, setLoadingRoles] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [isImportingRole, setIsImportingRole] = useState(false);
+  const [memberConfigs, setMemberConfigs] = useState<Record<string, { wowClass: string; mainSpec: string }>>({});
 
   // Edit player dialog state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -208,6 +209,7 @@ export default function RosterPage() {
   const fetchMembersByRole = async (roleId: string) => {
     if (!roleId) {
       setRoleMembers([]);
+      setMemberConfigs({});
       return;
     }
     setLoadingMembers(true);
@@ -216,6 +218,12 @@ export default function RosterPage() {
       if (res.ok) {
         const data = await res.json();
         setRoleMembers(data.members);
+        // Initialize empty configs for each member
+        const configs: Record<string, { wowClass: string; mainSpec: string }> = {};
+        data.members.forEach((member: { id: string }) => {
+          configs[member.id] = { wowClass: '', mainSpec: '' };
+        });
+        setMemberConfigs(configs);
       }
     } catch (error) {
       console.error('Failed to fetch members:', error);
@@ -229,6 +237,7 @@ export default function RosterPage() {
     setIsRoleImportDialogOpen(true);
     setSelectedRoleId('');
     setRoleMembers([]);
+    setMemberConfigs({});
     await fetchDiscordRoles();
   };
 
@@ -244,11 +253,17 @@ export default function RosterPage() {
 
     setIsImportingRole(true);
     try {
-      const discordIds = roleMembers.map(m => m.id);
+      // Build member configs with class/spec data
+      const membersWithConfig = roleMembers.map(m => ({
+        discordId: m.id,
+        wowClass: memberConfigs[m.id]?.wowClass || null,
+        mainSpec: memberConfigs[m.id]?.mainSpec || null,
+      }));
+
       const res = await fetch('/api/players', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'bulk', discordIds, teamId: selectedTeam.id }),
+        body: JSON.stringify({ mode: 'bulk', members: membersWithConfig, teamId: selectedTeam.id }),
       });
 
       if (res.ok) {
@@ -1846,14 +1861,14 @@ export default function RosterPage() {
 
       {/* Discord Role Import Dialog */}
       <Dialog open={isRoleImportDialogOpen} onOpenChange={setIsRoleImportDialogOpen}>
-        <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white max-w-md">
+        <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Upload className="h-5 w-5 text-[#5865F2]" />
               Import from Discord Role
             </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Select a Discord role to import all members as players. Players will be created with pending status until configured.
+              Select a Discord role to import members as players. Optionally set class and spec for each player.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1884,7 +1899,7 @@ export default function RosterPage() {
                 <Label className="text-gray-300">
                   Members to import: {loadingMembers ? 'Loading...' : roleMembers.length}
                 </Label>
-                <div className="bg-black border border-gray-700 rounded-md p-2 max-h-[200px] overflow-y-auto">
+                <div className="bg-black border border-gray-700 rounded-md p-2 max-h-[350px] overflow-y-auto">
                   {loadingMembers ? (
                     <div className="flex items-center justify-center py-4">
                       <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
@@ -1892,20 +1907,68 @@ export default function RosterPage() {
                   ) : roleMembers.length === 0 ? (
                     <div className="text-center text-gray-500 py-2">No members found</div>
                   ) : (
-                    <div className="space-y-1">
-                      {roleMembers.map((member) => (
-                        <div key={member.id} className="flex items-center gap-2 text-sm">
-                          {member.avatar ? (
-                            <img src={member.avatar} alt="" className="w-5 h-5 rounded-full" />
-                          ) : (
-                            <div className="w-5 h-5 rounded-full bg-gray-600" />
-                          )}
-                          <span>{member.displayName}</span>
-                        </div>
-                      ))}
+                    <div className="space-y-2">
+                      {roleMembers.map((member) => {
+                        const config = memberConfigs[member.id] || { wowClass: '', mainSpec: '' };
+                        const specsForClass = config.wowClass ? CLASS_SPECS[config.wowClass] || [] : [];
+                        return (
+                          <div key={member.id} className="flex items-center gap-2 text-sm p-2 bg-gray-900/50 rounded">
+                            {member.avatar ? (
+                              <img src={member.avatar} alt="" className="w-6 h-6 rounded-full flex-shrink-0" />
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-gray-600 flex-shrink-0" />
+                            )}
+                            <span className="w-24 truncate flex-shrink-0" title={member.displayName}>{member.displayName}</span>
+                            <Select
+                              value={config.wowClass}
+                              onValueChange={(value) => {
+                                setMemberConfigs(prev => ({
+                                  ...prev,
+                                  [member.id]: { wowClass: value, mainSpec: '' }
+                                }));
+                              }}
+                            >
+                              <SelectTrigger className="bg-black border-gray-600 text-white h-7 w-24 text-xs">
+                                <SelectValue placeholder="Class" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#1a1a1a] border-gray-700">
+                                {WOW_CLASSES.map((cls) => (
+                                  <SelectItem key={cls} value={cls} className="text-white hover:bg-gray-800 text-xs">
+                                    <span style={{ color: WOWSIMS_CLASS_COLORS[cls] }}>{cls}</span>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select
+                              value={config.mainSpec}
+                              onValueChange={(value) => {
+                                setMemberConfigs(prev => ({
+                                  ...prev,
+                                  [member.id]: { ...prev[member.id], mainSpec: value }
+                                }));
+                              }}
+                              disabled={!config.wowClass}
+                            >
+                              <SelectTrigger className="bg-black border-gray-600 text-white h-7 w-28 text-xs">
+                                <SelectValue placeholder="Spec" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#1a1a1a] border-gray-700">
+                                {specsForClass.map((spec) => (
+                                  <SelectItem key={spec} value={spec} className="text-white hover:bg-gray-800 text-xs">
+                                    {spec.replace(config.wowClass, '')}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
+                <p className="text-xs text-gray-500">
+                  Players without class/spec will be created with pending status.
+                </p>
               </div>
             )}
           </div>
