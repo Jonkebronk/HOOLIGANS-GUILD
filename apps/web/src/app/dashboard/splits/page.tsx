@@ -112,6 +112,7 @@ export default function RaidSplitsPage() {
 
   // Refs for screenshot functionality
   const raidRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const tenManSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Screenshot dialog state
   const [isScreenshotDialogOpen, setIsScreenshotDialogOpen] = useState(false);
@@ -480,6 +481,36 @@ export default function RaidSplitsPage() {
   // Download screenshot locally
   const downloadScreenshot = async () => {
     if (!screenshotRaidId) return;
+
+    // Handle combined 10-man screenshot
+    if (screenshotRaidId === 'all-10-man') {
+      const element = tenManSectionRef.current;
+      if (!element) return;
+
+      try {
+        const canvas = await html2canvas(element, {
+          backgroundColor: '#0d1117',
+          scale: 4,
+          useCORS: true,
+          logging: false,
+          scrollX: 0,
+          scrollY: -window.scrollY,
+          windowWidth: element.scrollWidth + 20,
+          windowHeight: element.scrollHeight + 20,
+        });
+
+        const link = document.createElement('a');
+        link.download = '10-Man_Splits.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        setIsScreenshotDialogOpen(false);
+      } catch (error) {
+        console.error('Screenshot failed:', error);
+        alert('Failed to capture screenshot');
+      }
+      return;
+    }
+
     const raid = raids.find(r => r.id === screenshotRaidId);
     const element = raidRefs.current[screenshotRaidId];
     if (!raid || !element) return;
@@ -535,9 +566,13 @@ export default function RaidSplitsPage() {
   // Send screenshot to Discord
   const sendToDiscord = async () => {
     if (!screenshotRaidId || !selectedChannel) return;
-    const raid = raids.find(r => r.id === screenshotRaidId);
-    const element = raidRefs.current[screenshotRaidId];
-    if (!raid || !element) return;
+
+    // Handle combined 10-man screenshot
+    const is10ManCombined = screenshotRaidId === 'all-10-man';
+    const element = is10ManCombined ? tenManSectionRef.current : raidRefs.current[screenshotRaidId];
+    const raid = is10ManCombined ? null : raids.find(r => r.id === screenshotRaidId);
+
+    if (!element) return;
 
     setIsSendingToDiscord(true);
     try {
@@ -557,12 +592,25 @@ export default function RaidSplitsPage() {
       // Get player Discord IDs for tagging
       const playerDiscordIds: string[] = [];
       if (tagPlayers) {
-        raid.groups.flat().forEach(player => {
-          if (player?.discordId) {
-            playerDiscordIds.push(player.discordId);
-          }
-        });
+        if (is10ManCombined) {
+          // Get all players from all 10-man splits
+          splitRaids.forEach(splitRaid => {
+            splitRaid.groups.flat().forEach(player => {
+              if (player?.discordId && !playerDiscordIds.includes(player.discordId)) {
+                playerDiscordIds.push(player.discordId);
+              }
+            });
+          });
+        } else if (raid) {
+          raid.groups.flat().forEach(player => {
+            if (player?.discordId) {
+              playerDiscordIds.push(player.discordId);
+            }
+          });
+        }
       }
+
+      const title = is10ManCombined ? '10-Man Splits' : (raid?.name || 'Raid');
 
       const res = await fetch('/api/discord/send-screenshot', {
         method: 'POST',
@@ -570,7 +618,7 @@ export default function RaidSplitsPage() {
         body: JSON.stringify({
           channelId: selectedChannel,
           imageData,
-          title: messageTitle || raid.name,
+          title: messageTitle || title,
           playerDiscordIds: tagPlayers ? playerDiscordIds : [],
         }),
       });
@@ -1096,8 +1144,24 @@ export default function RaidSplitsPage() {
 
   const mainRaid = raids.find(r => r.id === 'main-25');
   const splitRaids = raids.filter(r => r.id.startsWith('split-10'));
-  // Only show unassigned players in role columns
+
+  // Get all players assigned to any 10-man split
+  const getAssigned10ManPlayerIds = (): Set<string> => {
+    const ids = new Set<string>();
+    splitRaids.forEach(raid => {
+      raid.groups.flat().filter(Boolean).forEach(p => ids.add(p!.id));
+    });
+    return ids;
+  };
+
+  const assigned10ManIds = getAssigned10ManPlayerIds();
+  // Players assigned to 25-man but not yet in any 10-man split
+  const availableFor10Man = assignedTo25Man.filter(p => !assigned10ManIds.has(p.id));
+
+  // Only show unassigned players in 25-man role columns
   const roleGroupedPlayers = groupPlayersByRole(unassignedPlayers);
+  // Show 25-man assigned players available for 10-man
+  const roleGroupedFor10Man = groupPlayersByRole(availableFor10Man);
 
   return (
     <div
@@ -1111,6 +1175,34 @@ export default function RaidSplitsPage() {
           <h1 className="text-xl font-bold">Raid Compositions</h1>
           <p className="text-gray-400 text-sm">Drag players to assign groups</p>
         </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
+            onClick={() => setIsImportDialogOpen(true)}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-transparent border-red-600 text-red-400 hover:bg-red-900/20"
+            onClick={() => {
+              setPlayers(prev => prev.filter(p => !p.id.startsWith('imported-')));
+              setRaids(prevRaids => prevRaids.map(raid => ({
+                ...raid,
+                groups: raid.groups.map(group =>
+                  group.map(slot => slot?.id.startsWith('imported-') ? null : slot)
+                ),
+              })));
+            }}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Clear
+          </Button>
+        </div>
       </div>
 
       {/* Main Layout: Raids on left, Role Columns on right */}
@@ -1121,10 +1213,23 @@ export default function RaidSplitsPage() {
           {mainRaid && renderRaidSection(mainRaid)}
 
           {/* 10-Man Splits Section */}
-          <div className="mt-4">
+          <div className="mt-4" ref={tenManSectionRef}>
             <div className="flex items-center gap-4 mb-3">
               <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
               <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-gray-400 hover:text-white hover:bg-white/10"
+                onClick={() => {
+                  setScreenshotRaidId('all-10-man');
+                  setIsScreenshotDialogOpen(true);
+                }}
+                title="Screenshot all 10-man splits"
+              >
+                <Camera className="h-4 w-4 mr-1" />
+                Screenshot All
+              </Button>
             </div>
             <div className="flex gap-3">
               {splitRaids.map(raid => (
@@ -1136,38 +1241,9 @@ export default function RaidSplitsPage() {
           </div>
         </div>
 
-        {/* Role Columns Section */}
+        {/* Role Columns Section - 25-Man */}
         <div className="flex-shrink-0">
-          {/* Import and Clear buttons */}
-          <div className="mb-2 flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
-              onClick={() => setIsImportDialogOpen(true)}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Import
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-red-600 text-red-400 hover:bg-red-900/20"
-              onClick={() => {
-                // Clear imported players and all raid assignments
-                setPlayers(prev => prev.filter(p => !p.id.startsWith('imported-')));
-                setRaids(prevRaids => prevRaids.map(raid => ({
-                  ...raid,
-                  groups: raid.groups.map(group =>
-                    group.map(slot => slot?.id.startsWith('imported-') ? null : slot)
-                  ),
-                })));
-              }}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Clear
-            </Button>
-          </div>
+          <div className="text-xs text-gray-500 mb-2 text-center">25-Man Pool</div>
           {/* Role Columns - all 4 side by side */}
           <div className="flex gap-2">
           {/* Tank Column */}
@@ -1342,6 +1418,144 @@ export default function RaidSplitsPage() {
             </div>
           </div>
         </div>
+        </div>
+
+        {/* Role Columns Section - 10-Man */}
+        <div className="flex-shrink-0">
+          <div className="text-xs text-gray-500 mb-2 text-center">10-Man Pool (from 25-Man)</div>
+          <div className="flex gap-2">
+            {/* Tank Column - 10-Man */}
+            <div className="flex flex-col w-[120px]">
+              <div className="flex justify-center py-3">
+                <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
+                  <img src={ROLE_ICONS.Tank} alt="Tank" className="w-8 h-8" />
+                </div>
+              </div>
+              <div className="border-t-4 border-[#5a0000]" style={{ backgroundColor: ROLE_COLORS.Tank }}>
+                <div className="text-center py-1.5 font-bold text-white text-sm">Tank</div>
+              </div>
+              <div className="border-x border-b border-[#333] flex-1 min-h-[100px] p-1">
+                {roleGroupedFor10Man.Tank.length === 0 ? (
+                  <div className="py-4 text-center text-gray-500 text-sm">No players</div>
+                ) : (
+                  roleGroupedFor10Man.Tank.map((player) => (
+                    <div
+                      key={`10m-${player.id}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, player, 'available')}
+                      onDragEnd={handleDragEnd}
+                      onClick={() => addPlayerToRaid('split-10-1', player)}
+                      className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-2 border-black/40 rounded mb-1"
+                      style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
+                    >
+                      <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-6 h-6 pointer-events-none" />
+                      <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">{player.name}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="text-center py-2 bg-[#1a1a1a] border-x border-b border-[#333] text-sm font-semibold">{roleGroupedFor10Man.Tank.length}</div>
+            </div>
+
+            {/* Healer Column - 10-Man */}
+            <div className="flex flex-col w-[120px]">
+              <div className="flex justify-center py-3">
+                <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
+                  <img src={ROLE_ICONS.Healer} alt="Healer" className="w-8 h-8" />
+                </div>
+              </div>
+              <div className="border-t-4 border-[#5a0000]" style={{ backgroundColor: ROLE_COLORS.Healer }}>
+                <div className="text-center py-1.5 font-bold text-white text-sm">Healer</div>
+              </div>
+              <div className="border-x border-b border-[#333] flex-1 min-h-[100px] p-1">
+                {roleGroupedFor10Man.Healer.length === 0 ? (
+                  <div className="py-4 text-center text-gray-500 text-sm">No players</div>
+                ) : (
+                  roleGroupedFor10Man.Healer.map((player) => (
+                    <div
+                      key={`10m-${player.id}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, player, 'available')}
+                      onDragEnd={handleDragEnd}
+                      onClick={() => addPlayerToRaid('split-10-1', player)}
+                      className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-2 border-black/40 rounded mb-1"
+                      style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
+                    >
+                      <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-6 h-6 pointer-events-none" />
+                      <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">{player.name}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="text-center py-2 bg-[#1a1a1a] border-x border-b border-[#333] text-sm font-semibold">{roleGroupedFor10Man.Healer.length}</div>
+            </div>
+
+            {/* Melee Column - 10-Man */}
+            <div className="flex flex-col w-[120px]">
+              <div className="flex justify-center py-3">
+                <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
+                  <img src={ROLE_ICONS.Melee} alt="Melee" className="w-8 h-8" />
+                </div>
+              </div>
+              <div className="border-t-4 border-[#5a0000]" style={{ backgroundColor: ROLE_COLORS.Melee }}>
+                <div className="text-center py-1.5 font-bold text-white text-sm">Melee</div>
+              </div>
+              <div className="border-x border-b border-[#333] flex-1 min-h-[100px] p-1">
+                {roleGroupedFor10Man.Melee.length === 0 ? (
+                  <div className="py-4 text-center text-gray-500 text-sm">No players</div>
+                ) : (
+                  roleGroupedFor10Man.Melee.map((player) => (
+                    <div
+                      key={`10m-${player.id}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, player, 'available')}
+                      onDragEnd={handleDragEnd}
+                      onClick={() => addPlayerToRaid('split-10-1', player)}
+                      className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-2 border-black/40 rounded mb-1"
+                      style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
+                    >
+                      <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-6 h-6 pointer-events-none" />
+                      <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">{player.name}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="text-center py-2 bg-[#1a1a1a] border-x border-b border-[#333] text-sm font-semibold">{roleGroupedFor10Man.Melee.length}</div>
+            </div>
+
+            {/* Ranged Column - 10-Man */}
+            <div className="flex flex-col w-[120px]">
+              <div className="flex justify-center py-3">
+                <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
+                  <img src={ROLE_ICONS.Ranged} alt="Ranged" className="w-8 h-8" />
+                </div>
+              </div>
+              <div className="border-t-4 border-[#5a0000]" style={{ backgroundColor: ROLE_COLORS.Ranged }}>
+                <div className="text-center py-1.5 font-bold text-white text-sm">Ranged</div>
+              </div>
+              <div className="border-x border-b border-[#333] flex-1 min-h-[100px] p-1">
+                {roleGroupedFor10Man.Ranged.length === 0 ? (
+                  <div className="py-4 text-center text-gray-500 text-sm">No players</div>
+                ) : (
+                  roleGroupedFor10Man.Ranged.map((player) => (
+                    <div
+                      key={`10m-${player.id}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, player, 'available')}
+                      onDragEnd={handleDragEnd}
+                      onClick={() => addPlayerToRaid('split-10-1', player)}
+                      className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-2 border-black/40 rounded mb-1"
+                      style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
+                    >
+                      <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-6 h-6 pointer-events-none" />
+                      <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">{player.name}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="text-center py-2 bg-[#1a1a1a] border-x border-b border-[#333] text-sm font-semibold">{roleGroupedFor10Man.Ranged.length}</div>
+            </div>
+          </div>
         </div>
       </div>
 
