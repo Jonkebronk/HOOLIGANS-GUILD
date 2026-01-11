@@ -122,6 +122,14 @@ a[data-wh-icon-size="false"] ins {
   display: none !important;
 }
 
+/* Hide Wowhead icons for links with wh-icon-hide class */
+a.wh-icon-hide > ins,
+a.wh-icon-hide ins.icontiny,
+a.wh-icon-hide ins.iconsmall,
+a.wh-icon-hide ins.iconmedium {
+  display: none !important;
+}
+
 a[data-wh-icon-size="medium"] ins {
   width: 36px !important;
   height: 36px !important;

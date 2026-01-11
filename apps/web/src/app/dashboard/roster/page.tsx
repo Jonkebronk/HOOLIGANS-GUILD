@@ -240,7 +240,7 @@ export default function RosterPage() {
 
   // Import players from Discord role
   const handleImportFromRole = async () => {
-    if (roleMembers.length === 0) return;
+    if (roleMembers.length === 0 || !selectedTeam) return;
 
     setIsImportingRole(true);
     try {
@@ -248,13 +248,13 @@ export default function RosterPage() {
       const res = await fetch('/api/players', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'bulk', discordIds }),
+        body: JSON.stringify({ mode: 'bulk', discordIds, teamId: selectedTeam.id }),
       });
 
       if (res.ok) {
         const data = await res.json();
         alert(data.message);
-        await fetchPlayers();
+        await fetchPlayersAndAssignments();
         setIsRoleImportDialogOpen(false);
       } else {
         const error = await res.json();

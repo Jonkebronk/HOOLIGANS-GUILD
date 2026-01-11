@@ -29,6 +29,7 @@ import { Loader2, Target, Search, X, ExternalLink, Download, Upload, Copy, Check
 import { CLASS_COLORS, TbcItem, TbcEnchant, TbcGem } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, SLOT_ICONS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { GearPickerModal } from '@/components/gear-picker-modal';
+import { useTeam } from '@/components/providers/team-provider';
 
 const WOW_CLASSES = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
 
@@ -139,6 +140,7 @@ type PlayerGear = {
 type DialogContext = 'current' | 'bis';
 
 export default function BisListsPage() {
+  const { selectedTeam } = useTeam();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState<string>('');
@@ -169,8 +171,10 @@ export default function BisListsPage() {
   const [useTbcPicker, setUseTbcPicker] = useState(true); // Toggle between DB search and TBC picker
 
   useEffect(() => {
-    fetchPlayers();
-  }, []);
+    if (selectedTeam) {
+      fetchPlayers();
+    }
+  }, [selectedTeam]);
 
   const selectedPlayerData = players.find(p => p.name === selectedPlayer);
 
@@ -221,8 +225,9 @@ export default function BisListsPage() {
   }, [selectedPlayer, bisConfig, currentGear]);
 
   const fetchPlayers = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/players');
+      const res = await fetch(`/api/players?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setPlayers(data);

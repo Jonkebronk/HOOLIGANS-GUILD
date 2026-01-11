@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Users, Sword, Calendar, TrendingUp, Loader2 } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getItemIconUrl, ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
+import { useTeam } from '@/components/providers/team-provider';
 
 type LootRecord = {
   id: string;
@@ -40,21 +41,26 @@ const RESPONSE_LABELS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const { selectedTeam } = useTeam();
   const [recentLoot, setRecentLoot] = useState<LootRecord[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([fetchRecentLoot(), fetchPlayers()]).finally(() => setLoading(false));
-  }, []);
+    if (selectedTeam) {
+      setLoading(true);
+      Promise.all([fetchRecentLoot(), fetchPlayers()]).finally(() => setLoading(false));
+    }
+  }, [selectedTeam]);
 
   useEffect(() => {
     refreshWowheadTooltips();
   }, [recentLoot]);
 
   const fetchRecentLoot = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/loot');
+      const res = await fetch(`/api/loot?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         // Get the 5 most recent
@@ -66,8 +72,9 @@ export default function DashboardPage() {
   };
 
   const fetchPlayers = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/players');
+      const res = await fetch(`/api/players?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setPlayers(data);

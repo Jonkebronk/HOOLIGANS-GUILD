@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Bell, Search, LogOut, User, ChevronDown, Users } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,24 @@ interface HeaderProps {
 export function Header({ user }: HeaderProps) {
   const router = useRouter();
   const { teams, selectedTeam, setSelectedTeam } = useTeam();
+  const [discordRole, setDiscordRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDiscordRole = async () => {
+      try {
+        const res = await fetch('/api/discord/user-role');
+        if (res.ok) {
+          const data = await res.json();
+          setDiscordRole(data.role);
+        }
+      } catch (error) {
+        console.error('Failed to fetch Discord role:', error);
+      }
+    };
+    if (user) {
+      fetchDiscordRole();
+    }
+  }, [user]);
 
   const handleSwitchTeam = () => {
     setSelectedTeam(null);
@@ -114,7 +133,7 @@ export function Header({ user }: HeaderProps) {
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-medium text-foreground">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.role}</p>
+              <p className="text-xs text-muted-foreground">{discordRole || user.role}</p>
             </div>
             <Avatar>
               <AvatarImage src={user.image} alt={user.name} />
