@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, CopyPlus, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { getSpecIconUrl } from '@/lib/wowhead';
+import { SPEC_ROLES } from '@hooligans/shared';
 
 // WoWSims TBC class colors
 const WOWSIMS_CLASS_COLORS: Record<string, string> = {
@@ -434,14 +435,50 @@ export default function RaidSplitsPage() {
   };
 
   const applyImportedSignups = () => {
-    const tempPlayers: Player[] = importedSignups.map((signup, index) => ({
-      id: `imported-${index}-${Date.now()}`,
-      name: signup.name,
-      class: signup.class || 'Unknown',
-      mainSpec: signup.spec || signup.class || 'Unknown',
-      role: signup.role || 'DPS',
-      discordId: signup.discordId,
-    }));
+    const tempPlayers: Player[] = importedSignups.map((signup, index) => {
+      // Build mainSpec from class + spec (e.g., "RogueCombat")
+      const mainSpec = signup.class && signup.spec
+        ? `${signup.class}${signup.spec.replace(/\s+/g, '')}`
+        : signup.spec || signup.class || 'Unknown';
+
+      // Get role info from SPEC_ROLES mapping
+      const specRole = SPEC_ROLES[mainSpec];
+
+      // Determine role based on Raid-Helper role or spec mapping
+      let role = 'DPS';
+      let roleSubtype = 'DPS_Melee';
+
+      if (specRole) {
+        role = specRole.role;
+        roleSubtype = specRole.subtype;
+      } else if (signup.role) {
+        // Map Raid-Helper roles
+        const rhRole = signup.role.toLowerCase();
+        if (rhRole.includes('tank')) {
+          role = 'Tank';
+          roleSubtype = 'Tank';
+        } else if (rhRole.includes('heal') || rhRole.includes('healer')) {
+          role = 'Heal';
+          roleSubtype = 'Heal';
+        } else if (rhRole.includes('melee')) {
+          role = 'DPS';
+          roleSubtype = 'DPS_Melee';
+        } else if (rhRole.includes('range') || rhRole.includes('caster')) {
+          role = 'DPS';
+          roleSubtype = 'DPS_Ranged';
+        }
+      }
+
+      return {
+        id: `imported-${index}-${Date.now()}`,
+        name: signup.name,
+        class: signup.class || 'Unknown',
+        mainSpec,
+        role,
+        roleSubtype,
+        discordId: signup.discordId,
+      };
+    });
 
     setPlayers(prev => {
       const existingNames = new Set(prev.map(p => p.name.toLowerCase()));
@@ -660,15 +697,6 @@ export default function RaidSplitsPage() {
           <h1 className="text-xl font-bold">Raid Compositions</h1>
           <p className="text-gray-400 text-sm">Drag players to assign groups</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
-          onClick={() => setIsImportDialogOpen(true)}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Import
-        </Button>
       </div>
 
       {/* 25-Man Raid */}
@@ -691,9 +719,20 @@ export default function RaidSplitsPage() {
 
       {/* Available Players - Role Columns */}
       <div className="mt-8">
-        <div className="grid grid-cols-4 gap-6">
+        <div className="flex justify-center mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
+            onClick={() => setIsImportDialogOpen(true)}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+        </div>
+        <div className="flex justify-center gap-2">
           {/* Tank Column */}
-          <div className="flex flex-col max-w-[200px]">
+          <div className="flex flex-col w-[180px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Tank} alt="Tank" className="w-8 h-8" />
@@ -736,7 +775,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Healer Column */}
-          <div className="flex flex-col max-w-[200px]">
+          <div className="flex flex-col w-[180px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Healer} alt="Healer" className="w-8 h-8" />
@@ -779,7 +818,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Melee Column */}
-          <div className="flex flex-col max-w-[200px]">
+          <div className="flex flex-col w-[180px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Melee} alt="Melee" className="w-8 h-8" />
@@ -822,7 +861,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Ranged Column */}
-          <div className="flex flex-col max-w-[200px]">
+          <div className="flex flex-col w-[180px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Ranged} alt="Ranged" className="w-8 h-8" />
