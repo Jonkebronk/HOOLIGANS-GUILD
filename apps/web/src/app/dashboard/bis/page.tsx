@@ -1098,7 +1098,8 @@ export default function BisListsPage() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
-                                    className="flex-shrink-0 wh-icon-hide"
+                                    data-wh-icon-size="false"
+                                    className="flex-shrink-0"
                                   >
                                     <img
                                       src={getItemIconUrl(icon, 'small')}
@@ -1117,7 +1118,8 @@ export default function BisListsPage() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
-                                      className="font-medium hover:underline wh-icon-hide"
+                                      data-wh-icon-size="false"
+                                      className="font-medium hover:underline"
                                       style={{ color: ITEM_QUALITY_COLORS[quality] || '#a335ee' }}
                                     >
                                       {itemName}
