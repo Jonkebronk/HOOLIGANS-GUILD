@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { TeamGuard } from '@/components/layout/team-guard';
 
 export default async function DashboardLayout({
   children,
@@ -22,12 +23,14 @@ export default async function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <div className="pl-64">
-        <Header user={user} />
-        <main className="p-6">{children}</main>
+    <TeamGuard>
+      <div className="min-h-screen bg-background">
+        <Sidebar />
+        <div className="pl-64">
+          <Header user={user} />
+          <main className="p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </TeamGuard>
   );
 }

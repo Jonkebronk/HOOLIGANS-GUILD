@@ -11,13 +11,13 @@ export default async function LoginPage({
   const session = await auth();
   const params = await searchParams;
 
-  // If already logged in, redirect to dashboard
+  // If already logged in, redirect to team selection
   if (session) {
-    redirect('/dashboard');
+    redirect('/select-team');
   }
 
   const error = params.error;
-  const callbackUrl = params.callbackUrl || '/dashboard';
+  const callbackUrl = params.callbackUrl || '/select-team';
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">

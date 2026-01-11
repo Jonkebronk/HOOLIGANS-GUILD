@@ -90,6 +90,12 @@ enum UserRole {
   Raider
 }
 
+enum TeamRole {
+  Owner
+  Admin
+  Member
+}
+
 // ============================================
 // AUTH & USERS (NextAuth.js compatible)
 // ============================================
@@ -120,6 +126,43 @@ model User {
 
   // App relations
   players       Player[]  // A user can have multiple characters
+  teamMembers   TeamMember[] // Teams this user belongs to
+}
+
+// ============================================
+// TEAMS
+// ============================================
+
+model Team {
+  id            String    @id @default(cuid())
+  name          String    // e.g., "TEAM NATO", "TEAM SWEDEN", "PuG"
+  description   String?
+  icon          String?   // URL to team icon/logo
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  members       TeamMember[]
+  players       Player[]
+  raidSplits    RaidSplit[]
+  lootRecords   LootRecord[]
+  attendance    AttendanceRecord[]
+
+  @@index([name])
+}
+
+model TeamMember {
+  id            String    @id @default(cuid())
+  teamId        String
+  team          Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role          TeamRole  @default(Member)
+  joinedAt      DateTime  @default(now())
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
 }
 
 model Account {
@@ -163,7 +206,7 @@ model VerificationToken {
 
 model Player {
   id            String    @id @default(cuid())
-  name          String    @unique
+  name          String
   class         WowClass
   mainSpec      String    // e.g., "DruidBalance", "WarriorFury"
   offSpec       String?
@@ -180,6 +223,8 @@ model Player {
   // Relations
   userId        String?
   user          User?     @relation(fields: [userId], references: [id])
+  teamId        String?
+  team          Team?     @relation(fields: [teamId], references: [id])
   lootRecords   LootRecord[]
   attendance    AttendanceRecord[]
   bisStatus     PlayerBisStatus[]
@@ -187,8 +232,10 @@ model Player {
   raidSplits    RaidSplitMember[]
   currentGear   PlayerGear[]
 
+  @@unique([name, teamId]) // Player names unique per team
   @@index([class])
   @@index([active])
+  @@index([teamId])
 }
 
 model PlayerGear {
@@ -258,6 +305,8 @@ model LootRecord {
   item          Item          @relation(fields: [itemId], references: [id])
   playerId      String
   player        Player        @relation(fields: [playerId], references: [id])
+  teamId        String?
+  team          Team?         @relation(fields: [teamId], references: [id])
   response      LootResponse
   lootDate      DateTime
   phase         Phase
@@ -273,6 +322,7 @@ model LootRecord {
   @@index([itemId])
   @@index([lootDate])
   @@index([rcSessionId])
+  @@index([teamId])
 }
 
 // ============================================
@@ -318,6 +368,8 @@ model AttendanceRecord {
   id              String    @id @default(cuid())
   playerId        String
   player          Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId          String?
+  team            Team?     @relation(fields: [teamId], references: [id])
   raidDate        DateTime
   raidName        String    // e.g., "Karazhan", "Black Temple"
   attended        Boolean   @default(false)
@@ -327,6 +379,7 @@ model AttendanceRecord {
   @@unique([playerId, raidDate, raidName])
   @@index([playerId])
   @@index([raidDate])
+  @@index([teamId])
 }
 
 // ============================================
@@ -337,13 +390,16 @@ model RaidSplit {
   id            String    @id @default(cuid())
   name          String    // e.g., "Karazhan Team 1"
   raidNumber    Int       // 1, 2, or 3
+  teamId        String?
+  team          Team?     @relation(fields: [teamId], references: [id])
   active        Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   members       RaidSplitMember[]
 
-  @@unique([raidNumber])
+  @@unique([raidNumber, teamId]) // Raid numbers unique per team
+  @@index([teamId])
 }
 
 model RaidSplitMember {

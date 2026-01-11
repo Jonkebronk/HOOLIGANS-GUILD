@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const teamId = searchParams.get('teamId');
+
     const players = await prisma.player.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        ...(teamId && { teamId }),
+      },
       orderBy: { name: 'asc' },
     });
     return NextResponse.json(players);
@@ -21,13 +27,14 @@ export async function POST(request: Request) {
     // Bulk import mode: create multiple pending players from Discord IDs
     if (body.mode === 'bulk' && Array.isArray(body.discordIds)) {
       const discordIds = body.discordIds as string[];
+      const teamId = body.teamId;
       const createdPlayers = [];
       const skipped = [];
 
       for (const discordId of discordIds) {
-        // Skip if already exists
+        // Skip if already exists in this team
         const existing = await prisma.player.findFirst({
-          where: { discordId },
+          where: { discordId, ...(teamId && { teamId }) },
         });
         if (existing) {
           skipped.push(discordId);
@@ -44,6 +51,7 @@ export async function POST(request: Request) {
             roleSubtype: 'DPS_Melee',
             discordId,
             notes: 'PENDING - needs configuration',
+            ...(teamId && { teamId }),
           },
         });
         createdPlayers.push(player);
@@ -57,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     // Single player creation
-    const { name, wowClass, mainSpec, offSpec, role, roleSubtype, notes, discordId } = body;
+    const { name, wowClass, mainSpec, offSpec, role, roleSubtype, notes, discordId, teamId } = body;
 
     const player = await prisma.player.create({
       data: {
@@ -69,6 +77,7 @@ export async function POST(request: Request) {
         roleSubtype,
         notes,
         discordId,
+        ...(teamId && { teamId }),
       },
     });
 

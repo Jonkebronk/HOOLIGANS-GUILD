@@ -5,10 +5,12 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const raidsOnly = searchParams.get('raids') === 'true';
+    const teamId = searchParams.get('teamId');
 
     // Return unique raids list
     if (raidsOnly) {
       const raids = await prisma.attendanceRecord.findMany({
+        where: teamId ? { teamId } : undefined,
         select: {
           raidDate: true,
           raidName: true,
@@ -29,9 +31,13 @@ export async function GET(request: Request) {
 
     // Get all players with their attendance records
     const players = await prisma.player.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        ...(teamId && { teamId }),
+      },
       include: {
         attendance: {
+          where: teamId ? { teamId } : undefined,
           orderBy: { raidDate: 'desc' },
         },
       },
@@ -39,6 +45,7 @@ export async function GET(request: Request) {
 
     // Get all unique raid dates to calculate total raids
     const allRaids = await prisma.attendanceRecord.findMany({
+      where: teamId ? { teamId } : undefined,
       select: { raidDate: true, raidName: true },
       distinct: ['raidDate', 'raidName'],
     });
@@ -70,7 +77,7 @@ export async function POST(request: Request) {
 
     // Bulk import mode - create attendance for multiple players at once
     if (body.bulk && Array.isArray(body.playerIds)) {
-      const { playerIds, raidDate, raidName, attended = true, fullyAttended = false } = body;
+      const { playerIds, raidDate, raidName, attended = true, fullyAttended = false, teamId } = body;
 
       // Use upsert to avoid duplicates
       const results = await Promise.all(
@@ -90,6 +97,7 @@ export async function POST(request: Request) {
               raidName,
               attended,
               fullyAttended,
+              ...(teamId && { teamId }),
             },
           })
         )
@@ -99,7 +107,7 @@ export async function POST(request: Request) {
     }
 
     // Single record mode
-    const { playerId, raidDate, raidName, attended, fullyAttended } = body;
+    const { playerId, raidDate, raidName, attended, fullyAttended, teamId } = body;
 
     const record = await prisma.attendanceRecord.upsert({
       where: {
@@ -116,6 +124,7 @@ export async function POST(request: Request) {
         raidName,
         attended,
         fullyAttended,
+        ...(teamId && { teamId }),
       },
     });
 
@@ -158,10 +167,12 @@ export async function DELETE(request: Request) {
 
     // Delete entire raid (all attendance records for a date + raid)
     if (raidDate && raidName && !playerId) {
+      const teamId = searchParams.get('teamId');
       const result = await prisma.attendanceRecord.deleteMany({
         where: {
           raidDate: new Date(raidDate),
           raidName,
+          ...(teamId && { teamId }),
         },
       });
       return NextResponse.json({ deleted: result.count });
