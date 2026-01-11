@@ -469,11 +469,11 @@ export default function RaidSplitsPage() {
     return (
       <div
         key={slotKey}
-        className={`h-6 flex items-center transition-all cursor-pointer ${
-          slot ? '' : 'border border-[#333]'
+        className={`h-7 flex items-center transition-all cursor-pointer ${
+          slot ? '' : 'border border-[#444] bg-[#2a2a2a]'
         } ${isDragOver ? 'ring-2 ring-white/50' : ''}`}
         style={{
-          backgroundColor: slot ? classColor || '#333' : '#1a1a1a',
+          backgroundColor: slot ? classColor || '#333' : undefined,
         }}
         draggable={!!slot}
         onDragStart={(e) => slot && handleDragStart(e, slot, { raidId, groupIndex, slotIndex })}
@@ -487,9 +487,9 @@ export default function RaidSplitsPage() {
             <img
               src={getSpecIconUrl(slot.mainSpec)}
               alt={slot.mainSpec}
-              className="w-5 h-5 pointer-events-none"
+              className="w-6 h-6 pointer-events-none"
             />
-            <span className="flex-1 text-[11px] font-medium text-black px-1 truncate pointer-events-none">
+            <span className="flex-1 text-xs font-medium text-black px-1.5 truncate pointer-events-none">
               {getSpecName(slot.mainSpec, slot.class)}
             </span>
             <button
@@ -497,9 +497,9 @@ export default function RaidSplitsPage() {
                 e.stopPropagation();
                 removePlayerFromSlot(raidId, groupIndex, slotIndex);
               }}
-              className="px-1 text-red-800 hover:text-red-600"
+              className="px-1.5 text-red-800 hover:text-red-600"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </>
         )}
@@ -554,9 +554,9 @@ export default function RaidSplitsPage() {
         </div>
 
         {/* Groups Grid */}
-        <div className={`grid ${is25Man ? 'grid-cols-5 gap-2' : 'grid-cols-2 gap-1'}`}>
+        <div className={`flex ${is25Man ? 'gap-1' : 'gap-1'}`}>
           {raid.groups.map((group, groupIndex) => (
-            <div key={groupIndex} className={is25Man ? 'max-w-[180px]' : 'max-w-[140px]'}>
+            <div key={groupIndex} className="w-[160px]">
               <div className="text-[10px] text-gray-500 mb-0.5">Group {groupIndex + 1}</div>
               <div className="space-y-px">
                 {group.map((slot, slotIndex) => renderPlayerSlot(slot, raid.id, groupIndex, slotIndex))}
