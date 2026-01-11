@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, DragEvent } from 'react';
+import { useState, useEffect, useRef, DragEvent } from 'react';
+import html2canvas from 'html2canvas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, CopyPlus, X, Share2 } from 'lucide-react';
+import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, CopyPlus, X, Share2, Send, Hash } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -108,6 +109,20 @@ export default function RaidSplitsPage() {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [exportRaidId, setExportRaidId] = useState<string | null>(null);
   const [exportFormat, setExportFormat] = useState<'plain' | 'csv' | 'names' | 'mrt' | 'json'>('plain');
+
+  // Refs for screenshot functionality
+  const raidRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Screenshot dialog state
+  const [isScreenshotDialogOpen, setIsScreenshotDialogOpen] = useState(false);
+  const [screenshotRaidId, setScreenshotRaidId] = useState<string | null>(null);
+  const [isDiscordDialogOpen, setIsDiscordDialogOpen] = useState(false);
+  const [discordChannels, setDiscordChannels] = useState<{ id: string; name: string }[]>([]);
+  const [selectedChannel, setSelectedChannel] = useState<string>('');
+  const [messageTitle, setMessageTitle] = useState('');
+  const [tagPlayers, setTagPlayers] = useState(true);
+  const [isSendingToDiscord, setIsSendingToDiscord] = useState(false);
+  const [loadingChannels, setLoadingChannels] = useState(false);
 
   // Multi-raid state: 1x 25-man + 3x 10-man
   const [raids, setRaids] = useState<RaidConfig[]>([
@@ -444,6 +459,117 @@ export default function RaidSplitsPage() {
     a.download = `${raid.name.replace(/\s+/g, '_')}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Open screenshot options dialog
+  const openScreenshotDialog = (raidId: string) => {
+    setScreenshotRaidId(raidId);
+    setIsScreenshotDialogOpen(true);
+  };
+
+  // Download screenshot locally
+  const downloadScreenshot = async () => {
+    if (!screenshotRaidId) return;
+    const raid = raids.find(r => r.id === screenshotRaidId);
+    const element = raidRefs.current[screenshotRaidId];
+    if (!raid || !element) return;
+
+    try {
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#0d1117',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const link = document.createElement('a');
+      link.download = `${raid.name.replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      setIsScreenshotDialogOpen(false);
+    } catch (error) {
+      console.error('Screenshot failed:', error);
+      alert('Failed to capture screenshot');
+    }
+  };
+
+  // Fetch Discord channels
+  const fetchDiscordChannels = async () => {
+    setLoadingChannels(true);
+    try {
+      const res = await fetch('/api/discord/channels');
+      if (res.ok) {
+        const data = await res.json();
+        setDiscordChannels(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Discord channels:', error);
+    } finally {
+      setLoadingChannels(false);
+    }
+  };
+
+  // Open Discord send dialog
+  const openDiscordDialog = async () => {
+    setIsScreenshotDialogOpen(false);
+    setIsDiscordDialogOpen(true);
+    setMessageTitle('');
+    setSelectedChannel('');
+    await fetchDiscordChannels();
+  };
+
+  // Send screenshot to Discord
+  const sendToDiscord = async () => {
+    if (!screenshotRaidId || !selectedChannel) return;
+    const raid = raids.find(r => r.id === screenshotRaidId);
+    const element = raidRefs.current[screenshotRaidId];
+    if (!raid || !element) return;
+
+    setIsSendingToDiscord(true);
+    try {
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#0d1117',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const imageData = canvas.toDataURL('image/png');
+
+      // Get player Discord IDs for tagging
+      const playerDiscordIds: string[] = [];
+      if (tagPlayers) {
+        raid.groups.flat().forEach(player => {
+          if (player?.discordId) {
+            playerDiscordIds.push(player.discordId);
+          }
+        });
+      }
+
+      const res = await fetch('/api/discord/send-screenshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelId: selectedChannel,
+          imageData,
+          title: messageTitle || raid.name,
+          playerDiscordIds: tagPlayers ? playerDiscordIds : [],
+        }),
+      });
+
+      if (res.ok) {
+        alert('Screenshot sent to Discord!');
+        setIsDiscordDialogOpen(false);
+      } else {
+        const error = await res.json();
+        alert(`Failed to send: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to send to Discord:', error);
+      alert('Failed to send screenshot to Discord');
+    } finally {
+      setIsSendingToDiscord(false);
+    }
   };
 
   // Open export dialog
@@ -809,24 +935,60 @@ export default function RaidSplitsPage() {
     const is10Man = raid.size === '10';
 
     return (
-      <div key={raid.id} className={compact ? '' : 'mb-6'}>
-        {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
+      <div
+        key={raid.id}
+        ref={(el) => { raidRefs.current[raid.id] = el; }}
+        className={`bg-[#0d1117] border border-[#30363d] rounded-lg ${compact ? '' : 'mb-6'}`}
+      >
+        {/* Card Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#30363d]">
+          <div className="flex items-center gap-3">
             <Input
               value={raid.name}
               onChange={(e) => updateRaidName(raid.id, e.target.value)}
-              className="w-32 h-6 text-sm bg-transparent border-none text-white font-medium hover:bg-white/10 focus:bg-white/10 px-1"
+              className="w-36 h-7 text-sm bg-transparent border-none text-white font-semibold hover:bg-white/10 focus:bg-white/10 px-1"
             />
-            <span className="text-xs text-gray-400">{totalAssigned}/{maxPlayers}</span>
+            <span className="text-sm text-gray-400 font-medium">{totalAssigned}/{maxPlayers}</span>
+          </div>
+          <div className="flex gap-1">
+            {is10Man && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+                onClick={() => duplicateTo10Man(raid.id)}
+                title="Copy from 25-man"
+              >
+                <CopyPlus className="h-4 w-4" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => copyRaidToClipboard(raid.id)} title="Copy">
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openScreenshotDialog(raid.id)} title="Screenshot">
+              <Camera className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => clearRaid(raid.id)} title="Clear">
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openExportDialog(raid.id)} title="Export">
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => downloadRaid(raid.id)} title="Download">
+              <Download className="h-4 w-4" />
+            </Button>
           </div>
         </div>
+
+        {/* Card Body */}
+        <div className="p-4">
 
         {/* Group Headers Row */}
         <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'}`}>
           {raid.groups.map((_, groupIndex) => (
             <div key={groupIndex} className="w-[150px]">
-              <div className="text-yellow-500 text-xs font-medium pb-1 border-b-2 border-yellow-500 text-center">
+              <div className="flex items-center justify-center gap-1.5 text-yellow-500 text-xs font-medium pb-1 border-b-2 border-yellow-500">
+                <Users className="h-3 w-3" />
                 Group {groupIndex + 1}
               </div>
             </div>
@@ -843,32 +1005,6 @@ export default function RaidSplitsPage() {
             </div>
           ))}
         </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-1 mt-2">
-          {is10Man && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20"
-              onClick={() => duplicateTo10Man(raid.id)}
-              title="Copy from 25-man"
-            >
-              <CopyPlus className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => copyRaidToClipboard(raid.id)} title="Copy to clipboard">
-            <Copy className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => clearRaid(raid.id)} title="Clear raid">
-            <RotateCcw className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => openExportDialog(raid.id)} title="Export roster">
-            <Share2 className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => downloadRaid(raid.id)} title="Download as text">
-            <Download className="h-3.5 w-3.5" />
-          </Button>
         </div>
       </div>
     );
@@ -965,7 +1101,7 @@ export default function RaidSplitsPage() {
         </div>
 
         {/* Role Columns Section */}
-        <div className="ml-auto mr-32">
+        <div className="ml-auto mr-40">
           {/* Import button above Tank */}
           <div className="mb-2">
             <Button
@@ -1329,6 +1465,116 @@ export default function RaidSplitsPage() {
             <Button onClick={copyExportToClipboard}>
               <Copy className="h-4 w-4 mr-2" />
               Copy to Clipboard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Screenshot Options Dialog */}
+      <Dialog open={isScreenshotDialogOpen} onOpenChange={setIsScreenshotDialogOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5 text-purple-400" />
+              Screenshot Options
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <Button
+              variant="outline"
+              className="w-full justify-start bg-transparent border-green-600 text-green-400 hover:bg-green-900/20 hover:text-green-300"
+              onClick={downloadScreenshot}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Screenshot
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start bg-[#5865F2] border-[#5865F2] text-white hover:bg-[#4752C4]"
+              onClick={openDiscordDialog}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send to Discord
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-center text-gray-400 hover:text-white"
+              onClick={() => setIsScreenshotDialogOpen(false)}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send to Discord Dialog */}
+      <Dialog open={isDiscordDialogOpen} onOpenChange={setIsDiscordDialogOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5 text-purple-400" />
+              Send Screenshot to Discord
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Select Channel:</Label>
+              <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                <SelectTrigger className="bg-black border-gray-600 text-white">
+                  <SelectValue placeholder={loadingChannels ? "Loading channels..." : "Select a channel"} />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-gray-700 max-h-[300px]">
+                  {discordChannels.map((channel) => (
+                    <SelectItem key={channel.id} value={channel.id} className="text-white hover:bg-gray-800">
+                      <div className="flex items-center gap-2">
+                        <Hash className="h-4 w-4 text-gray-400" />
+                        {channel.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-300">Message Title:</Label>
+              <Input
+                value={messageTitle}
+                onChange={(e) => setMessageTitle(e.target.value)}
+                placeholder="Enter a title for the message..."
+                className="bg-black border-gray-600 text-white"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="tagPlayers"
+                checked={tagPlayers}
+                onChange={(e) => setTagPlayers(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-600 bg-black"
+              />
+              <Label htmlFor="tagPlayers" className="text-gray-300 cursor-pointer">
+                Tag players in the message
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDiscordDialogOpen(false)} className="bg-transparent border-gray-600">
+              Cancel
+            </Button>
+            <Button
+              onClick={sendToDiscord}
+              disabled={!selectedChannel || isSendingToDiscord}
+              className="bg-[#5865F2] hover:bg-[#4752C4]"
+            >
+              {isSendingToDiscord ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              {isSendingToDiscord ? 'Sending...' : 'Send Screenshot'}
             </Button>
           </DialogFooter>
         </DialogContent>
