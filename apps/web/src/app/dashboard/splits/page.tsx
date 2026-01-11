@@ -124,6 +124,10 @@ export default function RaidSplitsPage() {
   const [tagPlayers, setTagPlayers] = useState(true);
   const [isSendingToDiscord, setIsSendingToDiscord] = useState(false);
   const [loadingChannels, setLoadingChannels] = useState(false);
+  const [isPostAllDialogOpen, setIsPostAllDialogOpen] = useState(false);
+  const [postAllChannel, setPostAllChannel] = useState('');
+  const [postAllTitle, setPostAllTitle] = useState('');
+  const [isSendingPostAll, setIsSendingPostAll] = useState(false);
 
   // Multi-raid state: 1x 25-man + 3x 10-man
   const [raids, setRaids] = useState<RaidConfig[]>([
@@ -659,6 +663,98 @@ export default function RaidSplitsPage() {
     }
   };
 
+  // Open Post All dialog
+  const openPostAllDialog = async () => {
+    setIsPostAllDialogOpen(true);
+    setPostAllTitle('Raid Compositions');
+    setPostAllChannel('');
+    await fetchDiscordChannels();
+  };
+
+  // Generate text-based embed content for all raids
+  const generatePostAllContent = (): { content: string; playerDiscordIds: string[] } => {
+    const lines: string[] = [];
+    const playerDiscordIds: string[] = [];
+
+    // 25-Man Raid
+    if (mainRaid) {
+      const hasPlayers = mainRaid.groups.flat().some(Boolean);
+      if (hasPlayers) {
+        lines.push(`**${mainRaid.name}**`);
+        mainRaid.groups.forEach((group, index) => {
+          const groupPlayers = group.filter(Boolean);
+          if (groupPlayers.length > 0) {
+            const playerMentions = groupPlayers.map(p => {
+              if (p?.discordId && !playerDiscordIds.includes(p.discordId)) {
+                playerDiscordIds.push(p.discordId);
+              }
+              return p?.discordId ? `<@${p.discordId}>` : p?.name || '';
+            }).join(' ');
+            lines.push(`Group ${index + 1}: ${playerMentions}`);
+          }
+        });
+        lines.push('');
+      }
+    }
+
+    // 10-Man Splits
+    splitRaids.forEach((raid) => {
+      const hasPlayers = raid.groups.flat().some(Boolean);
+      if (hasPlayers) {
+        lines.push(`**${raid.name}**`);
+        raid.groups.forEach((group, index) => {
+          const groupPlayers = group.filter(Boolean);
+          if (groupPlayers.length > 0) {
+            const playerMentions = groupPlayers.map(p => {
+              if (p?.discordId && !playerDiscordIds.includes(p.discordId)) {
+                playerDiscordIds.push(p.discordId);
+              }
+              return p?.discordId ? `<@${p.discordId}>` : p?.name || '';
+            }).join(' ');
+            lines.push(`Group ${index + 1}: ${playerMentions}`);
+          }
+        });
+        lines.push('');
+      }
+    });
+
+    return { content: lines.join('\n'), playerDiscordIds };
+  };
+
+  // Send combined text-based embed to Discord
+  const sendPostAllToDiscord = async () => {
+    if (!postAllChannel) return;
+
+    setIsSendingPostAll(true);
+    try {
+      const { content, playerDiscordIds } = generatePostAllContent();
+      const title = postAllTitle || 'Raid Compositions';
+      const fullContent = `**${title}**\n\n${content}`;
+
+      const res = await fetch('/api/discord/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelId: postAllChannel,
+          content: fullContent,
+        }),
+      });
+
+      if (res.ok) {
+        alert('Raid compositions posted to Discord!');
+        setIsPostAllDialogOpen(false);
+      } else {
+        const error = await res.json();
+        alert(`Failed to send: ${error.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to send to Discord:', error);
+      alert('Failed to post to Discord');
+    } finally {
+      setIsSendingPostAll(false);
+    }
+  };
+
   // Open export dialog
   const openExportDialog = (raidId: string) => {
     setExportRaidId(raidId);
@@ -1181,6 +1277,15 @@ export default function RaidSplitsPage() {
           <Button
             variant="outline"
             size="sm"
+            className="bg-[#5865F2] border-[#5865F2] text-white hover:bg-[#4752C4] h-7 text-xs"
+            onClick={openPostAllDialog}
+          >
+            <Send className="h-3 w-3 mr-1" />
+            Post All
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10 h-7 text-xs"
             onClick={() => setIsImportDialogOpen(true)}
           >
@@ -1208,7 +1313,7 @@ export default function RaidSplitsPage() {
       </div>
 
       {/* Main Layout: Raids on left, Role Columns on right */}
-      <div className="flex items-start gap-8">
+      <div className="flex items-stretch gap-8">
         {/* Left Side: All Raids */}
         <div className="flex-shrink-0">
           {/* 25-Man Raid */}
@@ -1246,16 +1351,16 @@ export default function RaidSplitsPage() {
         {/* Role Columns Section - Side by Side */}
         <div className="flex-shrink-0 flex gap-6">
           {/* 25-Man Pool */}
-          <div>
+          <div className="flex flex-col">
             <div className="text-xs text-gray-400 mb-1">25-Man Pool</div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-1">
             {(['Tank', 'Healer', 'Melee', 'Ranged'] as const).map((role) => (
-              <div key={role} className="w-[100px]">
+              <div key={role} className="w-[100px] flex flex-col">
                 <div className="flex items-center justify-center gap-1 py-1 text-white text-xs font-bold" style={{ backgroundColor: ROLE_COLORS[role] }}>
                   <img src={ROLE_ICONS[role]} alt={role} className="w-4 h-4" />
                   {role}
                 </div>
-                <div className="bg-[#111] border border-[#333] min-h-[440px] p-0.5">
+                <div className="bg-[#111] border border-[#333] flex-1 p-0.5">
                   {roleGroupedPlayers[role].length === 0 ? (
                     <div className="py-2 text-center text-gray-600 text-[10px]">Empty</div>
                   ) : (
@@ -1266,11 +1371,11 @@ export default function RaidSplitsPage() {
                         onDragStart={(e) => handleDragStart(e, player, 'available')}
                         onDragEnd={handleDragEnd}
                         onClick={() => addPlayerToRaid('main-25', player)}
-                        className="flex items-center h-5 cursor-grab hover:brightness-110 border border-black/40 rounded mb-0.5"
+                        className="flex items-center h-7 cursor-grab hover:brightness-110 border border-black/40 rounded mb-0.5"
                         style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                       >
-                        <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-4 h-4 pointer-events-none" />
-                        <span className="flex-1 text-[9px] font-medium text-black px-0.5 truncate pointer-events-none">{player.name}</span>
+                        <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-5 h-5 pointer-events-none" />
+                        <span className="flex-1 text-xs font-medium text-black px-0.5 truncate pointer-events-none">{player.name}</span>
                       </div>
                     ))
                   )}
@@ -1282,16 +1387,16 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* 10-Man Pool */}
-          <div>
+          <div className="flex flex-col">
             <div className="text-xs text-gray-400 mb-1">10-Man Pool</div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-1">
               {(['Tank', 'Healer', 'Melee', 'Ranged'] as const).map((role) => (
-                <div key={`10m-${role}`} className="w-[100px]">
+                <div key={`10m-${role}`} className="w-[100px] flex flex-col">
                   <div className="flex items-center justify-center gap-1 py-1 text-white text-xs font-bold" style={{ backgroundColor: ROLE_COLORS[role] }}>
                     <img src={ROLE_ICONS[role]} alt={role} className="w-4 h-4" />
                     {role}
                   </div>
-                  <div className="bg-[#111] border border-[#333] min-h-[440px] p-0.5">
+                  <div className="bg-[#111] border border-[#333] flex-1 p-0.5">
                     {roleGroupedFor10Man[role].length === 0 ? (
                       <div className="py-2 text-center text-gray-600 text-[10px]">Empty</div>
                     ) : (
@@ -1302,11 +1407,11 @@ export default function RaidSplitsPage() {
                           onDragStart={(e) => handleDragStart(e, player, 'available')}
                           onDragEnd={handleDragEnd}
                           onClick={() => addPlayerToRaid('split-10-1', player)}
-                          className="flex items-center h-5 cursor-grab hover:brightness-110 border border-black/40 rounded mb-0.5"
+                          className="flex items-center h-7 cursor-grab hover:brightness-110 border border-black/40 rounded mb-0.5"
                           style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                         >
-                          <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-4 h-4 pointer-events-none" />
-                          <span className="flex-1 text-[9px] font-medium text-black px-0.5 truncate pointer-events-none">{player.name}</span>
+                          <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-5 h-5 pointer-events-none" />
+                          <span className="flex-1 text-xs font-medium text-black px-0.5 truncate pointer-events-none">{player.name}</span>
                         </div>
                       ))
                     )}
@@ -1588,6 +1693,75 @@ export default function RaidSplitsPage() {
                 <Send className="h-4 w-4 mr-2" />
               )}
               {isSendingToDiscord ? 'Sending...' : 'Send Screenshot'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Post All Compositions Dialog */}
+      <Dialog open={isPostAllDialogOpen} onOpenChange={setIsPostAllDialogOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-[#5865F2]" />
+              Post All Compositions to Discord
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Post all raid compositions as a text message with player mentions.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Select Channel:</Label>
+              <Select value={postAllChannel} onValueChange={setPostAllChannel}>
+                <SelectTrigger className="bg-black border-gray-600 text-white">
+                  <SelectValue placeholder={loadingChannels ? "Loading channels..." : "Select a channel"} />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-gray-700 max-h-[300px]">
+                  {discordChannels.map((channel) => (
+                    <SelectItem key={channel.id} value={channel.id} className="text-white hover:bg-gray-800">
+                      <div className="flex items-center gap-2">
+                        <Hash className="h-4 w-4 text-gray-400" />
+                        {channel.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-300">Title:</Label>
+              <Input
+                value={postAllTitle}
+                onChange={(e) => setPostAllTitle(e.target.value)}
+                placeholder="Raid Compositions"
+                className="bg-black border-gray-600 text-white"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-gray-300">Preview:</Label>
+              <div className="bg-black border border-gray-700 rounded-md p-3 max-h-[200px] overflow-y-auto text-sm font-mono whitespace-pre-wrap">
+                {generatePostAllContent().content || <span className="text-gray-500">No players assigned to any raids</span>}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPostAllDialogOpen(false)} className="bg-transparent border-gray-600">
+              Cancel
+            </Button>
+            <Button
+              onClick={sendPostAllToDiscord}
+              disabled={!postAllChannel || isSendingPostAll}
+              className="bg-[#5865F2] hover:bg-[#4752C4]"
+            >
+              {isSendingPostAll ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              {isSendingPostAll ? 'Posting...' : 'Post to Discord'}
             </Button>
           </DialogFooter>
         </DialogContent>
