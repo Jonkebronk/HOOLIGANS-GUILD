@@ -39,8 +39,92 @@ export function getClassIconUrl(className: string) {
   return `https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`;
 }
 
+// Normalize spec names from various formats to our standard format
+export function normalizeSpecName(spec: string, playerClass?: string): string {
+  if (!spec) return 'Unknown';
+
+  // Already in correct format
+  if (spec.match(/^(Druid|Hunter|Mage|Paladin|Priest|Rogue|Shaman|Warlock|Warrior)(Balance|Feral|Guardian|Restoration|BeastMastery|Marksmanship|Survival|Arcane|Fire|Frost|Holy|Protection|Retribution|Discipline|Shadow|Assassination|Combat|Subtlety|Elemental|Enhancement|Affliction|Demonology|Destruction|Arms|Fury)$/)) {
+    return spec;
+  }
+
+  // Spec name aliases/variations
+  const specAliases: Record<string, string> = {
+    // Common variations
+    'resto': 'Restoration',
+    'restro': 'Restoration',
+    'restor': 'Restoration',
+    'bm': 'BeastMastery',
+    'beast mastery': 'BeastMastery',
+    'mm': 'Marksmanship',
+    'marks': 'Marksmanship',
+    'sv': 'Survival',
+    'surv': 'Survival',
+    'ret': 'Retribution',
+    'prot': 'Protection',
+    'disc': 'Discipline',
+    'shadow': 'Shadow',
+    'holy': 'Holy',
+    'ele': 'Elemental',
+    'enh': 'Enhancement',
+    'enhance': 'Enhancement',
+    'aff': 'Affliction',
+    'affli': 'Affliction',
+    'demo': 'Demonology',
+    'destro': 'Destruction',
+    'cat': 'Feral',
+    'bear': 'Guardian',
+    'feral': 'Feral',
+    'balance': 'Balance',
+    'boomkin': 'Balance',
+    'boomy': 'Balance',
+    'moonkin': 'Balance',
+    'combat': 'Combat',
+    'sub': 'Subtlety',
+    'subtlety': 'Subtlety',
+    'mut': 'Assassination',
+    'assassination': 'Assassination',
+    'arms': 'Arms',
+    'fury': 'Fury',
+    'arcane': 'Arcane',
+    'fire': 'Fire',
+    'frost': 'Frost',
+    // Dreamstate is Balance Druid
+    'dreamstate': 'Balance',
+  };
+
+  const specLower = spec.toLowerCase().trim();
+  const normalizedSpec = specAliases[specLower];
+
+  if (normalizedSpec && playerClass) {
+    return `${playerClass}${normalizedSpec}`;
+  }
+
+  // Try to extract class and spec from combined string
+  const classNames = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
+  for (const cls of classNames) {
+    if (spec.includes(cls)) {
+      const specPart = spec.replace(cls, '').trim();
+      const normalizedPart = specAliases[specPart.toLowerCase()] || specPart;
+      return `${cls}${normalizedPart}`;
+    }
+  }
+
+  // If we have a class, try to match the spec
+  if (playerClass) {
+    const normalizedPart = specAliases[specLower];
+    if (normalizedPart) {
+      return `${playerClass}${normalizedPart}`;
+    }
+  }
+
+  return spec;
+}
+
 // Get spec icon URL
-export function getSpecIconUrl(spec: string) {
+export function getSpecIconUrl(spec: string, playerClass?: string) {
+  const normalizedSpec = normalizeSpecName(spec, playerClass);
+
   const specIcons: Record<string, string> = {
     // Druid
     DruidBalance: 'spell_nature_starfall',
@@ -80,7 +164,7 @@ export function getSpecIconUrl(spec: string) {
     WarriorFury: 'ability_warrior_innerrage',
     WarriorProtection: 'ability_warrior_defensivestance',
   };
-  const icon = specIcons[spec] || 'inv_misc_questionmark';
+  const icon = specIcons[normalizedSpec] || 'inv_misc_questionmark';
   return `https://wow.zamimg.com/images/wow/icons/medium/${icon}.jpg`;
 }
 

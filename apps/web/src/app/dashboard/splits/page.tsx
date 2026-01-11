@@ -14,7 +14,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, CopyPlus, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { getSpecIconUrl } from '@/lib/wowhead';
+import { getSpecIconUrl, normalizeSpecName } from '@/lib/wowhead';
 import { SPEC_ROLES } from '@hooligans/shared';
 
 // WoWSims TBC class colors
@@ -436,10 +436,8 @@ export default function RaidSplitsPage() {
 
   const applyImportedSignups = () => {
     const tempPlayers: Player[] = importedSignups.map((signup, index) => {
-      // Build mainSpec from class + spec (e.g., "RogueCombat")
-      const mainSpec = signup.class && signup.spec
-        ? `${signup.class}${signup.spec.replace(/\s+/g, '')}`
-        : signup.spec || signup.class || 'Unknown';
+      // Normalize spec name to our format (e.g., "Resto" -> "DruidRestoration")
+      const mainSpec = normalizeSpecName(signup.spec || '', signup.class);
 
       // Get role info from SPEC_ROLES mapping
       const specRole = SPEC_ROLES[mainSpec];
@@ -522,7 +520,7 @@ export default function RaidSplitsPage() {
         {slot && (
           <>
             <img
-              src={getSpecIconUrl(slot.mainSpec)}
+              src={getSpecIconUrl(slot.mainSpec, slot.class)}
               alt={slot.mainSpec}
               className="w-7 h-7 ml-0.5 pointer-events-none"
             />
@@ -640,7 +638,7 @@ export default function RaidSplitsPage() {
               title={`${player.name} - ${player.mainSpec?.replace(player.class, '').trim()}`}
             >
               <img
-                src={getSpecIconUrl(player.mainSpec)}
+                src={getSpecIconUrl(player.mainSpec, player.class)}
                 alt={player.mainSpec}
                 className="w-full h-full pointer-events-none"
               />
@@ -758,7 +756,7 @@ export default function RaidSplitsPage() {
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
-                      src={getSpecIconUrl(player.mainSpec)}
+                      src={getSpecIconUrl(player.mainSpec, player.class)}
                       alt={player.mainSpec}
                       className="w-6 h-6 pointer-events-none"
                     />
@@ -801,7 +799,7 @@ export default function RaidSplitsPage() {
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
-                      src={getSpecIconUrl(player.mainSpec)}
+                      src={getSpecIconUrl(player.mainSpec, player.class)}
                       alt={player.mainSpec}
                       className="w-6 h-6 pointer-events-none"
                     />
@@ -844,7 +842,7 @@ export default function RaidSplitsPage() {
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
-                      src={getSpecIconUrl(player.mainSpec)}
+                      src={getSpecIconUrl(player.mainSpec, player.class)}
                       alt={player.mainSpec}
                       className="w-6 h-6 pointer-events-none"
                     />
@@ -887,7 +885,7 @@ export default function RaidSplitsPage() {
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
-                      src={getSpecIconUrl(player.mainSpec)}
+                      src={getSpecIconUrl(player.mainSpec, player.class)}
                       alt={player.mainSpec}
                       className="w-6 h-6 pointer-events-none"
                     />
