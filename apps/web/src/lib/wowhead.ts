@@ -39,42 +39,64 @@ export function getClassIconUrl(className: string) {
   return `https://wow.zamimg.com/images/wow/icons/large/${icon}.jpg`;
 }
 
+// Capitalize first letter of each word
+function capitalizeClass(className: string): string {
+  if (!className) return 'Unknown';
+  return className.charAt(0).toUpperCase() + className.slice(1).toLowerCase();
+}
+
 // Normalize spec names from various formats to our standard format
 export function normalizeSpecName(spec: string, playerClass?: string): string {
   if (!spec) return 'Unknown';
+
+  // Capitalize class name if provided
+  const normalizedClass = playerClass ? capitalizeClass(playerClass) : undefined;
 
   // Already in correct format
   if (spec.match(/^(Druid|Hunter|Mage|Paladin|Priest|Rogue|Shaman|Warlock|Warrior)(Balance|Feral|Guardian|Restoration|BeastMastery|Marksmanship|Survival|Arcane|Fire|Frost|Holy|Protection|Retribution|Discipline|Shadow|Assassination|Combat|Subtlety|Elemental|Enhancement|Affliction|Demonology|Destruction|Arms|Fury)$/)) {
     return spec;
   }
 
-  // Spec name aliases/variations
+  // Spec name aliases/variations - maps to the proper spec suffix
   const specAliases: Record<string, string> = {
-    // Common variations
+    // Common variations (lowercase)
     'resto': 'Restoration',
     'restro': 'Restoration',
     'restor': 'Restoration',
+    'restoration': 'Restoration',
     'bm': 'BeastMastery',
     'beast mastery': 'BeastMastery',
+    'beastmastery': 'BeastMastery',
     'mm': 'Marksmanship',
     'marks': 'Marksmanship',
+    'marksmanship': 'Marksmanship',
     'sv': 'Survival',
     'surv': 'Survival',
+    'survival': 'Survival',
     'ret': 'Retribution',
+    'retribution': 'Retribution',
     'prot': 'Protection',
+    'protection': 'Protection',
     'disc': 'Discipline',
+    'discipline': 'Discipline',
     'shadow': 'Shadow',
     'holy': 'Holy',
     'ele': 'Elemental',
+    'elemental': 'Elemental',
     'enh': 'Enhancement',
     'enhance': 'Enhancement',
+    'enhancement': 'Enhancement',
     'aff': 'Affliction',
     'affli': 'Affliction',
+    'affliction': 'Affliction',
     'demo': 'Demonology',
+    'demonology': 'Demonology',
     'destro': 'Destruction',
+    'destruction': 'Destruction',
     'cat': 'Feral',
     'bear': 'Guardian',
     'feral': 'Feral',
+    'guardian': 'Guardian',
     'balance': 'Balance',
     'boomkin': 'Balance',
     'boomy': 'Balance',
@@ -96,11 +118,12 @@ export function normalizeSpecName(spec: string, playerClass?: string): string {
   const specLower = spec.toLowerCase().trim();
   const normalizedSpec = specAliases[specLower];
 
-  if (normalizedSpec && playerClass) {
-    return `${playerClass}${normalizedSpec}`;
+  // If we found a match and have a class, combine them
+  if (normalizedSpec && normalizedClass) {
+    return `${normalizedClass}${normalizedSpec}`;
   }
 
-  // Try to extract class and spec from combined string
+  // Try to extract class and spec from combined string (e.g., "DruidRestoration")
   const classNames = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
   for (const cls of classNames) {
     if (spec.includes(cls)) {
@@ -110,11 +133,18 @@ export function normalizeSpecName(spec: string, playerClass?: string): string {
     }
   }
 
-  // If we have a class, try to match the spec
-  if (playerClass) {
-    const normalizedPart = specAliases[specLower];
-    if (normalizedPart) {
-      return `${playerClass}${normalizedPart}`;
+  // If we have a class but spec wasn't in aliases, try direct combination
+  if (normalizedClass) {
+    // Check if spec is already properly capitalized (like "Restoration", "BeastMastery")
+    const validSpecs = ['Balance', 'Feral', 'Guardian', 'Restoration', 'BeastMastery', 'Marksmanship', 'Survival',
+                        'Arcane', 'Fire', 'Frost', 'Holy', 'Protection', 'Retribution', 'Discipline', 'Shadow',
+                        'Assassination', 'Combat', 'Subtlety', 'Elemental', 'Enhancement', 'Affliction',
+                        'Demonology', 'Destruction', 'Arms', 'Fury'];
+
+    for (const validSpec of validSpecs) {
+      if (spec.toLowerCase() === validSpec.toLowerCase()) {
+        return `${normalizedClass}${validSpec}`;
+      }
     }
   }
 

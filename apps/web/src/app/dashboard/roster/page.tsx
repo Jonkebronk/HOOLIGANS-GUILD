@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -132,11 +133,24 @@ export default function RosterPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="relative min-h-screen -m-6">
+      {/* Background Image */}
+      <div className="fixed inset-0 z-0">
+        <Image
+          src="/images/roster-bg.jpg"
+          alt="Roster Background"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+
+      <div className="relative z-10 p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Roster</h1>
-          <p className="text-muted-foreground">Manage your guild members and their specs</p>
+          <h1 className="text-2xl font-bold text-white">Roster</h1>
+          <p className="text-gray-300">Manage your guild members and their specs</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -345,6 +359,7 @@ export default function RosterPage() {
           )}
         </>
       )}
+      </div>
     </div>
   );
 }

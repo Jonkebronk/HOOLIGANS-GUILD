@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,11 +80,24 @@ export default function AttendancePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="relative min-h-screen -m-6">
+      {/* Background Image */}
+      <div className="fixed inset-0 z-0">
+        <Image
+          src="/images/attendance-bg.jpg"
+          alt="Attendance Background"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+
+      <div className="relative z-10 p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Attendance</h1>
-          <p className="text-muted-foreground">Track raid attendance and participation</p>
+          <h1 className="text-2xl font-bold text-white">Attendance</h1>
+          <p className="text-gray-300">Track raid attendance and participation</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -207,6 +221,7 @@ export default function AttendancePage() {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }

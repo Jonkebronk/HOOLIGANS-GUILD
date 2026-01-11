@@ -178,7 +178,8 @@ export default function RaidSplitsPage() {
       Tank: playerList.filter(p => p.role === 'Tank'),
       Healer: playerList.filter(p => p.role === 'Heal'),
       Melee: playerList.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Melee'),
-      Ranged: playerList.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Ranged'),
+      // Include both DPS_Ranged and DPS_Caster in the Ranged column
+      Ranged: playerList.filter(p => p.role === 'DPS' && (p.roleSubtype === 'DPS_Ranged' || p.roleSubtype === 'DPS_Caster')),
     };
   };
 
@@ -403,13 +404,21 @@ export default function RaidSplitsPage() {
         if (res.ok) {
           const event = await res.json();
           if (event.signUps) {
-            const signups: RaidHelperSignup[] = event.signUps.map((s: Record<string, unknown>) => ({
-              name: s.name || s.specName || 'Unknown',
-              discordId: s.odUserId || s.userId,
-              class: s.className,
-              spec: s.specName,
-              role: s.role,
-            }));
+            const signups: RaidHelperSignup[] = event.signUps.map((s: Record<string, unknown>) => {
+              // Capitalize class name (raid-helper returns lowercase like "druid", "hunter")
+              const rawClass = s.className as string | undefined;
+              const className = rawClass
+                ? rawClass.charAt(0).toUpperCase() + rawClass.slice(1).toLowerCase()
+                : undefined;
+
+              return {
+                name: (s.name || s.specName || 'Unknown') as string,
+                discordId: (s.odUserId || s.userId) as string | undefined,
+                class: className,
+                spec: s.specName as string | undefined,
+                role: s.role as string | undefined,
+              };
+            });
             setImportedSignups(signups);
           }
         } else {
@@ -436,11 +445,14 @@ export default function RaidSplitsPage() {
 
   const applyImportedSignups = () => {
     const tempPlayers: Player[] = importedSignups.map((signup, index) => {
+      // Debug: Log what we're getting from Raid-Helper
+      console.log('Importing:', { name: signup.name, class: signup.class, spec: signup.spec, role: signup.role });
+
       // Normalize spec name to our format (e.g., "Resto" -> "DruidRestoration")
-      const mainSpec = normalizeSpecName(signup.spec || '', signup.class);
+      let mainSpec = normalizeSpecName(signup.spec || '', signup.class);
 
       // Get role info from SPEC_ROLES mapping
-      const specRole = SPEC_ROLES[mainSpec];
+      let specRole = SPEC_ROLES[mainSpec];
 
       // Determine role based on Raid-Helper role or spec mapping
       let role = 'DPS';
@@ -465,7 +477,57 @@ export default function RaidSplitsPage() {
           role = 'DPS';
           roleSubtype = 'DPS_Ranged';
         }
+
+        // If spec didn't resolve but we have role, try to create a spec from role + class
+        if ((mainSpec === 'Unknown' || mainSpec === '') && signup.class) {
+          // Fallback specs based on role when spec is missing
+          const fallbackSpecs: Record<string, Record<string, string>> = {
+            Warrior: { Tank: 'WarriorProtection', Heal: 'WarriorProtection', DPS: 'WarriorFury', DPS_Melee: 'WarriorFury', DPS_Ranged: 'WarriorFury' },
+            Paladin: { Tank: 'PaladinProtection', Heal: 'PaladinHoly', DPS: 'PaladinRetribution', DPS_Melee: 'PaladinRetribution', DPS_Ranged: 'PaladinRetribution' },
+            Hunter: { Tank: 'HunterBeastMastery', Heal: 'HunterBeastMastery', DPS: 'HunterBeastMastery', DPS_Melee: 'HunterSurvival', DPS_Ranged: 'HunterBeastMastery' },
+            Rogue: { Tank: 'RogueCombat', Heal: 'RogueCombat', DPS: 'RogueCombat', DPS_Melee: 'RogueCombat', DPS_Ranged: 'RogueCombat' },
+            Priest: { Tank: 'PriestShadow', Heal: 'PriestHoly', DPS: 'PriestShadow', DPS_Melee: 'PriestShadow', DPS_Ranged: 'PriestShadow' },
+            Shaman: { Tank: 'ShamanEnhancement', Heal: 'ShamanRestoration', DPS: 'ShamanElemental', DPS_Melee: 'ShamanEnhancement', DPS_Ranged: 'ShamanElemental' },
+            Mage: { Tank: 'MageFire', Heal: 'MageFire', DPS: 'MageFire', DPS_Melee: 'MageFire', DPS_Ranged: 'MageFire' },
+            Warlock: { Tank: 'WarlockDestruction', Heal: 'WarlockDestruction', DPS: 'WarlockDestruction', DPS_Melee: 'WarlockDestruction', DPS_Ranged: 'WarlockDestruction' },
+            Druid: { Tank: 'DruidGuardian', Heal: 'DruidRestoration', DPS: 'DruidBalance', DPS_Melee: 'DruidFeral', DPS_Ranged: 'DruidBalance' },
+          };
+          const classFallbacks = fallbackSpecs[signup.class];
+          if (classFallbacks) {
+            // Try to match the most specific role first
+            mainSpec = classFallbacks[roleSubtype] || classFallbacks[role] || classFallbacks.DPS;
+            specRole = SPEC_ROLES[mainSpec];
+            if (specRole) {
+              role = specRole.role;
+              roleSubtype = specRole.subtype;
+            }
+          }
+        }
       }
+
+      // Final fallback: if we still don't have a valid spec but have a class, use a default
+      if ((mainSpec === 'Unknown' || mainSpec === '') && signup.class) {
+        const defaultSpecs: Record<string, string> = {
+          Warrior: 'WarriorFury',
+          Paladin: 'PaladinRetribution',
+          Hunter: 'HunterBeastMastery',
+          Rogue: 'RogueCombat',
+          Priest: 'PriestShadow',
+          Shaman: 'ShamanElemental',
+          Mage: 'MageFire',
+          Warlock: 'WarlockDestruction',
+          Druid: 'DruidBalance',
+        };
+        mainSpec = defaultSpecs[signup.class] || mainSpec;
+        const specRole = SPEC_ROLES[mainSpec];
+        if (specRole) {
+          role = specRole.role;
+          roleSubtype = specRole.subtype;
+        }
+      }
+
+      // Debug: Log what we resolved to
+      console.log('Resolved:', { mainSpec, role, roleSubtype });
 
       return {
         id: `imported-${index}-${Date.now()}`,
@@ -697,46 +759,28 @@ export default function RaidSplitsPage() {
           <h1 className="text-xl font-bold">Raid Compositions</h1>
           <p className="text-gray-400 text-sm">Drag players to assign groups</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
+          onClick={() => setIsImportDialogOpen(true)}
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          Import
+        </Button>
       </div>
 
-      {/* 25-Man Raid */}
-      {mainRaid && renderRaidSection(mainRaid)}
-
-      {/* Main Content + Sidebar Layout */}
-      <div className="flex gap-6">
-        {/* Left: 10-Man Splits */}
-        <div className="flex-1">
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
-              <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
-            </div>
-            <div className="flex gap-3">
-              {splitRaids.map(raid => (
-                <div key={raid.id}>
-                  {renderRaidSection(raid, true)}
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* 25-Man Raid + Role Columns side by side */}
+      <div className="flex gap-4 items-start">
+        {/* 25-Man Raid */}
+        <div className="flex-shrink-0">
+          {mainRaid && renderRaidSection(mainRaid)}
         </div>
 
-        {/* Right: Role Columns Sidebar */}
-        <div className="w-[280px] flex-shrink-0">
-          <div className="mb-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
-              onClick={() => setIsImportDialogOpen(true)}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Import
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
+        {/* Role Columns - all 4 side by side, aligned with 25-man */}
+        <div className="flex gap-2">
           {/* Tank Column */}
-          <div className="flex flex-col">
+          <div className="flex flex-col w-[120px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Tank} alt="Tank" className="w-8 h-8" />
@@ -779,7 +823,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Healer Column */}
-          <div className="flex flex-col">
+          <div className="flex flex-col w-[120px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Healer} alt="Healer" className="w-8 h-8" />
@@ -822,7 +866,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Melee Column */}
-          <div className="flex flex-col">
+          <div className="flex flex-col w-[120px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Melee} alt="Melee" className="w-8 h-8" />
@@ -865,7 +909,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Ranged Column */}
-          <div className="flex flex-col">
+          <div className="flex flex-col w-[120px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Ranged} alt="Ranged" className="w-8 h-8" />
@@ -907,6 +951,20 @@ export default function RaidSplitsPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 10-Man Splits Section */}
+      <div className="mt-6">
+        <div className="flex items-center gap-4 mb-3">
+          <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
+          <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
+        </div>
+        <div className="flex gap-3">
+          {splitRaids.map(raid => (
+            <div key={raid.id}>
+              {renderRaidSection(raid, true)}
+            </div>
+          ))}
         </div>
       </div>
 
