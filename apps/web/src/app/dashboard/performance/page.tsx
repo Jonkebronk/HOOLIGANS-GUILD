@@ -380,7 +380,7 @@ export default function PerformancePage() {
             <TabsContent value="rpb" className="mt-0 p-4 pt-2">
               <div className="h-[600px] bg-muted rounded-lg overflow-hidden">
                 <iframe
-                  src="https://docs.google.com/spreadsheets/d/1CVUc5YIl8cTD6HYw8JCF7b91JLHrMMPrwpEQfANl_BA/pubhtml?gid=1016834694&single=true&widget=true&headers=false"
+                  src="https://docs.google.com/spreadsheets/d/1CVUc5YIl8cTD6HYw8JCF7b91JLHrMMPrwpEQfANl_BA/preview"
                   className="w-full h-full border-0"
                 />
               </div>
@@ -388,7 +388,7 @@ export default function PerformancePage() {
             <TabsContent value="cla" className="mt-0 p-4 pt-2">
               <div className="h-[600px] bg-muted rounded-lg overflow-hidden">
                 <iframe
-                  src="https://docs.google.com/spreadsheets/d/1PqP0g10a652X4OgURb8lELLjGGBUv591q8zYpET-0QI/pubhtml?gid=1843677088&single=true&widget=true&headers=false"
+                  src="https://docs.google.com/spreadsheets/d/1PqP0g10a652X4OgURb8lELLjGGBUv591q8zYpET-0QI/preview"
                   className="w-full h-full border-0"
                 />
               </div>
