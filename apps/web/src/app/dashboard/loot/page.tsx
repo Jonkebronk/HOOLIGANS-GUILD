@@ -241,24 +241,6 @@ export default function DropsPage() {
     }
   };
 
-  const handleUpdateLootPrio = async (itemId: string, lootPrio: string) => {
-    // Optimistic update
-    setLootItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, lootPrio } : item))
-    );
-
-    // Persist to database
-    try {
-      await fetch(`/api/loot/${itemId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lootPrio: lootPrio || null }),
-      });
-    } catch (error) {
-      console.error('Failed to update loot priority:', error);
-    }
-  };
-
   const handleRCImport = async (items: ParsedItem[]) => {
     if (!selectedTeam) return;
 
@@ -410,7 +392,6 @@ export default function DropsPage() {
               players={players}
               onAssignPlayer={handleAssignPlayer}
               onUpdateResponse={handleUpdateResponse}
-              onUpdateLootPrio={handleUpdateLootPrio}
             />
           </CardContent>
         </Card>

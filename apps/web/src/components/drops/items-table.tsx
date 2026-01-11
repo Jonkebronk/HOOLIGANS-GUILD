@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { ITEM_QUALITY_COLORS, refreshWowheadTooltips, getItemIconUrl } from '@/lib/wowhead';
 
@@ -40,7 +39,6 @@ type ItemsTableProps = {
   players: Player[];
   onAssignPlayer: (itemId: string, playerId: string) => void;
   onUpdateResponse: (itemId: string, response: string) => void;
-  onUpdateLootPrio: (itemId: string, lootPrio: string) => void;
 };
 
 const RESPONSE_TYPES = [
@@ -57,10 +55,7 @@ export function ItemsTable({
   players,
   onAssignPlayer,
   onUpdateResponse,
-  onUpdateLootPrio,
 }: ItemsTableProps) {
-  const [editingLootPrio, setEditingLootPrio] = useState<string | null>(null);
-
   // Refresh Wowhead tooltips when items change
   useEffect(() => {
     refreshWowheadTooltips();
@@ -196,30 +191,9 @@ export function ItemsTable({
                 {item.lootDate ? new Date(item.lootDate).toLocaleDateString() : '-'}
               </td>
               <td className="py-1.5 px-2">
-                {editingLootPrio === item.id ? (
-                  <Input
-                    className="h-7 text-xs"
-                    defaultValue={item.lootPrio || ''}
-                    onBlur={(e) => {
-                      onUpdateLootPrio(item.id, e.target.value);
-                      setEditingLootPrio(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        onUpdateLootPrio(item.id, e.currentTarget.value);
-                        setEditingLootPrio(null);
-                      }
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  <div
-                    className="text-xs text-muted-foreground cursor-pointer hover:text-foreground truncate"
-                    onClick={() => setEditingLootPrio(item.id)}
-                  >
-                    {item.lootPrio || <span className="text-muted-foreground/50">Click to add...</span>}
-                  </div>
-                )}
+                <div className="text-xs text-muted-foreground truncate" title={item.lootPrio || ''}>
+                  {item.lootPrio || '-'}
+                </div>
               </td>
               <td className="py-1.5 px-2">
                 <div className="flex flex-wrap gap-0.5">
