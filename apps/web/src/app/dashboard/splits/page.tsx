@@ -807,8 +807,8 @@ export default function RaidSplitsPage() {
           {mainRaid && renderRaidSection(mainRaid)}
         </div>
 
-        {/* Role Columns Section - pushed right */}
-        <div className="ml-auto">
+        {/* Role Columns Section */}
+        <div className="ml-8">
           {/* Import button above Tank */}
           <div className="mb-2">
             <Button
