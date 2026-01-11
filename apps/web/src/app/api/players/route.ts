@@ -87,3 +87,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create player' }, { status: 500 });
   }
 }
+
+// PATCH - Assign unassigned players to a team
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { teamId } = body;
+
+    if (!teamId) {
+      return NextResponse.json({ error: 'teamId is required' }, { status: 400 });
+    }
+
+    // Update all players without a teamId
+    const result = await prisma.player.updateMany({
+      where: { teamId: null },
+      data: { teamId },
+    });
+
+    return NextResponse.json({
+      updated: result.count,
+      message: `Assigned ${result.count} players to team`,
+    });
+  } catch (error) {
+    console.error('Failed to assign players:', error);
+    return NextResponse.json({ error: 'Failed to assign players' }, { status: 500 });
+  }
+}

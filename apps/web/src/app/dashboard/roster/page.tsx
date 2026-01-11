@@ -1345,6 +1345,31 @@ export default function RosterPage() {
             <Plus className="h-3 w-3 mr-1" />
             Add Player
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-yellow-700 border-yellow-600 text-white hover:bg-yellow-600 h-7 text-xs"
+            onClick={async () => {
+              if (!selectedTeam) return;
+              try {
+                const res = await fetch('/api/players', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ teamId: selectedTeam.id }),
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  alert(data.message);
+                  fetchPlayersAndAssignments();
+                }
+              } catch (error) {
+                console.error('Failed to claim players:', error);
+              }
+            }}
+          >
+            <Users className="h-3 w-3 mr-1" />
+            Claim Unassigned
+          </Button>
         </div>
       </div>
 

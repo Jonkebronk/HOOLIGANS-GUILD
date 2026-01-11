@@ -864,11 +864,11 @@ export default function BisListsPage() {
             {/* Role Filter */}
             <div className="flex gap-1 mt-2">
               {[
-                { value: 'all', icon: 'trade_engineering', label: 'All' },
-                { value: 'Tank', icon: 'ability_warrior_defensivestance', label: 'Tank' },
-                { value: 'Heal', icon: 'spell_holy_flashheal', label: 'Heal' },
-                { value: 'Melee', icon: 'ability_dualwield', label: 'Melee' },
-                { value: 'Ranged', icon: 'ability_marksmanship', label: 'Ranged' },
+                { value: 'all', icon: null, label: 'All' },
+                { value: 'Tank', icon: '/icons/roles/tank.png', label: 'Tank' },
+                { value: 'Heal', icon: '/icons/roles/healer.png', label: 'Heal' },
+                { value: 'Melee', icon: '/icons/roles/melee.png', label: 'Melee' },
+                { value: 'Ranged', icon: '/icons/roles/ranged.png', label: 'Ranged' },
               ].map((role) => (
                 <button
                   key={role.value}
@@ -880,11 +880,11 @@ export default function BisListsPage() {
                   }`}
                   title={role.label}
                 >
-                  <img
-                    src={`https://wow.zamimg.com/images/wow/icons/small/${role.icon}.jpg`}
-                    alt={role.label}
-                    className="w-6 h-6 rounded"
-                  />
+                  {role.icon ? (
+                    <img src={role.icon} alt={role.label} className="w-6 h-6" />
+                  ) : (
+                    <span className="w-6 h-6 flex items-center justify-center text-xs font-bold">All</span>
+                  )}
                   <span className="text-[10px] text-muted-foreground">{role.label}</span>
                 </button>
               ))}
