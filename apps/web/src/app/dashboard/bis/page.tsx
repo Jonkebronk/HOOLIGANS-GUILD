@@ -238,7 +238,9 @@ export default function BisListsPage() {
   };
 
   const filteredPlayers = players.filter((player) => {
-    return classFilter === 'all' || player.class === classFilter;
+    const matchesClass = classFilter === 'all' || player.class === classFilter;
+    const matchesRole = roleFilter === 'all' || player.role === roleFilter;
+    return matchesClass && matchesRole;
   });
 
   // Search items when query changes
@@ -855,6 +857,33 @@ export default function BisListsPage() {
                 ))}
               </SelectContent>
             </Select>
+            {/* Role Filter */}
+            <div className="flex gap-1 mt-2">
+              {[
+                { value: 'all', icon: 'trade_engineering', label: 'All' },
+                { value: 'Tank', icon: 'ability_warrior_defensivestance', label: 'Tank' },
+                { value: 'Heal', icon: 'spell_holy_flashheal', label: 'Heal' },
+                { value: 'DPS', icon: 'ability_dualwield', label: 'DPS' },
+              ].map((role) => (
+                <button
+                  key={role.value}
+                  onClick={() => setRoleFilter(role.value)}
+                  className={`flex-1 p-1.5 rounded transition-colors flex flex-col items-center gap-1 ${
+                    roleFilter === role.value
+                      ? 'bg-primary/20 border border-primary'
+                      : 'hover:bg-muted/50 border border-transparent'
+                  }`}
+                  title={role.label}
+                >
+                  <img
+                    src={`https://wow.zamimg.com/images/wow/icons/small/${role.icon}.jpg`}
+                    alt={role.label}
+                    className="w-6 h-6 rounded"
+                  />
+                  <span className="text-[10px] text-muted-foreground">{role.label}</span>
+                </button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent className="space-y-1 max-h-[700px] overflow-y-auto">
             {filteredPlayers.map((player) => (
