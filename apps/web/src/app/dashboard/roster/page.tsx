@@ -1432,6 +1432,32 @@ export default function RosterPage() {
             <Users className="h-3 w-3 mr-1" />
             Claim Unassigned
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-red-700 border-red-600 text-white hover:bg-red-600 h-7 text-xs"
+            onClick={async () => {
+              if (!selectedTeam) return;
+              if (!confirm(`Delete ALL players from ${selectedTeam.name}? This cannot be undone!`)) return;
+              try {
+                const res = await fetch(`/api/players/cleanup?teamId=${selectedTeam.id}&all=true`, {
+                  method: 'DELETE',
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  alert(data.message);
+                  fetchPlayersAndAssignments();
+                } else {
+                  alert('Failed to delete players');
+                }
+              } catch (error) {
+                console.error('Failed to delete players:', error);
+              }
+            }}
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            Delete All
+          </Button>
         </div>
       </div>
 
