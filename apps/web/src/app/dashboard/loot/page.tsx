@@ -108,22 +108,28 @@ export default function DropsPage() {
       if (lootRes.ok) {
         const lootData = await lootRes.json();
         // Transform loot records to LootItem format
+        // Handle both: records with item relation AND records with direct itemName (from RC import)
         const items: LootItem[] = lootData.map((record: {
           id: string;
           item?: { name: string; wowheadId?: number; quality?: number };
+          itemName?: string;
+          wowheadId?: number;
+          quality?: number;
+          lootPrio?: string;
           player?: { id: string; name: string; class: string };
           response?: string;
           lootDate?: string;
         }) => ({
           id: record.id,
-          itemName: record.item?.name || 'Unknown Item',
-          wowheadId: record.item?.wowheadId,
-          quality: record.item?.quality || 4,
+          itemName: record.item?.name || record.itemName || 'Unknown Item',
+          wowheadId: record.item?.wowheadId || record.wowheadId,
+          quality: record.item?.quality || record.quality || 4,
           playerId: record.player?.id,
           playerName: record.player?.name,
           playerClass: record.player?.class,
           response: record.response,
           lootDate: record.lootDate,
+          lootPrio: record.lootPrio,
         }));
         setLootItems(items);
 

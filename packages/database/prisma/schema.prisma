@@ -303,16 +303,22 @@ model ItemBisSpec {
 
 model LootRecord {
   id            String        @id @default(cuid())
-  itemId        String
-  item          Item          @relation(fields: [itemId], references: [id])
-  playerId      String
-  player        Player        @relation(fields: [playerId], references: [id])
+  itemId        String?
+  item          Item?         @relation(fields: [itemId], references: [id])
+  playerId      String?
+  player        Player?       @relation(fields: [playerId], references: [id])
   teamId        String?
   team          Team?         @relation(fields: [teamId], references: [id])
-  response      LootResponse
-  lootDate      DateTime
-  phase         Phase
-  lootPoints    Int
+  response      LootResponse?
+  lootDate      DateTime      @default(now())
+  phase         Phase         @default(P1)
+  lootPoints    Int           @default(0)
+
+  // For items not in Item table (from RC import)
+  itemName      String?
+  wowheadId     Int?
+  quality       Int?          @default(4)
+  lootPrio      String?
 
   // RCLootCouncil import fields
   rcTimestamp   DateTime?

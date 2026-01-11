@@ -26,36 +26,36 @@ export async function POST(request: Request) {
       errors: [] as string[],
     };
 
+    // Create LootRecords for each imported item (unassigned drops)
     for (const importItem of items) {
       try {
-        // First, find or create the item in the Item table
-        let item = await prisma.item.findFirst({
+        // Check if this item was already imported (same wowheadId and team)
+        const existing = await prisma.lootRecord.findFirst({
           where: {
-            OR: [
-              { wowheadId: importItem.wowheadId },
-              { name: importItem.itemName },
-            ],
+            teamId,
+            wowheadId: importItem.wowheadId,
+            itemName: importItem.itemName,
           },
         });
 
-        if (!item) {
-          // Create new item
-          item = await prisma.item.create({
-            data: {
-              name: importItem.itemName,
-              wowheadId: importItem.wowheadId,
-              quality: importItem.quality,
-              slot: 'Misc', // Default slot, can be updated later
-              raid: 'Unknown', // Will be updated when item is assigned
-              boss: 'Unknown',
-              phase: 'P1', // Default phase
-            },
-          });
+        if (existing) {
+          results.skipped++;
+          continue;
         }
 
-        // Create a loot record for the drop (unassigned)
-        // Note: We're creating a placeholder loot record that can be assigned later
-        // For now, we just track the item was imported
+        // Create an unassigned drop record
+        await prisma.lootRecord.create({
+          data: {
+            teamId,
+            itemName: importItem.itemName,
+            wowheadId: importItem.wowheadId,
+            quality: importItem.quality,
+            // No playerId = unassigned
+            // No response = pending
+            // No itemId = not linked to Item table yet
+          },
+        });
+
         results.imported++;
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';
