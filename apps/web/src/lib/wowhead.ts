@@ -22,6 +22,26 @@ export function getItemIconUrl(iconName: string, size: 'small' | 'medium' | 'lar
   return `https://wow.zamimg.com/images/wow/icons/${size}/${iconName}.jpg`;
 }
 
+// Get item icon - tries icon name first, falls back to slot icon
+export function getItemIcon(
+  iconName: string | null | undefined,
+  slot?: string,
+  size: 'small' | 'medium' | 'large' = 'medium'
+): string {
+  // If we have a valid icon name (not the default questionmark), use it
+  if (iconName && iconName !== 'inv_misc_questionmark') {
+    return getItemIconUrl(iconName, size);
+  }
+
+  // Fall back to slot icon if provided
+  if (slot && SLOT_ICONS[slot]) {
+    return getItemIconUrl(SLOT_ICONS[slot], size);
+  }
+
+  // Final fallback
+  return getItemIconUrl('inv_misc_questionmark', size);
+}
+
 // Get class icon URL
 export function getClassIconUrl(className: string) {
   const classIcons: Record<string, string> = {

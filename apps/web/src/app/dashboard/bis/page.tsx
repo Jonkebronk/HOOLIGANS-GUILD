@@ -27,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Loader2, Target, Search, X, ExternalLink, Download, Upload, Copy, Check, Database } from 'lucide-react';
 import { CLASS_COLORS, TbcItem, TbcEnchant, TbcGem } from '@hooligans/shared';
-import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, SLOT_ICONS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
+import { getSpecIconUrl, getItemIconUrl, getItemIcon, refreshWowheadTooltips, SLOT_ICONS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { GearPickerModal } from '@/components/gear-picker-modal';
 import { useTeam } from '@/components/providers/team-provider';
 
@@ -1087,7 +1087,7 @@ export default function BisListsPage() {
                           const quality = item?.quality || 4; // Default to epic
                           const zone = item?.raid || bis.source || '-';
                           const boss = item?.boss || '-';
-                          const icon = item?.icon || 'inv_misc_questionmark';
+                          const iconUrl = getItemIcon(item?.icon, bis.slot, 'small');
 
                           return (
                             <tr key={bis.slot} className="border-b border-border/50 hover:bg-muted/30">
@@ -1098,11 +1098,11 @@ export default function BisListsPage() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
-                                    data-wh-icon-size="false"
+                                    data-wh-icon-size="small"
                                     className="flex-shrink-0"
                                   >
                                     <img
-                                      src={getItemIconUrl(icon, 'small')}
+                                      src={iconUrl}
                                       alt={itemName || 'Item'}
                                       className="w-8 h-8 rounded"
                                       style={{
@@ -1199,7 +1199,7 @@ export default function BisListsPage() {
                     className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left cursor-pointer"
                   >
                     <img
-                      src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
+                      src={getItemIcon(item.icon, selectedSlot?.slot, 'medium')}
                       alt={item.name}
                       className="w-9 h-9 rounded pointer-events-none"
                       style={{
