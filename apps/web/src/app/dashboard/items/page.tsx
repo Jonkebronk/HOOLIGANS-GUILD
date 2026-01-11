@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil } from 'lucide-react';
+import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { RAIDS, GEAR_SLOTS, CLASS_COLORS } from '@hooligans/shared';
 import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 
@@ -78,9 +79,10 @@ export default function ItemsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
-  const [editForm, setEditForm] = useState({ lootPriority: '', bisFor: '', bisNextPhase: '' });
+  const [editForm, setEditForm] = useState({ lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [loadingItemDetails, setLoadingItemDetails] = useState(false);
+  const [players, setPlayers] = useState<{ id: string; name: string; class: string }[]>([]);
   const [newItem, setNewItem] = useState({
     name: '',
     slot: '',
@@ -260,14 +262,36 @@ export default function ItemsPage() {
     }
   };
 
+  const fetchPlayers = async () => {
+    try {
+      const res = await fetch('/api/players');
+      if (res.ok) {
+        const data = await res.json();
+        setPlayers(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch players:', error);
+    }
+  };
+
+  const parsePlayerList = (str: string | null | undefined): string[] => {
+    if (!str) return [];
+    return str.split(',').map(s => s.trim()).filter(Boolean);
+  };
+
   const handleOpenEditDialog = async (item: Item) => {
     setEditingItem(item);
     setEditForm({
       lootPriority: item.lootPriority || '',
-      bisFor: item.bisFor || '',
-      bisNextPhase: item.bisNextPhase || '',
+      bisFor: parsePlayerList(item.bisFor),
+      bisNextPhase: parsePlayerList(item.bisNextPhase),
     });
     setIsEditDialogOpen(true);
+
+    // Fetch players list if not already loaded
+    if (players.length === 0) {
+      fetchPlayers();
+    }
 
     // Load full item details including loot records
     setLoadingItemDetails(true);
@@ -278,8 +302,8 @@ export default function ItemsPage() {
         setEditingItem(fullItem);
         setEditForm({
           lootPriority: fullItem.lootPriority || '',
-          bisFor: fullItem.bisFor || '',
-          bisNextPhase: fullItem.bisNextPhase || '',
+          bisFor: parsePlayerList(fullItem.bisFor),
+          bisNextPhase: parsePlayerList(fullItem.bisNextPhase),
         });
       }
     } catch (error) {
@@ -294,17 +318,24 @@ export default function ItemsPage() {
 
     setIsSavingEdit(true);
     try {
+      // Convert arrays to comma-separated strings for storage
+      const dataToSave = {
+        lootPriority: editForm.lootPriority,
+        bisFor: editForm.bisFor.join(', '),
+        bisNextPhase: editForm.bisNextPhase.join(', '),
+      };
+
       const res = await fetch(`/api/items/${editingItem.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(dataToSave),
       });
 
       if (res.ok) {
         // Update local state
         setItems(items.map(item =>
           item.id === editingItem.id
-            ? { ...item, ...editForm }
+            ? { ...item, ...dataToSave }
             : item
         ));
         setIsEditDialogOpen(false);
@@ -774,22 +805,72 @@ export default function ItemsPage() {
 
               <div className="space-y-2">
                 <Label>BiS For (Current Phase)</Label>
-                <Textarea
-                  placeholder="e.g., Combat Rogues, Fury Warriors"
-                  value={editForm.bisFor}
-                  onChange={(e) => setEditForm({ ...editForm, bisFor: e.target.value })}
-                  rows={2}
-                />
+                <div className="bg-muted/50 rounded-md p-3 max-h-40 overflow-y-auto">
+                  {players.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {players.map((player) => (
+                        <label
+                          key={player.id}
+                          className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded p-1"
+                        >
+                          <Checkbox
+                            checked={editForm.bisFor.includes(player.name)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setEditForm({ ...editForm, bisFor: [...editForm.bisFor, player.name] });
+                              } else {
+                                setEditForm({ ...editForm, bisFor: editForm.bisFor.filter(n => n !== player.name) });
+                              }
+                            }}
+                          />
+                          <span style={{ color: CLASS_COLORS[player.class] }}>{player.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Loading players...</p>
+                  )}
+                </div>
+                {editForm.bisFor.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Selected: {editForm.bisFor.join(', ')}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label>BiS Next Phase</Label>
-                <Textarea
-                  placeholder="e.g., Still BiS for Rogues in P2"
-                  value={editForm.bisNextPhase}
-                  onChange={(e) => setEditForm({ ...editForm, bisNextPhase: e.target.value })}
-                  rows={2}
-                />
+                <div className="bg-muted/50 rounded-md p-3 max-h-40 overflow-y-auto">
+                  {players.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {players.map((player) => (
+                        <label
+                          key={player.id}
+                          className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded p-1"
+                        >
+                          <Checkbox
+                            checked={editForm.bisNextPhase.includes(player.name)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setEditForm({ ...editForm, bisNextPhase: [...editForm.bisNextPhase, player.name] });
+                              } else {
+                                setEditForm({ ...editForm, bisNextPhase: editForm.bisNextPhase.filter(n => n !== player.name) });
+                              }
+                            }}
+                          />
+                          <span style={{ color: CLASS_COLORS[player.class] }}>{player.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Loading players...</p>
+                  )}
+                </div>
+                {editForm.bisNextPhase.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Selected: {editForm.bisNextPhase.join(', ')}
+                  </p>
+                )}
               </div>
 
               {/* Looted By Section */}
