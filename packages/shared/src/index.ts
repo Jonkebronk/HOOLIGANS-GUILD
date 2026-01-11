@@ -1,3 +1,6 @@
+// TBC Types for gear picker
+export * from './tbc-types';
+
 // WoW Class Colors
 export const CLASS_COLORS: Record<string, string> = {
   Druid: '#FF7C0A',

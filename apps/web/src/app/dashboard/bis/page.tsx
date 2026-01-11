@@ -25,9 +25,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, Target, Search, X, ExternalLink, Download, Upload, Copy, Check } from 'lucide-react';
-import { CLASS_COLORS } from '@hooligans/shared';
+import { Loader2, Target, Search, X, ExternalLink, Download, Upload, Copy, Check, Database } from 'lucide-react';
+import { CLASS_COLORS, TbcItem, TbcEnchant, TbcGem } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, SLOT_ICONS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
+import { GearPickerModal } from '@/components/gear-picker-modal';
 
 const WOW_CLASSES = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
 
@@ -163,6 +164,10 @@ export default function BisListsPage() {
   const [importLoading, setImportLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // TBC Gear Picker Modal state
+  const [tbcPickerOpen, setTbcPickerOpen] = useState(false);
+  const [useTbcPicker, setUseTbcPicker] = useState(true); // Toggle between DB search and TBC picker
+
   useEffect(() => {
     fetchPlayers();
   }, []);
@@ -282,7 +287,123 @@ export default function BisListsPage() {
     setDialogContext(context);
     setSearchQuery('');
     setSearchResults([]);
-    setDialogOpen(true);
+    if (useTbcPicker) {
+      setTbcPickerOpen(true);
+    } else {
+      setDialogOpen(true);
+    }
+  };
+
+  // Handle TBC item selection from the gear picker modal
+  const handleTbcItemSelect = async (item: TbcItem) => {
+    if (!selectedSlot) return;
+
+    try {
+      if (dialogContext === 'bis') {
+        if (!selectedPlayerData?.mainSpec) return;
+
+        // For BiS, we just store the item reference
+        const res = await fetch('/api/bis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            spec: selectedPlayerData.mainSpec,
+            phase: currentPhase,
+            slot: selectedSlot.slot,
+            wowheadId: item.id,
+            itemName: item.name,
+          }),
+        });
+
+        if (res.ok) {
+          await fetchBisConfig(selectedPlayerData.mainSpec);
+        }
+      } else {
+        // Update current gear
+        const res = await fetch(`/api/players/${selectedPlayerId}/gear`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slot: selectedSlot.slot,
+            wowheadId: item.id,
+            itemName: item.name,
+          }),
+        });
+
+        if (res.ok) {
+          await fetchCurrentGear(selectedPlayerId);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save TBC item selection:', error);
+    }
+  };
+
+  // Handle TBC enchant selection
+  const handleTbcEnchantSelect = async (enchant: TbcEnchant) => {
+    if (!selectedSlot || !selectedPlayerId) return;
+
+    try {
+      // Update current gear with enchant
+      const currentSlotGear = getCurrentGearItem(selectedSlot.slot);
+      if (currentSlotGear) {
+        const res = await fetch(`/api/players/${selectedPlayerId}/gear`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slot: selectedSlot.slot,
+            wowheadId: currentSlotGear.wowheadId || currentSlotGear.item?.wowheadId,
+            itemName: currentSlotGear.itemName || currentSlotGear.item?.name,
+            enchantId: enchant.id,
+          }),
+        });
+
+        if (res.ok) {
+          await fetchCurrentGear(selectedPlayerId);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save TBC enchant selection:', error);
+    }
+  };
+
+  // Handle TBC gem selection
+  const handleTbcGemSelect = async (gem: TbcGem, socketIndex: number) => {
+    if (!selectedSlot || !selectedPlayerId) return;
+
+    try {
+      const currentSlotGear = getCurrentGearItem(selectedSlot.slot);
+      if (currentSlotGear) {
+        const gemUpdates: Record<string, number | null> = {};
+        if (socketIndex === 0) gemUpdates.gem1Id = gem.id;
+        else if (socketIndex === 1) gemUpdates.gem2Id = gem.id;
+        else if (socketIndex === 2) gemUpdates.gem3Id = gem.id;
+
+        const res = await fetch(`/api/players/${selectedPlayerId}/gear`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slot: selectedSlot.slot,
+            wowheadId: currentSlotGear.wowheadId || currentSlotGear.item?.wowheadId,
+            itemName: currentSlotGear.itemName || currentSlotGear.item?.name,
+            ...gemUpdates,
+          }),
+        });
+
+        if (res.ok) {
+          await fetchCurrentGear(selectedPlayerId);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save TBC gem selection:', error);
+    }
+  };
+
+  // Handle clear from TBC picker
+  const handleTbcClear = async () => {
+    if (!selectedSlot) return;
+    await handleClearSlot();
+    setTbcPickerOpen(false);
   };
 
   // Handle item selection
@@ -701,6 +822,15 @@ export default function BisListsPage() {
         </div>
         {selectedPlayerData && (
           <div className="flex gap-2">
+            <Button
+              variant={useTbcPicker ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setUseTbcPicker(!useTbcPicker)}
+              title={useTbcPicker ? 'Using TBC Item Database (4500+ items)' : 'Using Boss Loot Tables'}
+            >
+              <Database className="h-4 w-4 mr-2" />
+              {useTbcPicker ? 'TBC DB' : 'Loot Tables'}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => handleExportToWowSims('current')}>
               <ExternalLink className="h-4 w-4 mr-2" />
               Sim Current
@@ -1005,6 +1135,28 @@ export default function BisListsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* TBC Gear Picker Modal */}
+      <GearPickerModal
+        open={tbcPickerOpen}
+        onOpenChange={setTbcPickerOpen}
+        slot={selectedSlot?.slot || ''}
+        slotLabel={selectedSlot?.label || ''}
+        onSelectItem={handleTbcItemSelect}
+        onSelectEnchant={handleTbcEnchantSelect}
+        onSelectGem={handleTbcGemSelect}
+        onClear={handleTbcClear}
+        currentItem={
+          dialogContext === 'current'
+            ? getCurrentGearItem(selectedSlot?.slot || '')
+              ? { id: getCurrentGearItem(selectedSlot?.slot || '')?.wowheadId || 0, name: getCurrentGearItem(selectedSlot?.slot || '')?.itemName || '' }
+              : null
+            : getBisItem(selectedSlot?.slot || '')
+              ? { id: getBisItem(selectedSlot?.slot || '')?.wowheadId || 0, name: getBisItem(selectedSlot?.slot || '')?.itemName || '' }
+              : null
+        }
+        playerClass={selectedPlayerData?.class}
+      />
     </div>
   );
 }

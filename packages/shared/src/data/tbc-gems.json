@@ -1,0 +1,2396 @@
+[
+  {
+    "id": 30565,
+    "name": "Assassin's Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "meleeCrit": 6,
+      "dodge": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 31863,
+    "name": "Balanced Nightseye",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "attackPower": 8,
+      "rangedAttackPower": 8
+    }
+  },
+  {
+    "id": 31862,
+    "name": "Balanced Shadow Draenite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "stamina": 4,
+      "attackPower": 6,
+      "rangedAttackPower": 6
+    }
+  },
+  {
+    "id": 32213,
+    "name": "Balanced Shadowsong Amethyst",
+    "color": "Purple",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 7,
+      "attackPower": 10,
+      "rangedAttackPower": 10
+    }
+  },
+  {
+    "id": 27809,
+    "name": "Barbed Deep Peridot",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 3,
+      "meleeCrit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 27786,
+    "name": "Barbed Deep Peridot",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 3,
+      "meleeCrit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 30601,
+    "name": "Beaming Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "dodge": 5,
+      "resilience": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 30552,
+    "name": "Blessed Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "spellPower": 4,
+      "healingPower": 11
+    },
+    "unique": true
+  },
+  {
+    "id": 33140,
+    "name": "Blood of Amber",
+    "color": "Yellow",
+    "phase": 0,
+    "quality": "Epic",
+    "stats": {
+      "spellCrit": 12
+    },
+    "unique": true
+  },
+  {
+    "id": 23095,
+    "name": "Bold Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "strength": 6
+    }
+  },
+  {
+    "id": 32193,
+    "name": "Bold Crimson Spinel",
+    "color": "Red",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "strength": 10
+    }
+  },
+  {
+    "id": 24027,
+    "name": "Bold Living Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "strength": 8
+    }
+  },
+  {
+    "id": 28362,
+    "name": "Bold Ornate Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 20,
+      "rangedAttackPower": 20
+    },
+    "unique": true
+  },
+  {
+    "id": 25897,
+    "name": "Bracing Earthstorm Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 9,
+      "healingPower": 26
+    }
+  },
+  {
+    "id": 28595,
+    "name": "Bright Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "attackPower": 12,
+      "rangedAttackPower": 12
+    }
+  },
+  {
+    "id": 35487,
+    "name": "Bright Crimson Spinel",
+    "color": "Red",
+    "phase": 5,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 20,
+      "rangedAttackPower": 20
+    }
+  },
+  {
+    "id": 32197,
+    "name": "Bright Crimson Spinel",
+    "color": "Red",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 20,
+      "rangedAttackPower": 20
+    }
+  },
+  {
+    "id": 24031,
+    "name": "Bright Living Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "attackPower": 16,
+      "rangedAttackPower": 16
+    }
+  },
+  {
+    "id": 24047,
+    "name": "Brilliant Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "intellect": 8
+    }
+  },
+  {
+    "id": 23113,
+    "name": "Brilliant Golden Draenite",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "intellect": 6
+    }
+  },
+  {
+    "id": 32204,
+    "name": "Brilliant Lionseye",
+    "color": "Yellow",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "intellect": 10
+    }
+  },
+  {
+    "id": 25899,
+    "name": "Brutal Earthstorm Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {}
+  },
+  {
+    "id": 30574,
+    "name": "Brutal Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "attackPower": 10,
+      "rangedAttackPower": 10
+    },
+    "unique": true
+  },
+  {
+    "id": 30587,
+    "name": "Champion's Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "strength": 5,
+      "defense": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 34220,
+    "name": "Chaotic Skyfire Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellCrit": 12
+    }
+  },
+  {
+    "id": 33131,
+    "name": "Crimson Sun",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 32,
+      "rangedAttackPower": 32
+    },
+    "unique": true
+  },
+  {
+    "id": 30589,
+    "name": "Dazzling Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "intellect": 5,
+      "mp5": 2
+    },
+    "unique": true
+  },
+  {
+    "id": 23106,
+    "name": "Dazzling Deep Peridot",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "intellect": 3
+    }
+  },
+  {
+    "id": 32225,
+    "name": "Dazzling Seaspray Emerald",
+    "color": "Green",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "intellect": 5,
+      "mp5": 2
+    }
+  },
+  {
+    "id": 24065,
+    "name": "Dazzling Talasite",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "intellect": 4,
+      "mp5": 2
+    }
+  },
+  {
+    "id": 30582,
+    "name": "Deadly Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 8,
+      "meleeCrit": 5,
+      "rangedAttackPower": 8
+    },
+    "unique": true
+  },
+  {
+    "id": 30566,
+    "name": "Defender's Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "parry": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 23097,
+    "name": "Delicate Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "agility": 6
+    }
+  },
+  {
+    "id": 32194,
+    "name": "Delicate Crimson Spinel",
+    "color": "Red",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "agility": 10
+    }
+  },
+  {
+    "id": 24028,
+    "name": "Delicate Living Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "agility": 8
+    }
+  },
+  {
+    "id": 25890,
+    "name": "Destructive Skyfire Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellCrit": 14
+    }
+  },
+  {
+    "id": 30598,
+    "name": "Don Amancio's Heart",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "strength": 8
+    },
+    "unique": true
+  },
+  {
+    "id": 33133,
+    "name": "Don Julio's Heart",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 14,
+      "healingPower": 14
+    },
+    "unique": true
+  },
+  {
+    "id": 30571,
+    "name": "Don Rodrigo's Heart",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "strength": 8
+    },
+    "unique": true
+  },
+  {
+    "id": 30581,
+    "name": "Durable Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 4,
+      "healingPower": 11,
+      "resilience": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 30594,
+    "name": "Effulgent Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "mp5": 2,
+      "defense": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 35503,
+    "name": "Ember Skyfire Diamond",
+    "color": "Meta",
+    "phase": 5,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 14,
+      "healingPower": 14
+    }
+  },
+  {
+    "id": 30591,
+    "name": "Empowered Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 8,
+      "rangedAttackPower": 8,
+      "resilience": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 30590,
+    "name": "Enduring Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "defense": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 23105,
+    "name": "Enduring Deep Peridot",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "stamina": 4,
+      "defense": 3
+    }
+  },
+  {
+    "id": 32223,
+    "name": "Enduring Seaspray Emerald",
+    "color": "Green",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 7,
+      "defense": 5
+    }
+  },
+  {
+    "id": 24062,
+    "name": "Enduring Talasite",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "defense": 4
+    }
+  },
+  {
+    "id": 25895,
+    "name": "Enigmatic Skyfire Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "meleeCrit": 12
+    }
+  },
+  {
+    "id": 30584,
+    "name": "Enscribed Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "strength": 5,
+      "meleeCrit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 30559,
+    "name": "Etched Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "strength": 5,
+      "meleeHit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 35501,
+    "name": "Eternal Earthstorm Diamond",
+    "color": "Meta",
+    "phase": 5,
+    "quality": "Rare",
+    "stats": {
+      "defense": 12
+    }
+  },
+  {
+    "id": 34831,
+    "name": "Eye of the Sea",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 15
+    },
+    "unique": true
+  },
+  {
+    "id": 33144,
+    "name": "Facet of Eternity",
+    "color": "Yellow",
+    "phase": 0,
+    "quality": "Epic",
+    "stats": {
+      "defense": 12
+    },
+    "unique": true
+  },
+  {
+    "id": 33135,
+    "name": "Falling Star",
+    "color": "Blue",
+    "phase": 0,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 18
+    },
+    "unique": true
+  },
+  {
+    "id": 32199,
+    "name": "Flashing Crimson Spinel",
+    "color": "Red",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "parry": 10
+    }
+  },
+  {
+    "id": 24036,
+    "name": "Flashing Living Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "parry": 8
+    }
+  },
+  {
+    "id": 30600,
+    "name": "Fluorescent Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spirit": 4,
+      "spellPower": 6,
+      "healingPower": 6
+    },
+    "unique": true
+  },
+  {
+    "id": 35759,
+    "name": "Forceful Seaspray Emerald",
+    "color": "Green",
+    "phase": 5,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 7,
+      "spellHaste": 5
+    }
+  },
+  {
+    "id": 35318,
+    "name": "Forceful Talasite",
+    "color": "Green",
+    "phase": 5,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "spellHaste": 4
+    }
+  },
+  {
+    "id": 24050,
+    "name": "Gleaming Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellCrit": 8
+    }
+  },
+  {
+    "id": 23114,
+    "name": "Gleaming Golden Draenite",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellCrit": 6
+    }
+  },
+  {
+    "id": 32207,
+    "name": "Gleaming Lionseye",
+    "color": "Yellow",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellCrit": 10
+    }
+  },
+  {
+    "id": 28120,
+    "name": "Gleaming Ornate Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellCrit": 10
+    },
+    "unique": true
+  },
+  {
+    "id": 30558,
+    "name": "Glimmering Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "defense": 4,
+      "parry": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 30556,
+    "name": "Glinting Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "agility": 5,
+      "meleeHit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 23100,
+    "name": "Glinting Flame Spessarite",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "agility": 3,
+      "meleeHit": 3
+    }
+  },
+  {
+    "id": 24061,
+    "name": "Glinting Noble Topaz",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "agility": 4,
+      "meleeHit": 4
+    }
+  },
+  {
+    "id": 32220,
+    "name": "Glinting Pyrestone",
+    "color": "Orange",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "agility": 5,
+      "meleeHit": 5
+    }
+  },
+  {
+    "id": 30585,
+    "name": "Glistening Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "agility": 4,
+      "defense": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 24056,
+    "name": "Glowing Nightseye",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "spellPower": 5,
+      "healingPower": 5
+    }
+  },
+  {
+    "id": 23108,
+    "name": "Glowing Shadow Draenite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "stamina": 4,
+      "spellPower": 4,
+      "healingPower": 4
+    }
+  },
+  {
+    "id": 32215,
+    "name": "Glowing Shadowsong Amethyst",
+    "color": "Purple",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 7,
+      "spellPower": 6,
+      "healingPower": 6
+    }
+  },
+  {
+    "id": 30555,
+    "name": "Glowing Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "spellPower": 6,
+      "healingPower": 6
+    },
+    "unique": true
+  },
+  {
+    "id": 31861,
+    "name": "Great Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellHit": 8
+    }
+  },
+  {
+    "id": 31860,
+    "name": "Great Golden Draenite",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellHit": 6
+    }
+  },
+  {
+    "id": 32210,
+    "name": "Great Lionseye",
+    "color": "Yellow",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellHit": 10
+    }
+  },
+  {
+    "id": 32641,
+    "name": "Imbued Unstable Diamond",
+    "color": "Meta",
+    "phase": 2,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 14,
+      "healingPower": 14
+    }
+  },
+  {
+    "id": 30572,
+    "name": "Imperial Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spirit": 5,
+      "spellPower": 3,
+      "healingPower": 9
+    },
+    "unique": true
+  },
+  {
+    "id": 31116,
+    "name": "Infused Amethyst",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "spellPower": 6,
+      "healingPower": 6
+    }
+  },
+  {
+    "id": 30551,
+    "name": "Infused Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "intellect": 4,
+      "spellPower": 6,
+      "healingPower": 6
+    },
+    "unique": true
+  },
+  {
+    "id": 31865,
+    "name": "Infused Nightseye",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "mp5": 2,
+      "attackPower": 8,
+      "rangedAttackPower": 8
+    }
+  },
+  {
+    "id": 31864,
+    "name": "Infused Shadow Draenite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "attackPower": 6,
+      "rangedAttackPower": 6
+    }
+  },
+  {
+    "id": 32214,
+    "name": "Infused Shadowsong Amethyst",
+    "color": "Purple",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 10,
+      "rangedAttackPower": 10
+    }
+  },
+  {
+    "id": 23098,
+    "name": "Inscribed Flame Spessarite",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "strength": 3,
+      "meleeCrit": 3
+    }
+  },
+  {
+    "id": 24058,
+    "name": "Inscribed Noble Topaz",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "strength": 4,
+      "meleeCrit": 4
+    }
+  },
+  {
+    "id": 28363,
+    "name": "Inscribed Ornate Topaz",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 10,
+      "meleeCrit": 5,
+      "rangedAttackPower": 10
+    },
+    "unique": true
+  },
+  {
+    "id": 32217,
+    "name": "Inscribed Pyrestone",
+    "color": "Orange",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "strength": 5,
+      "meleeCrit": 5
+    }
+  },
+  {
+    "id": 25901,
+    "name": "Insightful Earthstorm Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "intellect": 12
+    }
+  },
+  {
+    "id": 30593,
+    "name": "Iridescent Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 4,
+      "healingPower": 11,
+      "spellCrit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 30602,
+    "name": "Jagged Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6
+    },
+    "unique": true
+  },
+  {
+    "id": 23104,
+    "name": "Jagged Deep Peridot",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "stamina": 4,
+      "meleeCrit": 3
+    }
+  },
+  {
+    "id": 32226,
+    "name": "Jagged Seaspray Emerald",
+    "color": "Green",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 7,
+      "meleeCrit": 5
+    }
+  },
+  {
+    "id": 24067,
+    "name": "Jagged Talasite",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "meleeCrit": 4
+    }
+  },
+  {
+    "id": 33134,
+    "name": "Kailee's Rose",
+    "color": "Red",
+    "phase": 2,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 9,
+      "healingPower": 26
+    },
+    "unique": true
+  },
+  {
+    "id": 30606,
+    "name": "Lambent Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "mp5": 2,
+      "spellHit": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 30547,
+    "name": "Luminous Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "intellect": 4,
+      "spellPower": 4,
+      "healingPower": 11
+    },
+    "unique": true
+  },
+  {
+    "id": 23099,
+    "name": "Luminous Flame Spessarite",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "intellect": 3,
+      "spellPower": 3,
+      "healingPower": 7
+    }
+  },
+  {
+    "id": 24060,
+    "name": "Luminous Noble Topaz",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "intellect": 4,
+      "spellPower": 3,
+      "healingPower": 9
+    }
+  },
+  {
+    "id": 32219,
+    "name": "Luminous Pyrestone",
+    "color": "Orange",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "intellect": 5,
+      "spellPower": 4,
+      "healingPower": 11
+    }
+  },
+  {
+    "id": 23121,
+    "name": "Lustrous Azure Moonstone",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "mp5": 2
+    }
+  },
+  {
+    "id": 32202,
+    "name": "Lustrous Empyrean Sapphire",
+    "color": "Blue",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "mp5": 4
+    }
+  },
+  {
+    "id": 24037,
+    "name": "Lustrous Star of Elune",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "mp5": 3
+    }
+  },
+  {
+    "id": 28361,
+    "name": "Mighty Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "attackPower": 14,
+      "rangedAttackPower": 14
+    },
+    "unique": true
+  },
+  {
+    "id": 28360,
+    "name": "Mighty Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "attackPower": 14,
+      "rangedAttackPower": 14
+    },
+    "unique": true
+  },
+  {
+    "id": 30573,
+    "name": "Mysterious Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 6,
+      "healingPower": 6,
+      "spellPenetration": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 24053,
+    "name": "Mystic Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "resilience": 8
+    }
+  },
+  {
+    "id": 32209,
+    "name": "Mystic Lionseye",
+    "color": "Yellow",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "resilience": 10
+    }
+  },
+  {
+    "id": 25893,
+    "name": "Mystical Skyfire Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {}
+  },
+  {
+    "id": 30575,
+    "name": "Nimble Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "meleeHit": 4,
+      "dodge": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 27820,
+    "name": "Notched Deep Peridot",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 3,
+      "spellCrit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 27785,
+    "name": "Notched Deep Peridot",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 3,
+      "spellCrit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 30548,
+    "name": "Polished Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "spellCrit": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 30588,
+    "name": "Potent Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 6,
+      "healingPower": 6,
+      "spellCrit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 23101,
+    "name": "Potent Flame Spessarite",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellPower": 4,
+      "healingPower": 4,
+      "spellCrit": 3
+    }
+  },
+  {
+    "id": 24059,
+    "name": "Potent Noble Topaz",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 5,
+      "healingPower": 5,
+      "spellCrit": 4
+    }
+  },
+  {
+    "id": 28123,
+    "name": "Potent Ornate Topaz",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 6,
+      "healingPower": 6,
+      "spellCrit": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 32218,
+    "name": "Potent Pyrestone",
+    "color": "Orange",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 6,
+      "healingPower": 6,
+      "spellCrit": 5
+    }
+  },
+  {
+    "id": 32640,
+    "name": "Potent Unstable Diamond",
+    "color": "Meta",
+    "phase": 2,
+    "quality": "Rare",
+    "stats": {
+      "attackPower": 24,
+      "rangedAttackPower": 24
+    }
+  },
+  {
+    "id": 25896,
+    "name": "Powerful Earthstorm Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 18
+    }
+  },
+  {
+    "id": 22460,
+    "name": "Prismatic Sphere",
+    "color": "Prismatic",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "arcaneResistance": 3,
+      "fireResistance": 3,
+      "frostResistance": 3,
+      "natureResistance": 3,
+      "shadowResistance": 3
+    }
+  },
+  {
+    "id": 30553,
+    "name": "Pristine Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 10,
+      "meleeHit": 4,
+      "rangedAttackPower": 10
+    },
+    "unique": true
+  },
+  {
+    "id": 31118,
+    "name": "Pulsing Amethyst",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "attackPower": 10,
+      "rangedAttackPower": 10
+    }
+  },
+  {
+    "id": 32833,
+    "name": "Purified Jaggal Pearl",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spirit": 3,
+      "spellPower": 3,
+      "healingPower": 7
+    }
+  },
+  {
+    "id": 32836,
+    "name": "Purified Shadow Pearl",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spirit": 4,
+      "spellPower": 3,
+      "healingPower": 9
+    }
+  },
+  {
+    "id": 37503,
+    "name": "Purified Shadowsong Amethyst",
+    "color": "Purple",
+    "phase": 5,
+    "quality": "Epic",
+    "stats": {
+      "spirit": 5,
+      "spellPower": 4,
+      "healingPower": 11
+    }
+  },
+  {
+    "id": 35315,
+    "name": "Quick Dawnstone",
+    "color": "Yellow",
+    "phase": 5,
+    "quality": "Rare",
+    "stats": {
+      "spellHaste": 8
+    }
+  },
+  {
+    "id": 35761,
+    "name": "Quick Lionseye",
+    "color": "Yellow",
+    "phase": 5,
+    "quality": "Epic",
+    "stats": {
+      "spellHaste": 10
+    }
+  },
+  {
+    "id": 30608,
+    "name": "Radiant Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellCrit": 5,
+      "spellPenetration": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 23103,
+    "name": "Radiant Deep Peridot",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellCrit": 3,
+      "spellPenetration": 4
+    }
+  },
+  {
+    "id": 32224,
+    "name": "Radiant Seaspray Emerald",
+    "color": "Green",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellCrit": 5,
+      "spellPenetration": 6
+    }
+  },
+  {
+    "id": 24066,
+    "name": "Radiant Talasite",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellCrit": 4,
+      "spellPenetration": 5
+    }
+  },
+  {
+    "id": 35316,
+    "name": "Reckless Noble Topaz",
+    "color": "Orange",
+    "phase": 5,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 5,
+      "healingPower": 5,
+      "spellHaste": 4
+    }
+  },
+  {
+    "id": 35760,
+    "name": "Reckless Pyrestone",
+    "color": "Orange",
+    "phase": 5,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 6,
+      "healingPower": 6,
+      "spellHaste": 5
+    }
+  },
+  {
+    "id": 35707,
+    "name": "Regal Nightseye",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "dodge": 4
+    }
+  },
+  {
+    "id": 30563,
+    "name": "Regal Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "dodge": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 32409,
+    "name": "Relentless Earthstorm Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "agility": 12
+    }
+  },
+  {
+    "id": 30604,
+    "name": "Resplendent Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "strength": 5,
+      "resilience": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 24051,
+    "name": "Rigid Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "meleeHit": 8
+    }
+  },
+  {
+    "id": 23116,
+    "name": "Rigid Golden Draenite",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "meleeHit": 6
+    }
+  },
+  {
+    "id": 32206,
+    "name": "Rigid Lionseye",
+    "color": "Yellow",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "meleeHit": 10
+    }
+  },
+  {
+    "id": 24057,
+    "name": "Royal Nightseye",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 3,
+      "healingPower": 9,
+      "mp5": 2
+    }
+  },
+  {
+    "id": 23109,
+    "name": "Royal Shadow Draenite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellPower": 3,
+      "healingPower": 7
+    }
+  },
+  {
+    "id": 32216,
+    "name": "Royal Shadowsong Amethyst",
+    "color": "Purple",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 4,
+      "healingPower": 11,
+      "mp5": 2
+    }
+  },
+  {
+    "id": 30603,
+    "name": "Royal Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 4,
+      "healingPower": 11,
+      "mp5": 2
+    },
+    "unique": true
+  },
+  {
+    "id": 30560,
+    "name": "Rune Covered Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "mp5": 2,
+      "spellCrit": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 23096,
+    "name": "Runed Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellPower": 7,
+      "healingPower": 7
+    }
+  },
+  {
+    "id": 35488,
+    "name": "Runed Crimson Spinel",
+    "color": "Red",
+    "phase": 5,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 12,
+      "healingPower": 12
+    }
+  },
+  {
+    "id": 32196,
+    "name": "Runed Crimson Spinel",
+    "color": "Red",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 12,
+      "healingPower": 12
+    }
+  },
+  {
+    "id": 24030,
+    "name": "Runed Living Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 9,
+      "healingPower": 9
+    }
+  },
+  {
+    "id": 28118,
+    "name": "Runed Ornate Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 12,
+      "healingPower": 12
+    },
+    "unique": true
+  },
+  {
+    "id": 30586,
+    "name": "Seer's Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "intellect": 4,
+      "spirit": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 24055,
+    "name": "Shifting Nightseye",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "agility": 4,
+      "stamina": 6
+    }
+  },
+  {
+    "id": 23110,
+    "name": "Shifting Shadow Draenite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "agility": 3,
+      "stamina": 4
+    }
+  },
+  {
+    "id": 32212,
+    "name": "Shifting Shadowsong Amethyst",
+    "color": "Purple",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "agility": 5,
+      "stamina": 7
+    }
+  },
+  {
+    "id": 30549,
+    "name": "Shifting Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "agility": 5,
+      "stamina": 6
+    },
+    "unique": true
+  },
+  {
+    "id": 30564,
+    "name": "Shining Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 6,
+      "healingPower": 6,
+      "spellHit": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 24048,
+    "name": "Smooth Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "meleeCrit": 8
+    }
+  },
+  {
+    "id": 28290,
+    "name": "Smooth Golden Draenite",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "meleeCrit": 6
+    }
+  },
+  {
+    "id": 32205,
+    "name": "Smooth Lionseye",
+    "color": "Yellow",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "meleeCrit": 10
+    }
+  },
+  {
+    "id": 28119,
+    "name": "Smooth Ornate Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "meleeCrit": 10
+    },
+    "unique": true
+  },
+  {
+    "id": 23118,
+    "name": "Solid Azure Moonstone",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "stamina": 9
+    }
+  },
+  {
+    "id": 32200,
+    "name": "Solid Empyrean Sapphire",
+    "color": "Blue",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 15
+    }
+  },
+  {
+    "id": 24033,
+    "name": "Solid Star of Elune",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 12
+    }
+  },
+  {
+    "id": 31117,
+    "name": "Soothing Amethyst",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "spellPower": 4,
+      "healingPower": 11
+    }
+  },
+  {
+    "id": 24054,
+    "name": "Sovereign Nightseye",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "strength": 4,
+      "stamina": 6
+    }
+  },
+  {
+    "id": 23111,
+    "name": "Sovereign Shadow Draenite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "strength": 3,
+      "stamina": 4
+    }
+  },
+  {
+    "id": 32211,
+    "name": "Sovereign Shadowsong Amethyst",
+    "color": "Purple",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "strength": 5,
+      "stamina": 7
+    }
+  },
+  {
+    "id": 30546,
+    "name": "Sovereign Tanzanite",
+    "color": "Purple",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "strength": 5,
+      "stamina": 6
+    },
+    "unique": true
+  },
+  {
+    "id": 23119,
+    "name": "Sparkling Azure Moonstone",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spirit": 6
+    }
+  },
+  {
+    "id": 32201,
+    "name": "Sparkling Empyrean Sapphire",
+    "color": "Blue",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spirit": 10
+    }
+  },
+  {
+    "id": 24035,
+    "name": "Sparkling Star of Elune",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spirit": 8
+    }
+  },
+  {
+    "id": 30607,
+    "name": "Splendid Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "parry": 5,
+      "resilience": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 30554,
+    "name": "Stalwart Fire Opal",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "defense": 5,
+      "dodge": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 27812,
+    "name": "Stark Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 8,
+      "healingPower": 8
+    },
+    "unique": true
+  },
+  {
+    "id": 27777,
+    "name": "Stark Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 8,
+      "healingPower": 8
+    },
+    "unique": true
+  },
+  {
+    "id": 30592,
+    "name": "Steady Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "resilience": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 35758,
+    "name": "Steady Seaspray Emerald",
+    "color": "Green",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 7,
+      "resilience": 5
+    }
+  },
+  {
+    "id": 33782,
+    "name": "Steady Talasite",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "resilience": 4
+    }
+  },
+  {
+    "id": 33143,
+    "name": "Stone of Blades",
+    "color": "Yellow",
+    "phase": 0,
+    "quality": "Epic",
+    "stats": {
+      "meleeCrit": 12
+    },
+    "unique": true
+  },
+  {
+    "id": 23120,
+    "name": "Stormy Azure Moonstone",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellPenetration": 8
+    }
+  },
+  {
+    "id": 32203,
+    "name": "Stormy Empyrean Sapphire",
+    "color": "Blue",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellPenetration": 13
+    }
+  },
+  {
+    "id": 24039,
+    "name": "Stormy Star of Elune",
+    "color": "Blue",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPenetration": 10
+    }
+  },
+  {
+    "id": 27679,
+    "name": "Sublime Mystic Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "resilience": 10
+    },
+    "unique": true
+  },
+  {
+    "id": 32198,
+    "name": "Subtle Crimson Spinel",
+    "color": "Red",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "dodge": 10
+    }
+  },
+  {
+    "id": 24032,
+    "name": "Subtle Living Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "dodge": 8
+    }
+  },
+  {
+    "id": 30550,
+    "name": "Sundered Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "mp5": 2,
+      "meleeCrit": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 25894,
+    "name": "Swift Skyfire Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "attackPower": 24,
+      "rangedAttackPower": 24
+    }
+  },
+  {
+    "id": 28557,
+    "name": "Swift Starfire Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 12,
+      "healingPower": 12
+    },
+    "unique": true
+  },
+  {
+    "id": 28556,
+    "name": "Swift Windfire Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "attackPower": 20,
+      "rangedAttackPower": 20
+    },
+    "unique": true
+  },
+  {
+    "id": 23094,
+    "name": "Teardrop Blood Garnet",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellPower": 5,
+      "healingPower": 13
+    }
+  },
+  {
+    "id": 32195,
+    "name": "Teardrop Crimson Spinel",
+    "color": "Red",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 8,
+      "healingPower": 22
+    }
+  },
+  {
+    "id": 24029,
+    "name": "Teardrop Living Ruby",
+    "color": "Red",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 6,
+      "healingPower": 18
+    }
+  },
+  {
+    "id": 25898,
+    "name": "Tenacious Earthstorm Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "defense": 12
+    }
+  },
+  {
+    "id": 24052,
+    "name": "Thick Dawnstone",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "defense": 8
+    }
+  },
+  {
+    "id": 23115,
+    "name": "Thick Golden Draenite",
+    "color": "Yellow",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "defense": 6
+    }
+  },
+  {
+    "id": 32208,
+    "name": "Thick Lionseye",
+    "color": "Yellow",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "defense": 10
+    }
+  },
+  {
+    "id": 32410,
+    "name": "Thundering Skyfire Diamond",
+    "color": "Meta",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {}
+  },
+  {
+    "id": 30583,
+    "name": "Timeless Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "intellect": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 32634,
+    "name": "Unstable Amethyst",
+    "color": "Purple",
+    "phase": 2,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "attackPower": 8,
+      "rangedAttackPower": 8
+    },
+    "unique": true
+  },
+  {
+    "id": 32637,
+    "name": "Unstable Citrine",
+    "color": "Orange",
+    "phase": 2,
+    "quality": "Rare",
+    "stats": {
+      "attackPower": 8,
+      "meleeCrit": 4,
+      "rangedAttackPower": 8
+    },
+    "unique": true
+  },
+  {
+    "id": 32635,
+    "name": "Unstable Peridot",
+    "color": "Green",
+    "phase": 2,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 6,
+      "intellect": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 32636,
+    "name": "Unstable Sapphire",
+    "color": "Purple",
+    "phase": 2,
+    "quality": "Rare",
+    "stats": {
+      "spirit": 4,
+      "spellPower": 3,
+      "healingPower": 9
+    },
+    "unique": true
+  },
+  {
+    "id": 32639,
+    "name": "Unstable Talasite",
+    "color": "Green",
+    "phase": 2,
+    "quality": "Rare",
+    "stats": {
+      "stamina": 4,
+      "spellCrit": 4
+    },
+    "unique": true
+  },
+  {
+    "id": 32638,
+    "name": "Unstable Topaz",
+    "color": "Orange",
+    "phase": 2,
+    "quality": "Rare",
+    "stats": {
+      "intellect": 4,
+      "spellPower": 5,
+      "healingPower": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 31866,
+    "name": "Veiled Flame Spessarite",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "spellPower": 4,
+      "healingPower": 4,
+      "spellHit": 3
+    }
+  },
+  {
+    "id": 31867,
+    "name": "Veiled Noble Topaz",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "spellPower": 5,
+      "healingPower": 5,
+      "spellHit": 4
+    }
+  },
+  {
+    "id": 32221,
+    "name": "Veiled Pyrestone",
+    "color": "Orange",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "spellPower": 6,
+      "healingPower": 6,
+      "spellHit": 5
+    }
+  },
+  {
+    "id": 30605,
+    "name": "Vivid Chrysoprase",
+    "color": "Green",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "stamina": 6,
+      "spellHit": 5
+    },
+    "unique": true
+  },
+  {
+    "id": 22459,
+    "name": "Void Sphere",
+    "color": "Prismatic",
+    "phase": 1,
+    "quality": "Epic",
+    "stats": {
+      "arcaneResistance": 4,
+      "fireResistance": 4,
+      "frostResistance": 4,
+      "natureResistance": 4,
+      "shadowResistance": 4
+    }
+  },
+  {
+    "id": 31869,
+    "name": "Wicked Flame Spessarite",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Uncommon",
+    "stats": {
+      "attackPower": 6,
+      "meleeCrit": 3,
+      "rangedAttackPower": 6
+    }
+  },
+  {
+    "id": 31868,
+    "name": "Wicked Noble Topaz",
+    "color": "Orange",
+    "phase": 1,
+    "quality": "Rare",
+    "stats": {
+      "attackPower": 8,
+      "meleeCrit": 4,
+      "rangedAttackPower": 8
+    }
+  },
+  {
+    "id": 32222,
+    "name": "Wicked Pyrestone",
+    "color": "Orange",
+    "phase": 3,
+    "quality": "Epic",
+    "stats": {
+      "attackPower": 10,
+      "meleeCrit": 5,
+      "rangedAttackPower": 10
+    }
+  }
+]
