@@ -59,10 +59,12 @@ export async function POST(request: NextRequest) {
 
     // Send each raid as a separate embed with image
     for (const raid of raids) {
-      // Build fields for groups
+      // Build fields for groups - list format with bullet points
       const fields = raid.groups.map((group, index) => ({
         name: `Group ${index + 1}`,
-        value: group.players.length > 0 ? group.players.join(' ') : '*Empty*',
+        value: group.players.length > 0
+          ? group.players.map(p => `• ${p}`).join('\n')
+          : '*Empty*',
         inline: true,
       }));
 

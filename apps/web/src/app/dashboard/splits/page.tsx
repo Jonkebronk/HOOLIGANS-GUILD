@@ -1176,7 +1176,7 @@ export default function RaidSplitsPage() {
               alt={slot.mainSpec}
               className="w-7 h-7 ml-0.5"
             />
-            <span className="flex-1 text-sm font-bold text-black pl-1 pr-0.5" style={{ textShadow: '0 0 2px rgba(255,255,255,0.5)' }}>
+            <span className="flex-1 text-sm font-bold text-black text-center" style={{ textShadow: '0 0 2px rgba(255,255,255,0.5)' }}>
               {slot.name}
             </span>
             <button
