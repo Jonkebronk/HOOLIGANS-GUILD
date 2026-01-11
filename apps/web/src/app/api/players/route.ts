@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, wowClass, mainSpec, offSpec, role, roleSubtype, notes } = body;
+    const { name, wowClass, mainSpec, offSpec, role, roleSubtype, notes, discordId } = body;
 
     const player = await prisma.player.create({
       data: {
@@ -28,6 +28,7 @@ export async function POST(request: Request) {
         role,
         roleSubtype,
         notes,
+        discordId,
       },
     });
 

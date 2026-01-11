@@ -48,7 +48,7 @@ export default function RosterPage() {
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [newPlayer, setNewPlayer] = useState({ name: '', wowClass: '', mainSpec: '', notes: '' });
+  const [newPlayer, setNewPlayer] = useState({ name: '', wowClass: '', mainSpec: '', notes: '', discordId: '' });
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
   useEffect(() => {
@@ -85,13 +85,14 @@ export default function RosterPage() {
           role: specRole?.role || 'DPS',
           roleSubtype: specRole?.subtype || 'DPS_Melee',
           notes: newPlayer.notes || null,
+          discordId: newPlayer.discordId || null,
         }),
       });
 
       if (res.ok) {
         const player = await res.json();
         setPlayers([...players, player]);
-        setNewPlayer({ name: '', wowClass: '', mainSpec: '', notes: '' });
+        setNewPlayer({ name: '', wowClass: '', mainSpec: '', notes: '', discordId: '' });
         setIsAddDialogOpen(false);
       }
     } catch (error) {
@@ -173,6 +174,11 @@ export default function RosterPage() {
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes (optional)</Label>
                 <Input id="notes" value={newPlayer.notes} onChange={(e) => setNewPlayer({ ...newPlayer, notes: e.target.value })} placeholder="e.g., BiS wep P1-2" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discordId">Discord ID (optional)</Label>
+                <Input id="discordId" value={newPlayer.discordId} onChange={(e) => setNewPlayer({ ...newPlayer, discordId: e.target.value })} placeholder="e.g., 123456789012345678" />
+                <p className="text-xs text-muted-foreground">Right-click user in Discord → Copy User ID (enable Developer Mode in settings)</p>
               </div>
             </div>
             <DialogFooter>
