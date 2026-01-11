@@ -700,37 +700,41 @@ export default function RaidSplitsPage() {
       {/* 25-Man Raid */}
       {mainRaid && renderRaidSection(mainRaid)}
 
-      {/* 10-Man Splits */}
-      <div className="mt-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
-          <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
-        </div>
-        <div className="flex gap-8">
-          {splitRaids.map(raid => (
-            <div key={raid.id} className="flex-1">
-              {renderRaidSection(raid, true)}
+      {/* Main Content + Sidebar Layout */}
+      <div className="flex gap-6">
+        {/* Left: 10-Man Splits */}
+        <div className="flex-1">
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
+              <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
             </div>
-          ))}
+            <div className="flex gap-3">
+              {splitRaids.map(raid => (
+                <div key={raid.id}>
+                  {renderRaidSection(raid, true)}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Available Players - Role Columns */}
-      <div className="mt-8">
-        <div className="flex justify-center mb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
-            onClick={() => setIsImportDialogOpen(true)}
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Import
-          </Button>
-        </div>
-        <div className="flex justify-center gap-3">
+        {/* Right: Role Columns Sidebar */}
+        <div className="w-[280px] flex-shrink-0">
+          <div className="mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
+              onClick={() => setIsImportDialogOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Import
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
           {/* Tank Column */}
-          <div className="flex flex-col w-[220px]">
+          <div className="flex flex-col">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Tank} alt="Tank" className="w-8 h-8" />
@@ -773,7 +777,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Healer Column */}
-          <div className="flex flex-col w-[220px]">
+          <div className="flex flex-col">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Healer} alt="Healer" className="w-8 h-8" />
@@ -816,7 +820,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Melee Column */}
-          <div className="flex flex-col w-[220px]">
+          <div className="flex flex-col">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Melee} alt="Melee" className="w-8 h-8" />
@@ -859,7 +863,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Ranged Column */}
-          <div className="flex flex-col w-[220px]">
+          <div className="flex flex-col">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Ranged} alt="Ranged" className="w-8 h-8" />
@@ -900,6 +904,7 @@ export default function RaidSplitsPage() {
               {roleGroupedPlayers.Ranged.length}
             </div>
           </div>
+        </div>
         </div>
       </div>
 
