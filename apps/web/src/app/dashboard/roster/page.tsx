@@ -183,8 +183,9 @@ export default function RosterPage() {
 
   // Fetch players only
   const fetchPlayers = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/players');
+      const res = await fetch(`/api/players?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setPlayers(data);
