@@ -36,7 +36,7 @@ export default async function LoginPage({
       {/* Login Content */}
       <div className="relative z-10 flex flex-col items-center">
         {/* HLG Icon */}
-        <div className="mb-6">
+        <div className="mb-4">
           <Image
             src="/hlg-logo.png"
             alt="HOOLIGANS"
@@ -44,6 +44,12 @@ export default async function LoginPage({
             height={220}
             className="drop-shadow-2xl"
           />
+        </div>
+
+        {/* Welcome Text */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-white mb-1">Welcome to HOOLIGANS</h1>
+          <p className="text-gray-400">Smarter management for guilds and pugs.</p>
         </div>
 
         {/* Login Card */}
