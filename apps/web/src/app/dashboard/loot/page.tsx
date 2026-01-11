@@ -33,6 +33,7 @@ type LootItem = {
   itemName: string;
   wowheadId?: number;
   quality?: number;
+  icon?: string;
   playerId?: string;
   playerName?: string;
   playerClass?: string;
@@ -111,7 +112,7 @@ export default function DropsPage() {
         // Handle both: records with item relation AND records with direct itemName (from RC import)
         const items: LootItem[] = lootData.map((record: {
           id: string;
-          item?: { name: string; wowheadId?: number; quality?: number };
+          item?: { name: string; wowheadId?: number; quality?: number; icon?: string };
           itemName?: string;
           wowheadId?: number;
           quality?: number;
@@ -124,6 +125,7 @@ export default function DropsPage() {
           itemName: record.item?.name || record.itemName || 'Unknown Item',
           wowheadId: record.item?.wowheadId || record.wowheadId,
           quality: record.item?.quality || record.quality || 4,
+          icon: record.item?.icon,
           playerId: record.player?.id,
           playerName: record.player?.name,
           playerClass: record.player?.class,

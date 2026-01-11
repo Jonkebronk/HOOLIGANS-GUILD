@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { CLASS_COLORS } from '@hooligans/shared';
-import { ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
+import { ITEM_QUALITY_COLORS, refreshWowheadTooltips, getItemIconUrl } from '@/lib/wowhead';
 
 type Player = {
   id: string;
@@ -24,6 +24,7 @@ type LootItem = {
   itemName: string;
   wowheadId?: number;
   quality?: number;
+  icon?: string;
   playerId?: string;
   playerName?: string;
   playerClass?: string;
@@ -95,12 +96,25 @@ export function ItemsTable({
               <td className="py-1.5 px-2 text-muted-foreground">{index + 1}</td>
               <td className="py-1.5 px-2">
                 <div className="flex items-center gap-2">
+                  {item.icon && (
+                    <img
+                      src={getItemIconUrl(item.icon, 'small')}
+                      alt=""
+                      className="w-6 h-6 rounded flex-shrink-0"
+                      style={{
+                        borderWidth: 1,
+                        borderStyle: 'solid',
+                        borderColor: ITEM_QUALITY_COLORS[item.quality || 4],
+                      }}
+                    />
+                  )}
                   {item.wowheadId ? (
                     <a
                       href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       data-wowhead={`item=${item.wowheadId}&domain=tbc`}
+                      data-wh-icon-size={item.icon ? '0' : 'small'}
                       className="hover:underline truncate"
                       style={{ color: ITEM_QUALITY_COLORS[item.quality || 4] }}
                     >
