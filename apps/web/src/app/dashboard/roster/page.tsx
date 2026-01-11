@@ -84,7 +84,7 @@ type RaidConfig = {
 const SLOTS_PER_GROUP = 5;
 
 export default function RosterPage() {
-  const { selectedTeam } = useTeam();
+  const { selectedTeam, teams } = useTeam();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -116,7 +116,7 @@ export default function RosterPage() {
 
   // Add player dialog state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newPlayer, setNewPlayer] = useState({ name: '', wowClass: '', mainSpec: '', notes: '', discordId: '' });
+  const [newPlayer, setNewPlayer] = useState({ name: '', wowClass: '', mainSpec: '', notes: '', discordId: '', teamId: '' });
 
   // Export dialog state
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
@@ -721,7 +721,7 @@ export default function RosterPage() {
 
   // Add new player
   const handleAddPlayer = async () => {
-    if (!newPlayer.name || !newPlayer.mainSpec) return;
+    if (!newPlayer.name || !newPlayer.mainSpec || !newPlayer.teamId) return;
 
     setIsSaving(true);
     try {
@@ -737,12 +737,13 @@ export default function RosterPage() {
           roleSubtype: specRole?.subtype || 'DPS_Melee',
           notes: newPlayer.notes || null,
           discordId: newPlayer.discordId || null,
+          teamId: newPlayer.teamId,
         }),
       });
 
       if (res.ok) {
-        await fetchPlayers();
-        setNewPlayer({ name: '', wowClass: '', mainSpec: '', notes: '', discordId: '' });
+        await fetchPlayersAndAssignments();
+        setNewPlayer({ name: '', wowClass: '', mainSpec: '', notes: '', discordId: '', teamId: '' });
         setIsAddDialogOpen(false);
       }
     } catch (error) {
@@ -1355,7 +1356,10 @@ export default function RosterPage() {
             variant="outline"
             size="sm"
             className="bg-green-700 border-green-600 text-white hover:bg-green-600 h-7 text-xs"
-            onClick={() => setIsAddDialogOpen(true)}
+            onClick={() => {
+              setNewPlayer({ name: '', wowClass: '', mainSpec: '', notes: '', discordId: '', teamId: selectedTeam?.id || '' });
+              setIsAddDialogOpen(true);
+            }}
           >
             <Plus className="h-3 w-3 mr-1" />
             Add Player
@@ -1601,6 +1605,21 @@ export default function RosterPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
+              <Label className="text-gray-300">Team</Label>
+              <Select value={newPlayer.teamId} onValueChange={(value) => setNewPlayer({ ...newPlayer, teamId: value })}>
+                <SelectTrigger className="bg-black border-gray-600 text-white">
+                  <SelectValue placeholder="Select team" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-gray-700">
+                  {teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id} className="text-white hover:bg-gray-800">
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label className="text-gray-300">Character Name</Label>
               <Input
                 value={newPlayer.name}
@@ -1662,7 +1681,7 @@ export default function RosterPage() {
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="bg-transparent border-gray-600">
               Cancel
             </Button>
-            <Button onClick={handleAddPlayer} disabled={!newPlayer.name || !newPlayer.mainSpec || isSaving}>
+            <Button onClick={handleAddPlayer} disabled={!newPlayer.teamId || !newPlayer.name || !newPlayer.mainSpec || isSaving}>
               {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
               Add Player
             </Button>
