@@ -831,11 +831,7 @@ export default function BisListsPage() {
             </Button>
             <Button variant="outline" size="sm" onClick={() => handleExportToWowSims('current')}>
               <ExternalLink className="h-4 w-4 mr-2" />
-              Sim Current
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExportToWowSims('bis')}>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Sim BiS
+              WoWSims
             </Button>
           </div>
         )}
