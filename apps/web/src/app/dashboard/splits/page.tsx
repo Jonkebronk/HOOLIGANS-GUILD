@@ -967,7 +967,7 @@ export default function RaidSplitsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+                className="h-7 w-7 text-green-500 hover:text-green-400 hover:bg-green-900/20"
                 onClick={() => duplicateTo10Man(raid.id)}
                 title="Copy from 25-man"
               >
