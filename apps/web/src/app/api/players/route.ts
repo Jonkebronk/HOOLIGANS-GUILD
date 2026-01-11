@@ -32,11 +32,11 @@ export async function POST(request: Request) {
       const skipped = [];
 
       // Support both old format (discordIds) and new format (members with class/spec)
-      const members: { discordId: string; wowClass?: string | null; mainSpec?: string | null }[] =
+      const members: { discordId: string; displayName?: string | null; wowClass?: string | null; mainSpec?: string | null }[] =
         body.members || body.discordIds.map((id: string) => ({ discordId: id }));
 
       for (const member of members) {
-        const { discordId, wowClass, mainSpec } = member;
+        const { discordId, displayName, wowClass, mainSpec } = member;
 
         // Skip if already exists in this team
         const existing = await prisma.player.findFirst({
@@ -51,16 +51,20 @@ export async function POST(request: Request) {
         const hasConfig = wowClass && mainSpec;
         const specRole = mainSpec ? SPEC_ROLES[mainSpec] : null;
 
+        // Use display name if available, otherwise create pending name
+        const playerName = displayName || `Pending-${discordId.slice(-6)}`;
+        const isPending = !displayName || !hasConfig;
+
         // Create player - either configured or pending
         const player = await prisma.player.create({
           data: {
-            name: hasConfig ? `Pending-${discordId.slice(-6)}` : `Pending-${discordId.slice(-6)}`,
+            name: playerName,
             class: wowClass || 'Warrior',
             mainSpec: mainSpec || 'WarriorFury',
             role: specRole?.role || 'DPS',
             roleSubtype: specRole?.subtype || 'DPS_Melee',
             discordId,
-            notes: hasConfig ? null : 'PENDING - needs configuration',
+            notes: isPending ? 'PENDING - needs configuration' : null,
             ...(teamId && { teamId }),
           },
         });

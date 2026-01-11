@@ -26,6 +26,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RAIDS, GEAR_SLOTS, CLASS_COLORS } from '@hooligans/shared';
 import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
+import { useTeam } from '@/components/providers/team-provider';
 
 type LootRecord = {
   id: string;
@@ -62,6 +63,7 @@ const QUALITIES = [
 ];
 
 export default function ItemsPage() {
+  const { selectedTeam } = useTeam();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -95,7 +97,10 @@ export default function ItemsPage() {
 
   useEffect(() => {
     fetchItems();
-  }, []);
+    if (selectedTeam) {
+      fetchPlayers();
+    }
+  }, [selectedTeam]);
 
   useEffect(() => {
     refreshWowheadTooltips();
@@ -263,8 +268,9 @@ export default function ItemsPage() {
   };
 
   const fetchPlayers = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/players');
+      const res = await fetch(`/api/players?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setPlayers(data);

@@ -258,9 +258,10 @@ export default function RosterPage() {
 
     setIsImportingRole(true);
     try {
-      // Build member configs with class/spec data
+      // Build member configs with class/spec data and display name
       const membersWithConfig = roleMembers.map(m => ({
         discordId: m.id,
+        displayName: m.displayName,
         wowClass: memberConfigs[m.id]?.wowClass || null,
         mainSpec: memberConfigs[m.id]?.mainSpec || null,
       }));
@@ -376,9 +377,9 @@ export default function RosterPage() {
     }
   };
 
-  // Check if player is pending (needs configuration)
+  // Check if player is pending (no name set - show "???" instead)
   const isPendingPlayer = (player: Player) => {
-    return player.name.startsWith('Pending-') || player.notes === 'PENDING - needs configuration';
+    return player.name.startsWith('Pending-');
   };
 
   // Get all players assigned to a specific raid

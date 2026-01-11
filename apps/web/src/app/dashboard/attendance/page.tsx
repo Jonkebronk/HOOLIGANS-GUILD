@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { CLASS_COLORS, RAIDS } from '@hooligans/shared';
 import { getSpecIconUrl } from '@/lib/wowhead';
+import { useTeam } from '@/components/providers/team-provider';
 
 type AttendanceRecord = {
   id: string;
@@ -67,6 +68,7 @@ type ImportedPlayer = {
 };
 
 export default function AttendancePage() {
+  const { selectedTeam } = useTeam();
   const [players, setPlayers] = useState<PlayerWithAttendance[]>([]);
   const [raids, setRaids] = useState<RecordedRaid[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,13 +100,16 @@ export default function AttendancePage() {
   const [deletingRaid, setDeletingRaid] = useState<RecordedRaid | null>(null);
 
   useEffect(() => {
-    fetchAttendance();
-    fetchRaids();
-  }, []);
+    if (selectedTeam) {
+      fetchAttendance();
+      fetchRaids();
+    }
+  }, [selectedTeam]);
 
   const fetchAttendance = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/attendance');
+      const res = await fetch(`/api/attendance?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setPlayers(data);
@@ -117,8 +122,9 @@ export default function AttendancePage() {
   };
 
   const fetchRaids = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/attendance?raids=true');
+      const res = await fetch(`/api/attendance?raids=true&teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setRaids(data);

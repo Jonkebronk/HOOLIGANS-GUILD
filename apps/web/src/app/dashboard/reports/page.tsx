@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, PieChart, TrendingUp, Users, Package, Calendar, Award, Target, Loader2 } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
+import { useTeam } from '@/components/providers/team-provider';
 
 type LootRecord = {
   id: string;
@@ -32,17 +33,21 @@ const RESPONSE_TYPES = [
 ];
 
 export default function ReportsPage() {
+  const { selectedTeam } = useTeam();
   const [lootRecords, setLootRecords] = useState<LootRecord[]>([]);
   const [players, setPlayers] = useState<PlayerWithAttendance[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([fetchLootRecords(), fetchAttendance()]).finally(() => setLoading(false));
-  }, []);
+    if (selectedTeam) {
+      Promise.all([fetchLootRecords(), fetchAttendance()]).finally(() => setLoading(false));
+    }
+  }, [selectedTeam]);
 
   const fetchLootRecords = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/loot');
+      const res = await fetch(`/api/loot?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setLootRecords(data);
@@ -53,8 +58,9 @@ export default function ReportsPage() {
   };
 
   const fetchAttendance = async () => {
+    if (!selectedTeam) return;
     try {
-      const res = await fetch('/api/attendance');
+      const res = await fetch(`/api/attendance?teamId=${selectedTeam.id}`);
       if (res.ok) {
         const data = await res.json();
         setPlayers(data);
