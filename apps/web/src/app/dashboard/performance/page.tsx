@@ -32,8 +32,8 @@ import {
   RefreshCw,
   Users,
   Calendar,
-  Link as LinkIcon,
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTeam } from '@/components/providers/team-provider';
 import { CLASS_COLORS, RAIDS } from '@hooligans/shared';
 
@@ -349,34 +349,53 @@ export default function PerformancePage() {
         </div>
       </div>
 
-      {/* Google Sheet Embed */}
-      {selectedPerformance?.googleSheetUrl && (
-        <Card>
-          <CardHeader className="py-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <LinkIcon className="h-4 w-4" />
-              RPB/CLA Analysis
-              <a
-                href={selectedPerformance.googleSheetUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-auto text-sm text-muted-foreground hover:text-foreground"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-              <iframe
-                src={selectedPerformance.googleSheetUrl.replace('/edit', '/pubhtml')}
-                className="w-full h-full border-0"
-                sandbox="allow-scripts allow-same-origin"
-              />
+      {/* RPB & CLA Analysis Tabs */}
+      <Card>
+        <CardContent className="p-0">
+          <Tabs defaultValue="rpb" className="w-full">
+            <div className="flex items-center justify-between px-4 pt-3 pb-0">
+              <TabsList>
+                <TabsTrigger value="rpb">RPB Analysis</TabsTrigger>
+                <TabsTrigger value="cla">CLA Analysis</TabsTrigger>
+              </TabsList>
+              <div className="flex gap-2">
+                <a
+                  href="https://docs.google.com/spreadsheets/d/1CVUc5YIl8cTD6HYw8JCF7b91JLHrMMPrwpEQfANl_BA/edit?gid=1016834694#gid=1016834694"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  RPB <ExternalLink className="h-3 w-3" />
+                </a>
+                <a
+                  href="https://docs.google.com/spreadsheets/d/1PqP0g10a652X4OgURb8lELLjGGBUv591q8zYpET-0QI/edit?gid=1843677088#gid=1843677088"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  CLA <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <TabsContent value="rpb" className="mt-0 p-4 pt-2">
+              <div className="h-[600px] bg-muted rounded-lg overflow-hidden">
+                <iframe
+                  src="https://docs.google.com/spreadsheets/d/1CVUc5YIl8cTD6HYw8JCF7b91JLHrMMPrwpEQfANl_BA/pubhtml?gid=1016834694&single=true&widget=true&headers=false"
+                  className="w-full h-full border-0"
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="cla" className="mt-0 p-4 pt-2">
+              <div className="h-[600px] bg-muted rounded-lg overflow-hidden">
+                <iframe
+                  src="https://docs.google.com/spreadsheets/d/1PqP0g10a652X4OgURb8lELLjGGBUv591q8zYpET-0QI/pubhtml?gid=1843677088&single=true&widget=true&headers=false"
+                  className="w-full h-full border-0"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-6">
         {/* Performances List */}
