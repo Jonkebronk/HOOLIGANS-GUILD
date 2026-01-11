@@ -732,7 +732,7 @@ export default function RaidSplitsPage() {
         </div>
         <div className="flex justify-center gap-2">
           {/* Tank Column */}
-          <div className="flex flex-col w-[180px]">
+          <div className="flex flex-col w-[220px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Tank} alt="Tank" className="w-8 h-8" />
@@ -775,7 +775,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Healer Column */}
-          <div className="flex flex-col w-[180px]">
+          <div className="flex flex-col w-[220px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Healer} alt="Healer" className="w-8 h-8" />
@@ -818,7 +818,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Melee Column */}
-          <div className="flex flex-col w-[180px]">
+          <div className="flex flex-col w-[220px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Melee} alt="Melee" className="w-8 h-8" />
@@ -861,7 +861,7 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Ranged Column */}
-          <div className="flex flex-col w-[180px]">
+          <div className="flex flex-col w-[220px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Ranged} alt="Ranged" className="w-8 h-8" />
