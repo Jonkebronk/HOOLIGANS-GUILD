@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Search, Filter, Plus, RefreshCw } from 'lucide-react';
+import { Loader2, Search, Filter, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useTeam } from '@/components/providers/team-provider';
 import { ItemsTable } from '@/components/drops/items-table';
 import { RaidersTable } from '@/components/drops/raiders-table';
@@ -312,6 +312,32 @@ export default function DropsPage() {
     }
   };
 
+  const handleClearUnassigned = async () => {
+    if (!selectedTeam) return;
+
+    const unassignedCount = lootItems.filter(item => !item.playerId).length;
+    if (unassignedCount === 0) {
+      return;
+    }
+
+    if (!confirm(`Clear ${unassignedCount} unassigned items? This will start a new loot session.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/loot/clear-unassigned?teamId=${selectedTeam.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        // Remove unassigned items from local state
+        setLootItems((prev) => prev.filter(item => item.playerId));
+      }
+    } catch (error) {
+      console.error('Failed to clear unassigned items:', error);
+    }
+  };
+
   // Filter items based on search and raid
   const filteredItems = lootItems.filter((item) => {
     const matchesSearch =
@@ -341,6 +367,10 @@ export default function DropsPage() {
           <Button variant="outline" size="sm" onClick={() => fetchData()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleClearUnassigned}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            New Session
           </Button>
           <RCImportDialog onImport={handleRCImport} />
           <Button size="sm">
