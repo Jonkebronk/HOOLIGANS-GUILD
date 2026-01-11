@@ -96,6 +96,14 @@ enum TeamRole {
   Member
 }
 
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
 // ============================================
 // AUTH & USERS (NextAuth.js compatible)
 // ============================================
@@ -127,6 +135,7 @@ model User {
   // App relations
   players       Player[]  // A user can have multiple characters
   teamMembers   TeamMember[] // Teams this user belongs to
+  reviewedApplications Application[] @relation("ReviewedApplications")
 }
 
 // ============================================
@@ -148,6 +157,8 @@ model Team {
   lootRecords   LootRecord[]
   attendance    AttendanceRecord[]
   rosterAssignments RosterAssignment[]
+  raidPerformances RaidPerformance[]
+  applications  Application[]
 
   @@index([name])
 }
@@ -233,6 +244,7 @@ model Player {
   raidSplits    RaidSplitMember[]
   currentGear   PlayerGear[]
   rosterAssignments RosterAssignment[]
+  feedbackChannels FeedbackChannel[]
 
   @@unique([name, teamId]) // Player names unique per team
   @@index([class])
@@ -478,4 +490,95 @@ model TierSetConfig {
   shouldersName String?
 
   @@unique([tier, className])
+}
+
+// ============================================
+// PERFORMANCE TRACKING
+// ============================================
+
+model RaidPerformance {
+  id              String    @id @default(cuid())
+  teamId          String
+  team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  raidDate        DateTime
+  raidName        String    // e.g., "Black Temple", "Hyjal Summit"
+  wclUrl          String?   // Warcraft Logs URL
+  raidHelperId    String?   // RaidHelper event ID
+  googleSheetUrl  String?   // RPB/CLA analysis sheet embed URL
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  feedbackChannels FeedbackChannel[]
+
+  @@index([teamId])
+  @@index([raidDate])
+}
+
+model FeedbackChannel {
+  id                  String           @id @default(cuid())
+  playerId            String
+  player              Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  raidPerformanceId   String?
+  raidPerformance     RaidPerformance? @relation(fields: [raidPerformanceId], references: [id], onDelete: SetNull)
+  discordChannelId    String           @unique
+  channelName         String           // e.g., "feedback-playername"
+  isArchived          Boolean          @default(false)
+  createdAt           DateTime         @default(now())
+  archivedAt          DateTime?
+
+  @@index([playerId])
+  @@index([discordChannelId])
+  @@index([raidPerformanceId])
+}
+
+// ============================================
+// RECRUITMENT & APPLICATIONS
+// ============================================
+
+model Application {
+  id              String            @id @default(cuid())
+  teamId          String
+  team            Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  // Applicant Info (from Discord auth)
+  discordId       String
+  discordName     String
+  inGameName      String
+
+  // Character Info
+  characterName   String
+  realm           String?
+  class           WowClass
+  mainSpec        String
+  offSpec         String?
+
+  // Application Data
+  professions     String?           // e.g., "Enchanting 375, Jewelcrafting 350"
+  warcraftLogsUrl String?
+  raidExperience  String?           @db.Text
+  availability    Boolean           @default(false) // Can maintain 90%+ attendance
+  uiScreenshot    String?           // Cloudinary URL
+  gearScreenshot  String?           // Cloudinary URL
+  additionalInfo  String?           @db.Text
+
+  // Review
+  status          ApplicationStatus @default(PENDING)
+  officerNotes    String?           @db.Text
+  reviewedById    String?
+  reviewedBy      User?             @relation("ReviewedApplications", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
+
+  // Cached WCL Data
+  wclBestPerf     Float?            // Best performance average
+  wclMedianPerf   Float?            // Median performance
+  wclParseCount   Int?              // Number of logged kills
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([teamId])
+  @@index([status])
+  @@index([class])
+  @@index([discordId])
 }

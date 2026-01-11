@@ -17,6 +17,7 @@ import {
   Scroll,
   ChevronDown,
   Droplets,
+  Activity,
 } from 'lucide-react';
 
 type NavItem = {
@@ -31,6 +32,7 @@ const navigation: NavItem[] = [
   { name: 'Roster', href: '/dashboard/roster', icon: Users },
   { name: 'Raid Splits', href: '/dashboard/splits', icon: Users2 },
   { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
+  { name: 'Performance', href: '/dashboard/performance', icon: Activity },
   {
     name: 'Loot Council',
     icon: Sword,
