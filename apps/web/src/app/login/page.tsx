@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import { auth, signIn } from '@/lib/auth';
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default async function LoginPage({
   searchParams,
@@ -38,23 +38,17 @@ export default async function LoginPage({
         {/* HLG Icon */}
         <div className="mb-6">
           <Image
-            src="/images/hlg-icon.png"
+            src="/hlg-logo.png"
             alt="HOOLIGANS"
-            width={120}
-            height={120}
+            width={280}
+            height={280}
             className="drop-shadow-2xl"
-            style={{ filter: 'brightness(0)' }}
           />
         </div>
 
         {/* Login Card */}
         <Card className="w-full max-w-md bg-black/80 backdrop-blur-sm border-border/30">
-          <CardHeader className="text-center pb-2">
-            <CardDescription className="text-base text-gray-300">
-              Sign in to access the Loot Council platform
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             {error && (
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
                 {error === 'OAuthSignin' && 'Error starting the sign in process.'}
@@ -80,9 +74,6 @@ export default async function LoginPage({
               </button>
             </form>
 
-            <p className="text-center text-xs text-gray-500">
-              By signing in, you agree to our guild rules and loot council decisions.
-            </p>
           </CardContent>
         </Card>
       </div>
