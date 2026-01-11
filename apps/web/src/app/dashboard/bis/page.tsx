@@ -1057,6 +1057,89 @@ export default function BisListsPage() {
               </Card>
             </div>
           )}
+
+          {/* BiS Items Table */}
+          {selectedPlayerData && bisConfig.filter(b => b.item || b.wowheadId).length > 0 && (
+            <Card className="mt-6">
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  BiS Items - {selectedPhase}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border text-left">
+                        <th className="pb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Item</th>
+                        <th className="pb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Zone</th>
+                        <th className="pb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Boss</th>
+                        <th className="pb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Drop Chance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bisConfig
+                        .filter(b => b.item || b.wowheadId)
+                        .map((bis) => {
+                          const item = bis.item;
+                          const wowheadId = item?.wowheadId || bis.wowheadId;
+                          const itemName = item?.name || bis.itemName;
+                          const quality = item?.quality || 4; // Default to epic
+                          const zone = item?.raid || bis.source || '-';
+                          const boss = item?.boss || '-';
+                          const icon = item?.icon || 'inv_misc_questionmark';
+
+                          return (
+                            <tr key={bis.slot} className="border-b border-border/50 hover:bg-muted/30">
+                              <td className="py-2">
+                                <div className="flex items-center gap-3">
+                                  <a
+                                    href={wowheadId ? `https://www.wowhead.com/tbc/item=${wowheadId}` : '#'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
+                                    className="flex-shrink-0 wh-icon-hide"
+                                  >
+                                    <img
+                                      src={getItemIconUrl(icon, 'small')}
+                                      alt={itemName || 'Item'}
+                                      className="w-8 h-8 rounded"
+                                      style={{
+                                        borderWidth: 2,
+                                        borderStyle: 'solid',
+                                        borderColor: ITEM_QUALITY_COLORS[quality] || '#a335ee'
+                                      }}
+                                    />
+                                  </a>
+                                  <div>
+                                    <a
+                                      href={wowheadId ? `https://www.wowhead.com/tbc/item=${wowheadId}` : '#'}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
+                                      className="font-medium hover:underline wh-icon-hide"
+                                      style={{ color: ITEM_QUALITY_COLORS[quality] || '#a335ee' }}
+                                    >
+                                      {itemName}
+                                    </a>
+                                    <div className="text-xs text-muted-foreground">
+                                      {bis.slot.replace(/([A-Z])/g, ' $1').trim()}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-2 text-sm text-muted-foreground">{zone}</td>
+                              <td className="py-2 text-sm text-muted-foreground">{boss}</td>
+                              <td className="py-2 text-sm text-muted-foreground">-</td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
