@@ -20,9 +20,9 @@ import { useTeam, Team } from '@/components/providers/team-provider';
 
 // Team icons mapping
 const TEAM_ICONS: Record<string, string> = {
-  'TEAM NATO': '/images/nato-flag.png',
-  'TEAM SWEDEN': '/images/sweden-flag.png',
-  'PuG': '/images/pug-icon.png',
+  'TEAM NATO': '/teams/nato.png',
+  'TEAM SWEDEN': '/teams/sweden.png',
+  'PuGs': '/teams/pug.jpg',
 };
 
 const ROLE_ICONS = {
@@ -135,9 +135,9 @@ export default function SelectTeamPage() {
                         <Image
                           src={TEAM_ICONS[team.name]}
                           alt={team.name}
-                          width={64}
-                          height={64}
-                          className="object-cover"
+                          width={80}
+                          height={80}
+                          className="object-cover w-full h-full"
                         />
                       ) : (
                         <Users className="h-10 w-10 text-muted-foreground" />
