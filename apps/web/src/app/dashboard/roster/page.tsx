@@ -1102,40 +1102,11 @@ export default function RosterPage() {
           <Button
             variant="outline"
             size="sm"
-            className="bg-[#5865F2] border-[#5865F2] text-white hover:bg-[#4752C4] h-7 text-xs"
-            onClick={openPostAllDialog}
-          >
-            <Send className="h-3 w-3 mr-1" />
-            Post All
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             className="bg-green-700 border-green-600 text-white hover:bg-green-600 h-7 text-xs"
             onClick={() => setIsAddDialogOpen(true)}
           >
             <Plus className="h-3 w-3 mr-1" />
             Add Player
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10 h-7 text-xs"
-            onClick={() => setIsImportDialogOpen(true)}
-          >
-            <Upload className="h-3 w-3 mr-1" />
-            Import
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-transparent border-red-600 text-red-400 hover:bg-red-900/20 h-7 text-xs"
-            onClick={() => {
-              raids.forEach(raid => clearRaid(raid.id));
-            }}
-          >
-            <RotateCcw className="h-3 w-3 mr-1" />
-            Clear Raids
           </Button>
         </div>
       </div>
