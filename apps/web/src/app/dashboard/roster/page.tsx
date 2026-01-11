@@ -511,33 +511,38 @@ export default function RosterPage() {
 
   // Add player to raid on click
   const addPlayerToRaid = (raidId: string, player: Player) => {
-    let addedPosition: { groupIndex: number; slotIndex: number } | null = null;
+    // Find first empty slot for player
+    const targetRaid = raids.find(r => r.id === raidId);
+    if (!targetRaid) return;
+
+    const alreadyInRaid = targetRaid.groups.flat().some(p => p?.id === player.id);
+    if (alreadyInRaid) return;
+
+    // Find first empty slot
+    let foundPosition: { groupIndex: number; slotIndex: number } | null = null;
+    for (let gi = 0; gi < targetRaid.groups.length && !foundPosition; gi++) {
+      for (let si = 0; si < targetRaid.groups[gi].length && !foundPosition; si++) {
+        if (targetRaid.groups[gi][si] === null) {
+          foundPosition = { groupIndex: gi, slotIndex: si };
+        }
+      }
+    }
+
+    if (!foundPosition) return;
+
+    const { groupIndex, slotIndex } = foundPosition;
 
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
         if (raid.id !== raidId) return raid;
-
-        const alreadyInRaid = raid.groups.flat().some(p => p?.id === player.id);
-        if (alreadyInRaid) return raid;
-
         const newGroups = raid.groups.map(group => [...group]);
-        for (let gi = 0; gi < newGroups.length; gi++) {
-          for (let si = 0; si < newGroups[gi].length; si++) {
-            if (newGroups[gi][si] === null) {
-              newGroups[gi][si] = player;
-              addedPosition = { groupIndex: gi, slotIndex: si };
-              return { ...raid, groups: newGroups };
-            }
-          }
-        }
-        return raid;
+        newGroups[groupIndex][slotIndex] = player;
+        return { ...raid, groups: newGroups };
       });
     });
 
-    // Save to database after state update
-    if (addedPosition) {
-      saveAssignment(raidId, addedPosition.groupIndex, addedPosition.slotIndex, player.id);
-    }
+    // Save to database
+    saveAssignment(raidId, groupIndex, slotIndex, player.id);
   };
 
   // Remove player from slot
