@@ -735,34 +735,24 @@ export default function BisListsPage() {
       || (context === 'current'
         ? (gearItem as PlayerGear | null)?.itemName
         : (gearItem as BisConfig | null)?.itemName);
-    const icon = item?.icon || (context === 'current' ? (gearItem as PlayerGear | null)?.icon : null);
     const slotIcon = SLOT_ICONS[slot] || 'inv_misc_questionmark';
     const hasItem = !!wowheadId || !!itemName;
 
-    // Use slot placeholder icon, with Wowhead link wrapper for tooltip
+    // Let Wowhead inject icons via iconizeLinks - use empty link with sizing
     const iconElement = hasItem && wowheadId ? (
       <a
         href={`https://www.wowhead.com/tbc/item=${wowheadId}`}
         onClick={(e) => e.preventDefault()}
-        className="flex-shrink-0"
-      >
-        <img
-          src={getItemIconUrl(icon || slotIcon, 'medium')}
-          alt={itemName || label}
-          className="w-8 h-8 rounded"
-          style={{
-            borderWidth: 2,
-            borderStyle: 'solid',
-            borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee',
-          }}
-        />
-      </a>
+        data-wh-icon-size="medium"
+        className="flex-shrink-0 wowhead-icon"
+        style={{ display: 'inline-block', width: 36, height: 36 }}
+      />
     ) : (
       <div className="relative flex-shrink-0">
         <img
           src={getItemIconUrl(slotIcon, 'medium')}
           alt={label}
-          className="w-8 h-8 rounded"
+          className="w-9 h-9 rounded"
           style={{
             borderWidth: 2,
             borderStyle: 'solid',
