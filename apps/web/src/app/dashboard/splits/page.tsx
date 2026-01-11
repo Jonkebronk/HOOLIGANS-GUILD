@@ -1059,10 +1059,10 @@ export default function RaidSplitsPage() {
         </div>
 
         {/* Card Body */}
-        <div className="p-2">
+        <div className={`p-2 ${is10Man ? 'flex justify-center' : ''}`}>
 
         {/* Groups Grid with Headers */}
-        <div className="flex gap-1">
+        <div className={`flex gap-1 ${is25Man ? 'pl-2' : ''}`}>
           {raid.groups.map((group, groupIndex) => (
             <div key={groupIndex} className="w-[150px]">
               {/* Group Header */}
@@ -1183,6 +1183,34 @@ export default function RaidSplitsPage() {
           <h1 className="text-xl font-bold">Raid Compositions</h1>
           <p className="text-gray-400 text-sm">Drag players to assign groups</p>
         </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10 h-7 text-xs"
+            onClick={() => setIsImportDialogOpen(true)}
+          >
+            <Upload className="h-3 w-3 mr-1" />
+            Import
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-transparent border-red-600 text-red-400 hover:bg-red-900/20 h-7 text-xs"
+            onClick={() => {
+              setPlayers(prev => prev.filter(p => !p.id.startsWith('imported-')));
+              setRaids(prevRaids => prevRaids.map(raid => ({
+                ...raid,
+                groups: raid.groups.map(group =>
+                  group.map(slot => slot?.id.startsWith('imported-') ? null : slot)
+                ),
+              })));
+            }}
+          >
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Clear
+          </Button>
+        </div>
       </div>
 
       {/* Main Layout: Raids on left, Role Columns on right */}
@@ -1221,41 +1249,12 @@ export default function RaidSplitsPage() {
           </div>
         </div>
 
-        {/* Role Columns Section */}
-        <div className="flex-shrink-0">
-          {/* Import/Clear buttons */}
-          <div className="flex gap-2 mb-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10 h-7 text-xs"
-              onClick={() => setIsImportDialogOpen(true)}
-            >
-              <Upload className="h-3 w-3 mr-1" />
-              Import
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-red-600 text-red-400 hover:bg-red-900/20 h-7 text-xs"
-              onClick={() => {
-                setPlayers(prev => prev.filter(p => !p.id.startsWith('imported-')));
-                setRaids(prevRaids => prevRaids.map(raid => ({
-                  ...raid,
-                  groups: raid.groups.map(group =>
-                    group.map(slot => slot?.id.startsWith('imported-') ? null : slot)
-                  ),
-                })));
-              }}
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Clear
-            </Button>
-          </div>
-
+        {/* Role Columns Section - Side by Side */}
+        <div className="flex-shrink-0 flex gap-6">
           {/* 25-Man Pool */}
-          <div className="text-xs text-gray-400 mb-1">25-Man Pool</div>
-          <div className="flex gap-1 mb-4">
+          <div>
+            <div className="text-xs text-gray-400 mb-1">25-Man Pool</div>
+            <div className="flex gap-1">
             {(['Tank', 'Healer', 'Melee', 'Ranged'] as const).map((role) => (
               <div key={role} className="w-[100px]">
                 <div className="flex items-center justify-center gap-1 py-1 text-white text-xs font-bold" style={{ backgroundColor: ROLE_COLORS[role] }}>
@@ -1285,40 +1284,43 @@ export default function RaidSplitsPage() {
                 <div className="text-center py-1 bg-[#1a1a1a] border-x border-b border-[#333] text-xs font-semibold">{roleGroupedPlayers[role].length}</div>
               </div>
             ))}
+            </div>
           </div>
 
           {/* 10-Man Pool */}
-          <div className="text-xs text-gray-400 mb-1">10-Man Pool</div>
-          <div className="flex gap-1">
-            {(['Tank', 'Healer', 'Melee', 'Ranged'] as const).map((role) => (
-              <div key={`10m-${role}`} className="w-[100px]">
-                <div className="flex items-center justify-center gap-1 py-1 text-white text-xs font-bold" style={{ backgroundColor: ROLE_COLORS[role] }}>
-                  <img src={ROLE_ICONS[role]} alt={role} className="w-4 h-4" />
-                  {role}
+          <div>
+            <div className="text-xs text-gray-400 mb-1">10-Man Pool</div>
+            <div className="flex gap-1">
+              {(['Tank', 'Healer', 'Melee', 'Ranged'] as const).map((role) => (
+                <div key={`10m-${role}`} className="w-[100px]">
+                  <div className="flex items-center justify-center gap-1 py-1 text-white text-xs font-bold" style={{ backgroundColor: ROLE_COLORS[role] }}>
+                    <img src={ROLE_ICONS[role]} alt={role} className="w-4 h-4" />
+                    {role}
+                  </div>
+                  <div className="bg-[#111] border border-[#333] min-h-[440px] p-0.5">
+                    {roleGroupedFor10Man[role].length === 0 ? (
+                      <div className="py-2 text-center text-gray-600 text-[10px]">Empty</div>
+                    ) : (
+                      roleGroupedFor10Man[role].map((player) => (
+                        <div
+                          key={`10m-${player.id}`}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, player, 'available')}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => addPlayerToRaid('split-10-1', player)}
+                          className="flex items-center h-5 cursor-grab hover:brightness-110 border border-black/40 rounded mb-0.5"
+                          style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
+                        >
+                          <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-4 h-4 pointer-events-none" />
+                          <span className="flex-1 text-[9px] font-medium text-black px-0.5 truncate pointer-events-none">{player.name}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="text-center py-1 bg-[#1a1a1a] border-x border-b border-[#333] text-xs font-semibold">{roleGroupedFor10Man[role].length}</div>
                 </div>
-                <div className="bg-[#111] border border-[#333] min-h-[440px] p-0.5">
-                  {roleGroupedFor10Man[role].length === 0 ? (
-                    <div className="py-2 text-center text-gray-600 text-[10px]">Empty</div>
-                  ) : (
-                    roleGroupedFor10Man[role].map((player) => (
-                      <div
-                        key={`10m-${player.id}`}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, player, 'available')}
-                        onDragEnd={handleDragEnd}
-                        onClick={() => addPlayerToRaid('split-10-1', player)}
-                        className="flex items-center h-5 cursor-grab hover:brightness-110 border border-black/40 rounded mb-0.5"
-                        style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
-                      >
-                        <img src={getSpecIconUrl(player.mainSpec, player.class)} alt={player.mainSpec} className="w-4 h-4 pointer-events-none" />
-                        <span className="flex-1 text-[9px] font-medium text-black px-0.5 truncate pointer-events-none">{player.name}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-                <div className="text-center py-1 bg-[#1a1a1a] border-x border-b border-[#333] text-xs font-semibold">{roleGroupedFor10Man[role].length}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
