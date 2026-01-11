@@ -53,7 +53,7 @@ export function normalizeSpecName(spec: string, playerClass?: string): string {
   const normalizedClass = playerClass ? capitalizeClass(playerClass) : undefined;
 
   // Already in correct format
-  if (spec.match(/^(Druid|Hunter|Mage|Paladin|Priest|Rogue|Shaman|Warlock|Warrior)(Balance|Feral|Guardian|Restoration|BeastMastery|Marksmanship|Survival|Arcane|Fire|Frost|Holy|Protection|Retribution|Discipline|Shadow|Assassination|Combat|Subtlety|Elemental|Enhancement|Affliction|Demonology|Destruction|Arms|Fury)$/)) {
+  if (spec.match(/^(Druid|Hunter|Mage|Paladin|Priest|Rogue|Shaman|Warlock|Warrior)(Balance|Feral|Guardian|Restoration|Dreamstate|BeastMastery|Marksmanship|Survival|Arcane|Fire|Frost|Holy|Protection|Retribution|Discipline|Shadow|Assassination|Combat|Subtlety|Elemental|Enhancement|Affliction|Demonology|Destruction|Arms|Fury)$/)) {
     return spec;
   }
 
@@ -111,8 +111,8 @@ export function normalizeSpecName(spec: string, playerClass?: string): string {
     'arcane': 'Arcane',
     'fire': 'Fire',
     'frost': 'Frost',
-    // Dreamstate is Balance Druid
-    'dreamstate': 'Balance',
+    // Dreamstate is its own spec
+    'dreamstate': 'Dreamstate',
   };
 
   const specLower = spec.toLowerCase().trim();
@@ -136,7 +136,7 @@ export function normalizeSpecName(spec: string, playerClass?: string): string {
   // If we have a class but spec wasn't in aliases, try direct combination
   if (normalizedClass) {
     // Check if spec is already properly capitalized (like "Restoration", "BeastMastery")
-    const validSpecs = ['Balance', 'Feral', 'Guardian', 'Restoration', 'BeastMastery', 'Marksmanship', 'Survival',
+    const validSpecs = ['Balance', 'Feral', 'Guardian', 'Restoration', 'Dreamstate', 'BeastMastery', 'Marksmanship', 'Survival',
                         'Arcane', 'Fire', 'Frost', 'Holy', 'Protection', 'Retribution', 'Discipline', 'Shadow',
                         'Assassination', 'Combat', 'Subtlety', 'Elemental', 'Enhancement', 'Affliction',
                         'Demonology', 'Destruction', 'Arms', 'Fury'];
@@ -161,6 +161,7 @@ export function getSpecIconUrl(spec: string, playerClass?: string) {
     DruidFeral: 'ability_druid_catform',
     DruidGuardian: 'ability_racial_bearform',
     DruidRestoration: 'spell_nature_healingtouch',
+    DruidDreamstate: 'spell_arcane_starfire',
     // Hunter
     HunterBeastMastery: 'ability_hunter_beasttaming',
     HunterMarksmanship: 'ability_marksmanship',
