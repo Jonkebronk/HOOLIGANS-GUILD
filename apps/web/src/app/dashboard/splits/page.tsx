@@ -490,6 +490,10 @@ export default function RaidSplitsPage() {
         scale: 4,
         useCORS: true,
         logging: false,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        windowWidth: element.scrollWidth + 20,
+        windowHeight: element.scrollHeight + 20,
       });
 
       const link = document.createElement('a');
@@ -542,6 +546,10 @@ export default function RaidSplitsPage() {
         scale: 4,
         useCORS: true,
         logging: false,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        windowWidth: element.scrollWidth + 20,
+        windowHeight: element.scrollHeight + 20,
       });
 
       const imageData = canvas.toDataURL('image/png');
@@ -921,7 +929,7 @@ export default function RaidSplitsPage() {
               alt={slot.mainSpec}
               className="w-7 h-7 ml-0.5"
             />
-            <span className="flex-1 text-sm font-bold text-black pl-2 truncate">
+            <span className="flex-1 text-sm font-bold text-black pl-2">
               {slot.name}
             </span>
             <button
@@ -998,7 +1006,7 @@ export default function RaidSplitsPage() {
         {/* Group Headers Row */}
         <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'}`}>
           {raid.groups.map((_, groupIndex) => (
-            <div key={groupIndex} className="w-[150px]">
+            <div key={groupIndex} className="w-[160px]">
               <div className="flex items-center justify-center gap-1.5 text-yellow-500 text-xs font-medium pb-1 border-b-2 border-yellow-500">
                 <Users className="h-3 w-3" />
                 Group {groupIndex + 1}
