@@ -1053,10 +1053,10 @@ export default function RaidSplitsPage() {
         </div>
 
         {/* Card Body */}
-        <div className={`p-2 ${is10Man ? 'flex justify-center' : ''}`}>
+        <div className="p-2 flex justify-center">
 
         {/* Groups Grid with Headers */}
-        <div className={`flex gap-1 ${is25Man ? 'pl-2' : ''}`}>
+        <div className="flex gap-1">
           {raid.groups.map((group, groupIndex) => (
             <div key={groupIndex} className="w-[150px]">
               {/* Group Header */}
