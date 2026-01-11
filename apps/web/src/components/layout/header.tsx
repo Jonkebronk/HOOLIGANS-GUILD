@@ -16,11 +16,11 @@ import {
 import { useTeam } from '@/components/providers/team-provider';
 import { useRouter } from 'next/navigation';
 
-// Team icon mapping - add your team icons to /public/icons/teams/
+// Team icon mapping
 const TEAM_ICONS: Record<string, string> = {
-  'TEAM NATO': '/icons/teams/nato.png',
-  'TEAM SWEDEN': '/icons/teams/sweden.png',
-  'PuG': '/icons/teams/pug.png',
+  'TEAM NATO': '/teams/nato.png',
+  'TEAM SWEDEN': '/teams/sweden.png',
+  'PuG': '/teams/pug.jpg',
 };
 
 function TeamIcon({ teamName, className = "h-5 w-5" }: { teamName: string; className?: string }) {
