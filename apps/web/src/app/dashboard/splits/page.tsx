@@ -681,9 +681,11 @@ export default function RaidSplitsPage() {
               const className = s.className as string || '';
               const roleName = s.roleName as string || '';
               const status = s.status as string || '';
-              // Exclude tentative/bench signups
+              // Exclude tentative/absence/bench signups
               return className !== 'Tentative' &&
+                     className !== 'Absence' &&
                      roleName !== 'Tentative' &&
+                     roleName !== 'Absence' &&
                      status === 'primary';
             });
 
