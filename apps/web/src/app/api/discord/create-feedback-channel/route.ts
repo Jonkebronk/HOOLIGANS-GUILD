@@ -69,8 +69,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Build channel name (lowercase, replace spaces with dashes)
-    const channelName = `feedback-${player.name.toLowerCase().replace(/\s+/g, '-')}`;
+    // Build channel name (lowercase, only alphanumeric and dashes, max 100 chars)
+    const sanitizedName = player.name
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')  // Replace non-alphanumeric with dashes
+      .replace(/-+/g, '-')           // Collapse multiple dashes
+      .replace(/^-|-$/g, '');        // Remove leading/trailing dashes
+    const channelName = `feedback-${sanitizedName}`.slice(0, 100);
 
     // Build permission overwrites
     const permissionOverwrites = [
@@ -113,6 +118,8 @@ export async function POST(request: Request) {
     if (DISCORD_RAID_MANAGEMENT_CATEGORY_ID) {
       channelData.parent_id = DISCORD_RAID_MANAGEMENT_CATEGORY_ID;
     }
+
+    console.log('Creating Discord channel:', JSON.stringify(channelData, null, 2));
 
     const discordResponse = await fetch(
       `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/channels`,
