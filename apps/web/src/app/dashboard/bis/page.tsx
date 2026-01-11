@@ -239,7 +239,11 @@ export default function BisListsPage() {
 
   const filteredPlayers = players.filter((player) => {
     const matchesClass = classFilter === 'all' || player.class === classFilter;
-    const matchesRole = roleFilter === 'all' || player.role === roleFilter;
+    let matchesRole = roleFilter === 'all';
+    if (roleFilter === 'Tank') matchesRole = player.roleSubtype === 'Tank';
+    if (roleFilter === 'Heal') matchesRole = player.roleSubtype === 'Heal';
+    if (roleFilter === 'Melee') matchesRole = player.roleSubtype === 'DPS_Melee';
+    if (roleFilter === 'Ranged') matchesRole = player.roleSubtype === 'DPS_Ranged' || player.roleSubtype === 'DPS_Caster';
     return matchesClass && matchesRole;
   });
 
@@ -863,7 +867,8 @@ export default function BisListsPage() {
                 { value: 'all', icon: 'trade_engineering', label: 'All' },
                 { value: 'Tank', icon: 'ability_warrior_defensivestance', label: 'Tank' },
                 { value: 'Heal', icon: 'spell_holy_flashheal', label: 'Heal' },
-                { value: 'DPS', icon: 'ability_dualwield', label: 'DPS' },
+                { value: 'Melee', icon: 'ability_dualwield', label: 'Melee' },
+                { value: 'Ranged', icon: 'ability_marksmanship', label: 'Ranged' },
               ].map((role) => (
                 <button
                   key={role.value}
