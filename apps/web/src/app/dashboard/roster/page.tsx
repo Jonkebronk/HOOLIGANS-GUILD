@@ -342,16 +342,28 @@ export default function RosterPage() {
 
   // Save assignment to database
   const saveAssignment = async (raidId: string, groupIndex: number, slotIndex: number, playerId: string) => {
-    if (!selectedTeam) return;
+    if (!selectedTeam) {
+      console.error('saveAssignment: No selectedTeam');
+      return;
+    }
+
+    const payload = { raidId, groupIndex, slotIndex, playerId, teamId: selectedTeam.id };
+    console.log('saveAssignment: Saving', payload);
 
     try {
-      await fetch('/api/roster-assignments', {
+      const res = await fetch('/api/roster-assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ raidId, groupIndex, slotIndex, playerId, teamId: selectedTeam.id }),
+        body: JSON.stringify(payload),
       });
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('saveAssignment: FAILED', payload, error);
+      } else {
+        console.log('saveAssignment: SUCCESS', payload);
+      }
     } catch (error) {
-      console.error('Failed to save assignment:', error);
+      console.error('saveAssignment: ERROR', payload, error);
     }
   };
 
@@ -511,6 +523,8 @@ export default function RosterPage() {
     });
 
     // Save assignments to database
+    console.log('handleDrop: Assignments to save:', assignmentsToSave);
+    console.log('handleDrop: Assignments to delete:', assignmentsToDelete);
     assignmentsToSave.forEach(a => saveAssignment(a.raidId, a.groupIndex, a.slotIndex, a.playerId));
     assignmentsToDelete.forEach(a => deleteAssignment(a.raidId, a.groupIndex, a.slotIndex));
 
