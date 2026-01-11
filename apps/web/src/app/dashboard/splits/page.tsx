@@ -389,6 +389,51 @@ export default function RaidSplitsPage() {
     return raid ? raid.groups.length * SLOTS_PER_GROUP : 0;
   };
 
+  // Copy raid composition to clipboard
+  const copyRaidToClipboard = (raidId: string) => {
+    const raid = raids.find(r => r.id === raidId);
+    if (!raid) return;
+
+    const lines: string[] = [raid.name, ''];
+    raid.groups.forEach((group, index) => {
+      lines.push(`Group ${index + 1}:`);
+      group.forEach((player) => {
+        if (player) {
+          lines.push(`  ${player.name} (${player.class})`);
+        }
+      });
+      lines.push('');
+    });
+
+    navigator.clipboard.writeText(lines.join('\n'));
+    alert('Copied to clipboard!');
+  };
+
+  // Download raid as text file
+  const downloadRaid = (raidId: string) => {
+    const raid = raids.find(r => r.id === raidId);
+    if (!raid) return;
+
+    const lines: string[] = [raid.name, ''];
+    raid.groups.forEach((group, index) => {
+      lines.push(`Group ${index + 1}:`);
+      group.forEach((player) => {
+        if (player) {
+          lines.push(`  ${player.name} - ${player.class} (${player.mainSpec})`);
+        }
+      });
+      lines.push('');
+    });
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${raid.name.replace(/\s+/g, '_')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Import handlers
   const handleImportFromRaidHelper = async () => {
     setIsImporting(true);
@@ -711,16 +756,16 @@ export default function RaidSplitsPage() {
               <CopyPlus className="h-3.5 w-3.5" />
             </Button>
           )}
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20">
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => copyRaidToClipboard(raid.id)} title="Copy to clipboard">
             <Copy className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => clearRaid(raid.id)}>
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => clearRaid(raid.id)} title="Clear raid">
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20">
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" title="Screenshot (coming soon)" disabled>
             <Camera className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20">
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => downloadRaid(raid.id)} title="Download as text">
             <Download className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -819,7 +864,7 @@ export default function RaidSplitsPage() {
         </div>
 
         {/* Role Columns Section */}
-        <div className="ml-auto mr-24">
+        <div className="ml-auto mr-32">
           {/* Import button above Tank */}
           <div className="mb-2">
             <Button
