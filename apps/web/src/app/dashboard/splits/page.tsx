@@ -798,26 +798,31 @@ export default function RaidSplitsPage() {
           <h1 className="text-xl font-bold">Raid Compositions</h1>
           <p className="text-gray-400 text-sm">Drag players to assign groups</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
-          onClick={() => setIsImportDialogOpen(true)}
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Import
-        </Button>
       </div>
 
       {/* 25-Man Raid + Role Columns side by side */}
-      <div className="flex gap-4 items-start">
+      <div className="flex items-start">
         {/* 25-Man Raid */}
         <div className="flex-shrink-0">
           {mainRaid && renderRaidSection(mainRaid)}
         </div>
 
-        {/* Role Columns - all 4 side by side, aligned with 25-man */}
-        <div className="flex gap-2">
+        {/* Role Columns Section - pushed right */}
+        <div className="ml-auto">
+          {/* Import button above Tank */}
+          <div className="mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-transparent border-gray-600 text-gray-300 hover:bg-white/10"
+              onClick={() => setIsImportDialogOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Import
+            </Button>
+          </div>
+          {/* Role Columns - all 4 side by side */}
+          <div className="flex gap-2">
           {/* Tank Column */}
           <div className="flex flex-col w-[120px]">
             <div className="flex justify-center py-3">
@@ -989,6 +994,7 @@ export default function RaidSplitsPage() {
               {roleGroupedPlayers.Ranged.length}
             </div>
           </div>
+        </div>
         </div>
       </div>
 
