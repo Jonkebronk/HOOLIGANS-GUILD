@@ -477,7 +477,7 @@ export default function RaidSplitsPage() {
     try {
       const canvas = await html2canvas(element, {
         backgroundColor: '#0d1117',
-        scale: 2,
+        scale: 3,
         useCORS: true,
         logging: false,
       });
@@ -529,7 +529,7 @@ export default function RaidSplitsPage() {
     try {
       const canvas = await html2canvas(element, {
         backgroundColor: '#0d1117',
-        scale: 2,
+        scale: 3,
         useCORS: true,
         logging: false,
       });
