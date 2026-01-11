@@ -142,6 +142,11 @@ export default function RosterPage() {
   const [postAllTitle, setPostAllTitle] = useState('');
   const [isSendingPostAll, setIsSendingPostAll] = useState(false);
 
+  // Cleanup dialog state
+  const [isCleanupDialogOpen, setIsCleanupDialogOpen] = useState(false);
+  const [cleanupChannel, setCleanupChannel] = useState('');
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
+
   // Multi-raid state: 1x 25-man + 3x 10-man
   const [raids, setRaids] = useState<RaidConfig[]>([
     {
@@ -1072,6 +1077,43 @@ export default function RosterPage() {
     }
   };
 
+  // Cleanup functions
+  const openCleanupDialog = async () => {
+    setIsCleanupDialogOpen(true);
+    setCleanupChannel('');
+    await fetchDiscordChannels();
+  };
+
+  const handleCleanup = async () => {
+    if (!cleanupChannel) return;
+
+    setIsCleaningUp(true);
+    try {
+      const res = await fetch('/api/discord/cleanup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelId: cleanupChannel,
+          limit: 100,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(data.message);
+        setIsCleanupDialogOpen(false);
+      } else {
+        const error = await res.json();
+        alert(`Failed to cleanup: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to cleanup:', error);
+      alert('Failed to cleanup messages');
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+
   // Export functions
   const openExportDialog = (raidId: string) => {
     setExportRaidId(raidId);
@@ -1413,6 +1455,15 @@ export default function RosterPage() {
               >
                 <Camera className="h-4 w-4 mr-1" />
                 Screenshot All
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                onClick={openCleanupDialog}
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Cleanup Channel
               </Button>
             </div>
             <div className="flex gap-3">
@@ -2002,6 +2053,55 @@ export default function RosterPage() {
             >
               {isImportingRole ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
               {isImportingRole ? 'Importing...' : `Import ${roleMembers.length} Players`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cleanup Dialog */}
+      <Dialog open={isCleanupDialogOpen} onOpenChange={setIsCleanupDialogOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-400" />
+              Cleanup Bot Messages
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Remove all messages posted by the bot in a Discord channel.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Channel:</Label>
+              <Select value={cleanupChannel} onValueChange={setCleanupChannel}>
+                <SelectTrigger className="bg-black border-gray-600 text-white">
+                  <SelectValue placeholder={loadingChannels ? "Loading..." : "Select channel"} />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-gray-700 max-h-[300px]">
+                  {discordChannels.map((channel) => (
+                    <SelectItem key={channel.id} value={channel.id} className="text-white hover:bg-gray-800">
+                      <div className="flex items-center gap-2">
+                        <Hash className="h-4 w-4 text-gray-400" />
+                        {channel.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-md">
+              <p className="text-sm text-yellow-200">
+                This will delete the last 100 messages posted by the bot in the selected channel.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCleanupDialogOpen(false)} className="bg-transparent border-gray-600">
+              Cancel
+            </Button>
+            <Button onClick={handleCleanup} disabled={!cleanupChannel || isCleaningUp} className="bg-red-600 hover:bg-red-700">
+              {isCleaningUp ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              {isCleaningUp ? 'Cleaning up...' : 'Delete Messages'}
             </Button>
           </DialogFooter>
         </DialogContent>

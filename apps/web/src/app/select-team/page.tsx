@@ -22,7 +22,7 @@ import { useTeam, Team } from '@/components/providers/team-provider';
 const TEAM_ICONS: Record<string, string> = {
   'TEAM NATO': '/teams/nato.png',
   'TEAM SWEDEN': '/teams/sweden.png',
-  'PuG': '/teams/pug.jpg',
+  'PuGs': '/teams/pug.jpg',
 };
 
 const ROLE_ICONS = {
