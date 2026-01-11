@@ -129,8 +129,17 @@ export async function POST(request: Request) {
     if (!discordResponse.ok) {
       const error = await discordResponse.json();
       console.error('Discord API error:', error);
+      console.error('Request data:', { channelName, permissionOverwrites, parent_id: DISCORD_RAID_MANAGEMENT_CATEGORY_ID });
       return NextResponse.json(
-        { error: 'Failed to create Discord channel', details: error },
+        {
+          error: 'Failed to create Discord channel',
+          details: error,
+          discordError: error.message || error.code,
+          hint: error.code === 50001 ? 'Bot lacks permissions - check Manage Channels permission' :
+                error.code === 50013 ? 'Missing permissions to set overwrites' :
+                error.code === 10003 ? 'Invalid category ID' :
+                'Check bot permissions and env vars'
+        },
         { status: discordResponse.status }
       );
     }

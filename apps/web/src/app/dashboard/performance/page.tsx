@@ -190,7 +190,10 @@ export default function PerformancePage() {
         }
       } else {
         const error = await res.json();
-        alert(error.error || 'Failed to create channel');
+        const errorMsg = error.hint
+          ? `${error.error}\n\nHint: ${error.hint}\n\nDetails: ${error.discordError || JSON.stringify(error.details)}`
+          : error.error || 'Failed to create channel';
+        alert(errorMsg);
       }
     } catch (error) {
       console.error('Failed to create feedback channel:', error);
