@@ -115,20 +115,24 @@ export function ItemsTable({
               </td>
               <td className="py-1.5 px-2">
                 <Select
-                  value={item.playerId || ''}
-                  onValueChange={(value) => onAssignPlayer(item.id, value)}
+                  value={item.playerId || 'unassigned'}
+                  onValueChange={(value) => onAssignPlayer(item.id, value === 'unassigned' ? '' : value)}
                 >
                   <SelectTrigger className="h-7 text-xs">
                     <SelectValue placeholder="Select...">
-                      {item.playerName && (
+                      {item.playerName ? (
                         <span style={{ color: CLASS_COLORS[item.playerClass || ''] }}>
                           {item.playerName}
                         </span>
+                      ) : (
+                        <span className="text-muted-foreground">Unassigned</span>
                       )}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Unassigned</SelectItem>
+                    <SelectItem value="unassigned">
+                      <span className="text-muted-foreground">Unassigned</span>
+                    </SelectItem>
                     {players.map((player) => (
                       <SelectItem key={player.id} value={player.id}>
                         <span style={{ color: CLASS_COLORS[player.class] }}>
@@ -141,12 +145,12 @@ export function ItemsTable({
               </td>
               <td className="py-1.5 px-2">
                 <Select
-                  value={item.response || ''}
-                  onValueChange={(value) => onUpdateResponse(item.id, value)}
+                  value={item.response || 'none'}
+                  onValueChange={(value) => onUpdateResponse(item.id, value === 'none' ? '' : value)}
                 >
                   <SelectTrigger className="h-7 text-xs">
                     <SelectValue placeholder="Response...">
-                      {item.response && (
+                      {item.response ? (
                         <span
                           style={{
                             color: RESPONSE_TYPES.find((r) => r.value === item.response)?.color,
@@ -154,10 +158,15 @@ export function ItemsTable({
                         >
                           {RESPONSE_TYPES.find((r) => r.value === item.response)?.label}
                         </span>
+                      ) : (
+                        <span className="text-muted-foreground">Select...</span>
                       )}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">
+                      <span className="text-muted-foreground">None</span>
+                    </SelectItem>
                     {RESPONSE_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         <span style={{ color: type.color }}>{type.label}</span>
