@@ -1161,13 +1161,15 @@ export default function RaidSplitsPage() {
   };
 
   const assigned10ManIds = getAssigned10ManPlayerIds();
-  // Players not yet assigned to any 10-man split (independent of 25-man)
-  const availableFor10Man = players.filter(p => !assigned10ManIds.has(p.id));
 
-  // Only show unassigned players in 25-man role columns
-  const roleGroupedPlayers = groupPlayersByRole(unassignedPlayers);
-  // Show all players available for 10-man (not yet in any 10-man split)
-  const roleGroupedFor10Man = groupPlayersByRole(availableFor10Man);
+  // Only show IMPORTED players in pools (not platform players)
+  const importedUnassigned = unassignedPlayers.filter(p => p.id.startsWith('imported-'));
+  const importedAvailableFor10Man = players.filter(p => p.id.startsWith('imported-') && !assigned10ManIds.has(p.id));
+
+  // Only show imported unassigned players in 25-man role columns
+  const roleGroupedPlayers = groupPlayersByRole(importedUnassigned);
+  // Show imported players available for 10-man (not yet in any 10-man split)
+  const roleGroupedFor10Man = groupPlayersByRole(importedAvailableFor10Man);
 
   return (
     <div
@@ -1260,7 +1262,7 @@ export default function RaidSplitsPage() {
                   <img src={ROLE_ICONS[role]} alt={role} className="w-4 h-4" />
                   {role}
                 </div>
-                <div className="bg-[#111] border border-[#333] min-h-[80px] p-0.5">
+                <div className="bg-[#111] border border-[#333] min-h-[440px] p-0.5">
                   {roleGroupedPlayers[role].length === 0 ? (
                     <div className="py-2 text-center text-gray-600 text-[10px]">Empty</div>
                   ) : (
@@ -1294,7 +1296,7 @@ export default function RaidSplitsPage() {
                   <img src={ROLE_ICONS[role]} alt={role} className="w-4 h-4" />
                   {role}
                 </div>
-                <div className="bg-[#111] border border-[#333] min-h-[80px] p-0.5">
+                <div className="bg-[#111] border border-[#333] min-h-[440px] p-0.5">
                   {roleGroupedFor10Man[role].length === 0 ? (
                     <div className="py-2 text-center text-gray-600 text-[10px]">Empty</div>
                   ) : (
