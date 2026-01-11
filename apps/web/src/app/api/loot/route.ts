@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const teamId = searchParams.get('teamId');
+
     const lootRecords = await prisma.lootRecord.findMany({
+      where: teamId ? { teamId } : undefined,
       include: {
         item: true,
         player: true,
