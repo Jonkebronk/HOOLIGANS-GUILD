@@ -1105,15 +1105,31 @@ export default function RaidSplitsPage() {
         </div>
       </div>
 
-      {/* 25-Man Raid + Role Columns side by side */}
-      <div className="flex items-start">
-        {/* 25-Man Raid */}
+      {/* Main Layout: Raids on left, Role Columns on right */}
+      <div className="flex items-start gap-8">
+        {/* Left Side: All Raids */}
         <div className="flex-shrink-0">
+          {/* 25-Man Raid */}
           {mainRaid && renderRaidSection(mainRaid)}
+
+          {/* 10-Man Splits Section */}
+          <div className="mt-4">
+            <div className="flex items-center gap-4 mb-3">
+              <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
+              <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
+            </div>
+            <div className="flex gap-3">
+              {splitRaids.map(raid => (
+                <div key={raid.id}>
+                  {renderRaidSection(raid, true)}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Role Columns Section */}
-        <div className="ml-auto mr-40">
+        <div className="flex-shrink-0">
           {/* Import button above Tank */}
           <div className="mb-2">
             <Button
@@ -1300,21 +1316,6 @@ export default function RaidSplitsPage() {
             </div>
           </div>
         </div>
-        </div>
-      </div>
-
-      {/* 10-Man Splits Section */}
-      <div className="mt-6">
-        <div className="flex items-center gap-4 mb-3">
-          <h2 className="text-sm font-semibold text-gray-300">10-Man Splits</h2>
-          <span className="text-xs text-gray-500">Players can be in both 25-man and 10-man</span>
-        </div>
-        <div className="flex gap-3">
-          {splitRaids.map(raid => (
-            <div key={raid.id}>
-              {renderRaidSection(raid, true)}
-            </div>
-          ))}
         </div>
       </div>
 
