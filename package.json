@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @hooligans/web dev",
-    "build": "pnpm --filter @hooligans/web build",
+    "build": "pnpm --filter @hooligans/database generate && pnpm --filter @hooligans/web build",
     "start": "pnpm --filter @hooligans/web start",
     "lint": "pnpm --filter @hooligans/web lint",
     "db:generate": "pnpm --filter @hooligans/database generate",
