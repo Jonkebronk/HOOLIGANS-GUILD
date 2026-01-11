@@ -576,7 +576,8 @@ export default function ItemsPage() {
                       href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-shrink-0 wh-icon-hide"
+                      data-wh-icon-size="0"
+                      className="flex-shrink-0"
                     >
                       <img
                         src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
@@ -590,7 +591,8 @@ export default function ItemsPage() {
                         href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium truncate block hover:underline wh-icon-hide"
+                        data-wh-icon-size="0"
+                        className="font-medium truncate block hover:underline"
                         style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                       >
                         {item.name}
