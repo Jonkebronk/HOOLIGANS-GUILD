@@ -722,53 +722,103 @@ export default function RaidSplitsPage() {
     return { content: lines.join('\n'), playerDiscordIds };
   };
 
-  // Send combined text-based embed to Discord
+  // Send rich embeds with individual screenshots for each raid
   const sendPostAllToDiscord = async () => {
     if (!postAllChannel) return;
 
-    const element = allRaidsSectionRef.current;
-    if (!element) {
-      alert('Could not capture raids section');
-      return;
-    }
-
     setIsSendingPostAll(true);
     try {
-      // Hide X buttons and other elements for screenshot
-      const hideElements = element.querySelectorAll('.screenshot-hide');
-      hideElements.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
+      const raidEmbeds: {
+        name: string;
+        color: number;
+        groups: { name: string; players: string[] }[];
+        imageData: string;
+      }[] = [];
 
-      // Capture screenshot
-      const canvas = await html2canvas(element, {
-        backgroundColor: '#0d1117',
-        scale: 4,
-        useCORS: true,
-        logging: false,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-        windowWidth: element.scrollWidth + 40,
-        windowHeight: element.scrollHeight + 40,
-      });
+      // Capture 25-man raid
+      if (mainRaid) {
+        const element = raidRefs.current[mainRaid.id];
+        if (element) {
+          const hideElements = element.querySelectorAll('.screenshot-hide');
+          hideElements.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
 
-      // Restore hidden elements
-      hideElements.forEach(el => (el as HTMLElement).style.visibility = 'visible');
+          const canvas = await html2canvas(element, {
+            backgroundColor: '#0d1117',
+            scale: 4,
+            useCORS: true,
+            logging: false,
+            scrollX: 0,
+            scrollY: -window.scrollY,
+          });
 
-      const imageData = canvas.toDataURL('image/png');
+          hideElements.forEach(el => (el as HTMLElement).style.visibility = 'visible');
 
-      // Generate text content with mentions
-      const { content, playerDiscordIds } = generatePostAllContent();
-      const title = postAllTitle || 'Raid Compositions';
-      const fullContent = `**${title}**\n\n${content}`;
+          const groups = mainRaid.groups.map((group, index) => ({
+            name: `Group ${index + 1}`,
+            players: group.filter(Boolean).map(p =>
+              p?.discordId ? `<@${p.discordId}>` : p?.name || ''
+            ),
+          }));
 
-      // Send screenshot with text content
-      const res = await fetch('/api/discord/send-screenshot', {
+          raidEmbeds.push({
+            name: mainRaid.name,
+            color: 0x8B0000, // Dark red
+            groups,
+            imageData: canvas.toDataURL('image/png'),
+          });
+        }
+      }
+
+      // Capture each 10-man split
+      for (const raid of splitRaids) {
+        const hasPlayers = raid.groups.flat().some(Boolean);
+        if (!hasPlayers) continue;
+
+        const element = raidRefs.current[raid.id];
+        if (element) {
+          const hideElements = element.querySelectorAll('.screenshot-hide');
+          hideElements.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
+
+          const canvas = await html2canvas(element, {
+            backgroundColor: '#0d1117',
+            scale: 4,
+            useCORS: true,
+            logging: false,
+            scrollX: 0,
+            scrollY: -window.scrollY,
+          });
+
+          hideElements.forEach(el => (el as HTMLElement).style.visibility = 'visible');
+
+          const groups = raid.groups.map((group, index) => ({
+            name: `Group ${index + 1}`,
+            players: group.filter(Boolean).map(p =>
+              p?.discordId ? `<@${p.discordId}>` : p?.name || ''
+            ),
+          }));
+
+          raidEmbeds.push({
+            name: raid.name,
+            color: 0x5865F2, // Discord blurple for 10-mans
+            groups,
+            imageData: canvas.toDataURL('image/png'),
+          });
+        }
+      }
+
+      if (raidEmbeds.length === 0) {
+        alert('No raids to post');
+        return;
+      }
+
+      // Send all raid embeds
+      const res = await fetch('/api/discord/send-raid-embeds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           channelId: postAllChannel,
-          imageData,
-          title: fullContent,
-          playerDiscordIds: [],  // Mentions are already in the content
+          title: postAllTitle || 'Raid Compositions',
+          raids: raidEmbeds,
         }),
       });
 
