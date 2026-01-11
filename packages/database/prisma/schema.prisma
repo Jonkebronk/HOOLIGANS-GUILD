@@ -231,6 +231,7 @@ model Player {
   raidQuests    RaidQuest[]
   raidSplits    RaidSplitMember[]
   currentGear   PlayerGear[]
+  rosterAssignments RosterAssignment[]
 
   @@unique([name, teamId]) // Player names unique per team
   @@index([class])
@@ -425,6 +426,21 @@ model RaidQuest {
   createdAt     DateTime  @default(now())
 
   @@unique([playerId, questName])
+}
+
+model RosterAssignment {
+  id            String    @id @default(cuid())
+  raidId        String    // "25man" or "10man-1", "10man-2", "10man-3"
+  groupIndex    Int       // 0-4 for 25-man, 0-1 for 10-man
+  slotIndex     Int       // 0-4
+  playerId      String
+  player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([raidId, groupIndex, slotIndex]) // One player per slot
+  @@index([playerId])
+  @@index([raidId])
 }
 
 // ============================================

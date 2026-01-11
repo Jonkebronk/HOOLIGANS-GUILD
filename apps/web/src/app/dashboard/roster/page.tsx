@@ -159,20 +159,86 @@ export default function RosterPage() {
   ]);
 
   useEffect(() => {
-    fetchPlayers();
+    fetchPlayersAndAssignments();
   }, []);
 
-  const fetchPlayers = async () => {
+  const fetchPlayersAndAssignments = async () => {
     try {
-      const res = await fetch('/api/players');
-      if (res.ok) {
-        const data = await res.json();
-        setPlayers(data);
+      // Fetch players and assignments in parallel
+      const [playersRes, assignmentsRes] = await Promise.all([
+        fetch('/api/players'),
+        fetch('/api/roster-assignments'),
+      ]);
+
+      if (playersRes.ok) {
+        const playersData = await playersRes.json();
+        setPlayers(playersData);
+
+        // Apply saved assignments if available
+        if (assignmentsRes.ok) {
+          const assignmentsData = await assignmentsRes.json();
+          if (assignmentsData.length > 0) {
+            setRaids(prevRaids => {
+              const newRaids = prevRaids.map(raid => ({
+                ...raid,
+                groups: raid.groups.map(group => [...group]),
+              }));
+
+              // Apply each assignment
+              for (const assignment of assignmentsData) {
+                const raid = newRaids.find(r => r.id === assignment.raidId);
+                if (raid && assignment.player) {
+                  const player = playersData.find((p: Player) => p.id === assignment.playerId);
+                  if (player && raid.groups[assignment.groupIndex]) {
+                    raid.groups[assignment.groupIndex][assignment.slotIndex] = player;
+                  }
+                }
+              }
+
+              return newRaids;
+            });
+          }
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch players:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Save assignment to database
+  const saveAssignment = async (raidId: string, groupIndex: number, slotIndex: number, playerId: string) => {
+    try {
+      await fetch('/api/roster-assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raidId, groupIndex, slotIndex, playerId }),
+      });
+    } catch (error) {
+      console.error('Failed to save assignment:', error);
+    }
+  };
+
+  // Delete assignment from database
+  const deleteAssignment = async (raidId: string, groupIndex: number, slotIndex: number) => {
+    try {
+      await fetch(`/api/roster-assignments?raidId=${raidId}&groupIndex=${groupIndex}&slotIndex=${slotIndex}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to delete assignment:', error);
+    }
+  };
+
+  // Clear all assignments for a raid
+  const clearRaidAssignments = async (raidId: string) => {
+    try {
+      await fetch(`/api/roster-assignments?raidId=${raidId}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to clear raid assignments:', error);
     }
   };
 
@@ -244,6 +310,10 @@ export default function RosterPage() {
     setDragOverSlot(null);
     if (!draggedPlayer) return;
 
+    // Track what assignments need to be saved/deleted
+    const assignmentsToSave: { raidId: string; groupIndex: number; slotIndex: number; playerId: string }[] = [];
+    const assignmentsToDelete: { raidId: string; groupIndex: number; slotIndex: number }[] = [];
+
     setRaids(prevRaids => {
       const newRaids = prevRaids.map(raid => ({
         ...raid,
@@ -259,15 +329,32 @@ export default function RosterPage() {
         const sourceRaid = newRaids.find(r => r.id === dragSource.raidId);
         if (sourceRaid) {
           if (dragSource.raidId === raidId) {
+            // Swap within same raid
             const targetPlayer = targetRaid.groups[groupIndex][slotIndex];
             targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
             sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = targetPlayer;
+
+            // Save both positions
+            assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: draggedPlayer.id });
+            if (targetPlayer) {
+              assignmentsToSave.push({ raidId: dragSource.raidId, groupIndex: dragSource.groupIndex, slotIndex: dragSource.slotIndex, playerId: targetPlayer.id });
+            } else {
+              assignmentsToDelete.push({ raidId: dragSource.raidId, groupIndex: dragSource.groupIndex, slotIndex: dragSource.slotIndex });
+            }
           } else {
+            // Move between raids
             sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = null;
             const targetPlayer = targetRaid.groups[groupIndex][slotIndex];
             targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
+
+            // Save target position
+            assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: draggedPlayer.id });
+
             if (targetPlayer) {
               sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = targetPlayer;
+              assignmentsToSave.push({ raidId: dragSource.raidId, groupIndex: dragSource.groupIndex, slotIndex: dragSource.slotIndex, playerId: targetPlayer.id });
+            } else {
+              assignmentsToDelete.push({ raidId: dragSource.raidId, groupIndex: dragSource.groupIndex, slotIndex: dragSource.slotIndex });
             }
           }
         }
@@ -277,11 +364,16 @@ export default function RosterPage() {
             return prevRaids;
           }
           targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
+          assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: draggedPlayer.id });
         }
       }
 
       return newRaids;
     });
+
+    // Save assignments to database
+    assignmentsToSave.forEach(a => saveAssignment(a.raidId, a.groupIndex, a.slotIndex, a.playerId));
+    assignmentsToDelete.forEach(a => deleteAssignment(a.raidId, a.groupIndex, a.slotIndex));
 
     setDraggedPlayer(null);
     setDragSource(null);
@@ -290,6 +382,9 @@ export default function RosterPage() {
   const handleDropToAvailable = (e: DragEvent) => {
     e.preventDefault();
     if (!draggedPlayer || dragSource === 'available' || !dragSource) return;
+
+    // Delete assignment from database
+    deleteAssignment(dragSource.raidId, dragSource.groupIndex, dragSource.slotIndex);
 
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
@@ -314,6 +409,8 @@ export default function RosterPage() {
 
   // Add player to raid on click
   const addPlayerToRaid = (raidId: string, player: Player) => {
+    let addedPosition: { groupIndex: number; slotIndex: number } | null = null;
+
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
         if (raid.id !== raidId) return raid;
@@ -326,6 +423,7 @@ export default function RosterPage() {
           for (let si = 0; si < newGroups[gi].length; si++) {
             if (newGroups[gi][si] === null) {
               newGroups[gi][si] = player;
+              addedPosition = { groupIndex: gi, slotIndex: si };
               return { ...raid, groups: newGroups };
             }
           }
@@ -333,10 +431,18 @@ export default function RosterPage() {
         return raid;
       });
     });
+
+    // Save to database after state update
+    if (addedPosition) {
+      saveAssignment(raidId, addedPosition.groupIndex, addedPosition.slotIndex, player.id);
+    }
   };
 
   // Remove player from slot
   const removePlayerFromSlot = (raidId: string, groupIndex: number, slotIndex: number) => {
+    // Delete from database
+    deleteAssignment(raidId, groupIndex, slotIndex);
+
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
         if (raid.id !== raidId) return raid;
@@ -349,6 +455,9 @@ export default function RosterPage() {
 
   // Clear raid
   const clearRaid = (raidId: string) => {
+    // Clear all assignments for this raid from database
+    clearRaidAssignments(raidId);
+
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
         if (raid.id !== raidId) return raid;
