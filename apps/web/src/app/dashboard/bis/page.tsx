@@ -726,11 +726,18 @@ export default function BisListsPage() {
     const item = context === 'current'
       ? (gearItem as PlayerGear | null)?.item
       : (gearItem as BisConfig | null)?.item;
-    const wowheadId = item?.wowheadId || (context === 'current' ? (gearItem as PlayerGear | null)?.wowheadId : null);
-    const itemName = item?.name || (context === 'current' ? (gearItem as PlayerGear | null)?.itemName : null);
+    // Get wowheadId and itemName from item first, then fall back to the config object itself
+    const wowheadId = item?.wowheadId
+      || (context === 'current'
+        ? (gearItem as PlayerGear | null)?.wowheadId
+        : (gearItem as BisConfig | null)?.wowheadId);
+    const itemName = item?.name
+      || (context === 'current'
+        ? (gearItem as PlayerGear | null)?.itemName
+        : (gearItem as BisConfig | null)?.itemName);
     const icon = item?.icon || (context === 'current' ? (gearItem as PlayerGear | null)?.icon : null);
     const slotIcon = SLOT_ICONS[slot] || 'inv_misc_questionmark';
-    const hasItem = !!wowheadId || !!item;
+    const hasItem = !!wowheadId || !!itemName;
 
     // Use slot placeholder icon, with Wowhead link wrapper for tooltip
     const iconElement = hasItem && wowheadId ? (
