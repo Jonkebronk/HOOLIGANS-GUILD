@@ -199,14 +199,24 @@ export default function RaidSplitsPage() {
     return grouped;
   };
 
-  // Group players by role for the role columns view
+  // Group players by role for the role columns view, sorted by class
   const groupPlayersByRole = (playerList: Player[]) => {
+    const sortByClass = (players: Player[]) => {
+      return [...players].sort((a, b) => {
+        // First sort by class
+        const classCompare = CLASS_ORDER.indexOf(a.class) - CLASS_ORDER.indexOf(b.class);
+        if (classCompare !== 0) return classCompare;
+        // Then by spec within same class
+        return a.mainSpec.localeCompare(b.mainSpec);
+      });
+    };
+
     return {
-      Tank: playerList.filter(p => p.role === 'Tank'),
-      Healer: playerList.filter(p => p.role === 'Heal'),
-      Melee: playerList.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Melee'),
+      Tank: sortByClass(playerList.filter(p => p.role === 'Tank')),
+      Healer: sortByClass(playerList.filter(p => p.role === 'Heal')),
+      Melee: sortByClass(playerList.filter(p => p.role === 'DPS' && p.roleSubtype === 'DPS_Melee')),
       // Include both DPS_Ranged and DPS_Caster in the Ranged column
-      Ranged: playerList.filter(p => p.role === 'DPS' && (p.roleSubtype === 'DPS_Ranged' || p.roleSubtype === 'DPS_Caster')),
+      Ranged: sortByClass(playerList.filter(p => p.role === 'DPS' && (p.roleSubtype === 'DPS_Ranged' || p.roleSubtype === 'DPS_Caster'))),
     };
   };
 
@@ -477,7 +487,7 @@ export default function RaidSplitsPage() {
     try {
       const canvas = await html2canvas(element, {
         backgroundColor: '#0d1117',
-        scale: 3,
+        scale: 4,
         useCORS: true,
         logging: false,
       });
@@ -529,7 +539,7 @@ export default function RaidSplitsPage() {
     try {
       const canvas = await html2canvas(element, {
         backgroundColor: '#0d1117',
-        scale: 3,
+        scale: 4,
         useCORS: true,
         logging: false,
       });
@@ -890,7 +900,7 @@ export default function RaidSplitsPage() {
     return (
       <div
         key={slotKey}
-        className={`h-8 flex items-center transition-all cursor-pointer border border-[#444] ${
+        className={`h-8 flex items-center transition-all cursor-pointer border-2 border-black/50 rounded ${
           slot ? '' : 'bg-[#1a1a1a]'
         } ${isDragOver ? 'ring-2 ring-yellow-400/50' : ''}`}
         style={{
@@ -1001,7 +1011,7 @@ export default function RaidSplitsPage() {
         <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'} mt-1`}>
           {raid.groups.map((group, groupIndex) => (
             <div key={groupIndex} className="w-[150px] bg-[#111] border-2 border-[#444] rounded">
-              <div className="space-y-px p-0.5">
+              <div className="space-y-1 p-1">
                 {group.map((slot, slotIndex) => renderPlayerSlot(slot, raid.id, groupIndex, slotIndex))}
               </div>
             </div>
@@ -1130,7 +1140,7 @@ export default function RaidSplitsPage() {
                 Tank
               </div>
             </div>
-            <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
+            <div className="border-x border-b border-[#333] flex-1 min-h-[100px] p-1">
               {roleGroupedPlayers.Tank.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 text-sm">No players</div>
               ) : (
@@ -1141,7 +1151,7 @@ export default function RaidSplitsPage() {
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-b border-black/20"
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-2 border-black/40 rounded mb-1"
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
@@ -1173,7 +1183,7 @@ export default function RaidSplitsPage() {
                 Healer
               </div>
             </div>
-            <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
+            <div className="border-x border-b border-[#333] flex-1 min-h-[100px] p-1">
               {roleGroupedPlayers.Healer.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 text-sm">No players</div>
               ) : (
@@ -1184,7 +1194,7 @@ export default function RaidSplitsPage() {
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-b border-black/20"
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-2 border-black/40 rounded mb-1"
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
@@ -1216,7 +1226,7 @@ export default function RaidSplitsPage() {
                 Melee
               </div>
             </div>
-            <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
+            <div className="border-x border-b border-[#333] flex-1 min-h-[100px] p-1">
               {roleGroupedPlayers.Melee.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 text-sm">No players</div>
               ) : (
@@ -1227,7 +1237,7 @@ export default function RaidSplitsPage() {
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-b border-black/20"
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-2 border-black/40 rounded mb-1"
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
@@ -1259,7 +1269,7 @@ export default function RaidSplitsPage() {
                 Ranged
               </div>
             </div>
-            <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
+            <div className="border-x border-b border-[#333] flex-1 min-h-[100px] p-1">
               {roleGroupedPlayers.Ranged.length === 0 ? (
                 <div className="py-4 text-center text-gray-500 text-sm">No players</div>
               ) : (
@@ -1270,7 +1280,7 @@ export default function RaidSplitsPage() {
                     onDragStart={(e) => handleDragStart(e, player, 'available')}
                     onDragEnd={handleDragEnd}
                     onClick={() => addPlayerToRaid('main-25', player)}
-                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-b border-black/20"
+                    className="flex items-center h-7 cursor-grab active:cursor-grabbing hover:brightness-110 transition-all border-2 border-black/40 rounded mb-1"
                     style={{ backgroundColor: WOWSIMS_CLASS_COLORS[player.class] }}
                   >
                     <img
