@@ -572,22 +572,31 @@ export default function ItemsPage() {
               <div className="divide-y divide-border">
                 {filteredItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors">
-                    <img
-                      src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
-                      alt={item.name}
-                      className="w-9 h-9 rounded flex-shrink-0 cursor-pointer"
-                      style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
-                      onClick={() => window.open(`https://www.wowhead.com/tbc/item=${item.wowheadId}`, '_blank')}
-                    />
+                    <a
+                      href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0"
+                      data-wh-icon-size="false"
+                    >
+                      <img
+                        src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
+                        alt={item.name}
+                        className="w-9 h-9 rounded"
+                        style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                      />
+                    </a>
                     <div className="flex-1 min-w-0">
-                      <span
-                        className="font-medium truncate block cursor-pointer hover:underline"
+                      <a
+                        href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium truncate block hover:underline"
                         style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
-                        data-wowhead={`item=${item.wowheadId}&domain=tbc`}
-                        onClick={() => window.open(`https://www.wowhead.com/tbc/item=${item.wowheadId}`, '_blank')}
+                        data-wh-icon-size="false"
                       >
                         {item.name}
-                      </span>
+                      </a>
                     </div>
                     <div className="hidden sm:block w-24 text-sm text-muted-foreground">
                       {item.slot}

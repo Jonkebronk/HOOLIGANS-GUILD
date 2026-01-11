@@ -117,6 +117,11 @@ a[data-wh-icon-size="small"] ins {
   height: 32px !important;
 }
 
+/* Hide Wowhead icons when data-wh-icon-size="false" */
+a[data-wh-icon-size="false"] ins {
+  display: none !important;
+}
+
 a[data-wh-icon-size="medium"] ins {
   width: 36px !important;
   height: 36px !important;

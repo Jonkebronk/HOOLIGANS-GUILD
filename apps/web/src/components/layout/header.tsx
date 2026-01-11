@@ -16,7 +16,20 @@ import {
 import { useTeam } from '@/components/providers/team-provider';
 import { useRouter } from 'next/navigation';
 
-function TeamIcon({ className = "h-5 w-5" }: { className?: string }) {
+// Team icon mapping
+const TEAM_ICONS: Record<string, string> = {
+  'TEAM NATO': '/teams/nato.png',
+  'TEAM SWEDEN': '/teams/sweden.png',
+  'PuGs': '/teams/pug.jpg',
+};
+
+function TeamIcon({ teamName, className = "h-5 w-5" }: { teamName?: string; className?: string }) {
+  const iconUrl = teamName ? TEAM_ICONS[teamName] : null;
+
+  if (iconUrl) {
+    return <img src={iconUrl} alt={teamName} className={`${className} rounded-full object-cover`} />;
+  }
+
   return <Users className={className} />;
 }
 
@@ -45,7 +58,7 @@ export function Header({ user }: HeaderProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-3">
-              <TeamIcon className="h-5 w-5" />
+              <TeamIcon teamName={selectedTeam?.name} className="h-5 w-5" />
               <span className="font-semibold text-foreground">
                 {selectedTeam?.name || 'Select Team'}
               </span>
@@ -61,7 +74,7 @@ export function Header({ user }: HeaderProps) {
                 onClick={() => setSelectedTeam(team)}
                 className={selectedTeam?.id === team.id ? 'bg-primary/10' : ''}
               >
-                <TeamIcon className="h-4 w-4 mr-2" />
+                <TeamIcon teamName={team.name} className="h-4 w-4 mr-2" />
                 {team.name}
                 {selectedTeam?.id === team.id && (
                   <span className="ml-auto text-xs text-primary">Active</span>
