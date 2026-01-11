@@ -16,6 +16,23 @@ import {
 import { useTeam } from '@/components/providers/team-provider';
 import { useRouter } from 'next/navigation';
 
+// Team icon mapping - add your team icons to /public/icons/teams/
+const TEAM_ICONS: Record<string, string> = {
+  'TEAM NATO': '/icons/teams/nato.png',
+  'TEAM SWEDEN': '/icons/teams/sweden.png',
+  'PuG': '/icons/teams/pug.png',
+};
+
+function TeamIcon({ teamName, className = "h-5 w-5" }: { teamName: string; className?: string }) {
+  const iconUrl = TEAM_ICONS[teamName];
+
+  if (iconUrl) {
+    return <img src={iconUrl} alt={teamName} className={className} />;
+  }
+
+  return <Users className={className} />;
+}
+
 interface HeaderProps {
   user?: {
     name: string;
@@ -41,7 +58,7 @@ export function Header({ user }: HeaderProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-3">
-              <Users className="h-4 w-4 text-primary" />
+              <TeamIcon teamName={selectedTeam?.name || ''} className="h-5 w-5" />
               <span className="font-semibold text-foreground">
                 {selectedTeam?.name || 'Select Team'}
               </span>
@@ -57,7 +74,7 @@ export function Header({ user }: HeaderProps) {
                 onClick={() => setSelectedTeam(team)}
                 className={selectedTeam?.id === team.id ? 'bg-primary/10' : ''}
               >
-                <Users className="h-4 w-4 mr-2" />
+                <TeamIcon teamName={team.name} className="h-4 w-4 mr-2" />
                 {team.name}
                 {selectedTeam?.id === team.id && (
                   <span className="ml-auto text-xs text-primary">Active</span>

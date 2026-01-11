@@ -18,11 +18,11 @@ import {
 import { Users, Plus, Loader2, Shield, Crown, User } from 'lucide-react';
 import { useTeam, Team } from '@/components/providers/team-provider';
 
-// Team icons mapping
+// Team icons mapping - add your team icons to /public/icons/teams/
 const TEAM_ICONS: Record<string, string> = {
-  'TEAM NATO': '/teams/nato.png',
-  'TEAM SWEDEN': '/teams/sweden.png',
-  'PuGs': '/teams/pug.jpg',
+  'TEAM NATO': '/icons/teams/nato.png',
+  'TEAM SWEDEN': '/icons/teams/sweden.png',
+  'PuG': '/icons/teams/pug.png',
 };
 
 const ROLE_ICONS = {
