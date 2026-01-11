@@ -406,17 +406,56 @@ export default function RaidSplitsPage() {
           if (event.signUps) {
             const signups: RaidHelperSignup[] = event.signUps.map((s: Record<string, unknown>) => {
               // Capitalize class name (raid-helper returns lowercase like "druid", "hunter")
-              const rawClass = s.className as string | undefined;
+              let rawClass = s.className as string | undefined;
+
+              // Raid-Helper sometimes returns "Tank" or "Tentative" as className - derive real class from spec
+              if (rawClass === 'Tank' || rawClass === 'Tentative' || !rawClass) {
+                // Try to derive class from specName
+                const specName = (s.specName as string || '').replace(/\d+$/, ''); // Remove trailing numbers
+                const specToClass: Record<string, string> = {
+                  'Protection': 'Warrior', // Could be Paladin, but Warrior is common
+                  'Guardian': 'Druid',
+                  'Feral': 'Druid',
+                  'Bear': 'Druid',
+                  'Holy': 'Paladin', // Could be Priest
+                  'Retribution': 'Paladin',
+                  'Restoration': 'Shaman', // Could be Druid
+                  'Balance': 'Druid',
+                  'Shadow': 'Priest',
+                  'Discipline': 'Priest',
+                  'Elemental': 'Shaman',
+                  'Enhancement': 'Shaman',
+                  'Destruction': 'Warlock',
+                  'Affliction': 'Warlock',
+                  'Demonology': 'Warlock',
+                  'Fury': 'Warrior',
+                  'Arms': 'Warrior',
+                  'Combat': 'Rogue',
+                  'Assassination': 'Rogue',
+                  'Subtlety': 'Rogue',
+                  'Arcane': 'Mage',
+                  'Fire': 'Mage',
+                  'Frost': 'Mage',
+                  'BeastMastery': 'Hunter',
+                  'Marksmanship': 'Hunter',
+                  'Survival': 'Hunter',
+                };
+                rawClass = specToClass[specName] || rawClass;
+              }
+
               const className = rawClass
                 ? rawClass.charAt(0).toUpperCase() + rawClass.slice(1).toLowerCase()
                 : undefined;
+
+              // Clean spec name - remove trailing numbers (e.g., "Protection1" -> "Protection")
+              const specName = ((s.specName as string) || '').replace(/\d+$/, '');
 
               return {
                 name: (s.name || s.specName || 'Unknown') as string,
                 discordId: (s.odUserId || s.userId) as string | undefined,
                 class: className,
-                spec: s.specName as string | undefined,
-                role: s.role as string | undefined,
+                spec: specName,
+                role: (s.roleName || s.role) as string | undefined,
               };
             });
             setImportedSignups(signups);
