@@ -44,10 +44,10 @@ const CLASS_ORDER = ['Warrior', 'Paladin', 'Hunter', 'Rogue', 'Priest', 'Shaman'
 
 // Role colors for the category headers
 const ROLE_COLORS: Record<string, string> = {
-  Tank: '#8B4513',
-  Healer: '#2E8B57',
+  Tank: '#8B0000',
+  Healer: '#8B0000',
   Melee: '#8B0000',
-  Ranged: '#4B0082',
+  Ranged: '#8B0000',
 };
 
 // Role icons
@@ -1130,8 +1130,8 @@ export default function RaidSplitsPage() {
 
         {/* Role Columns Section */}
         <div className="flex-shrink-0">
-          {/* Import button above Tank */}
-          <div className="mb-2">
+          {/* Import and Clear buttons */}
+          <div className="mb-2 flex gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -1140,6 +1140,24 @@ export default function RaidSplitsPage() {
             >
               <Upload className="h-4 w-4 mr-2" />
               Import
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-transparent border-red-600 text-red-400 hover:bg-red-900/20"
+              onClick={() => {
+                // Clear imported players and all raid assignments
+                setPlayers(prev => prev.filter(p => !p.id.startsWith('imported-')));
+                setRaids(prevRaids => prevRaids.map(raid => ({
+                  ...raid,
+                  groups: raid.groups.map(group =>
+                    group.map(slot => slot?.id.startsWith('imported-') ? null : slot)
+                  ),
+                })));
+              }}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Clear
             </Button>
           </div>
           {/* Role Columns - all 4 side by side */}
@@ -1151,7 +1169,7 @@ export default function RaidSplitsPage() {
                 <img src={ROLE_ICONS.Tank} alt="Tank" className="w-8 h-8" />
               </div>
             </div>
-            <div className="border-t-4 border-[#5a3a1a]" style={{ backgroundColor: ROLE_COLORS.Tank }}>
+            <div className="border-t-4 border-[#5a0000]" style={{ backgroundColor: ROLE_COLORS.Tank }}>
               <div className="text-center py-1.5 font-bold text-white text-sm">
                 Tank
               </div>
@@ -1194,7 +1212,7 @@ export default function RaidSplitsPage() {
                 <img src={ROLE_ICONS.Healer} alt="Healer" className="w-8 h-8" />
               </div>
             </div>
-            <div className="border-t-4 border-[#1a5a3a]" style={{ backgroundColor: ROLE_COLORS.Healer }}>
+            <div className="border-t-4 border-[#5a0000]" style={{ backgroundColor: ROLE_COLORS.Healer }}>
               <div className="text-center py-1.5 font-bold text-white text-sm">
                 Healer
               </div>
@@ -1280,7 +1298,7 @@ export default function RaidSplitsPage() {
                 <img src={ROLE_ICONS.Ranged} alt="Ranged" className="w-8 h-8" />
               </div>
             </div>
-            <div className="border-t-4 border-[#2a0050]" style={{ backgroundColor: ROLE_COLORS.Ranged }}>
+            <div className="border-t-4 border-[#5a0000]" style={{ backgroundColor: ROLE_COLORS.Ranged }}>
               <div className="text-center py-1.5 font-bold text-white text-sm">
                 Ranged
               </div>
