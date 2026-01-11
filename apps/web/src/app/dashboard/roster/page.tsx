@@ -305,17 +305,18 @@ export default function RosterPage() {
         const playersData = await playersRes.json();
         setPlayers(playersData);
 
-        // Apply saved assignments if available
+        // Clear raids first, then apply saved assignments
         if (assignmentsRes.ok) {
           const assignmentsData = await assignmentsRes.json();
-          if (Array.isArray(assignmentsData) && assignmentsData.length > 0) {
-            setRaids(prevRaids => {
-              const newRaids = prevRaids.map(raid => ({
-                ...raid,
-                groups: raid.groups.map(group => [...group]),
-              }));
+          setRaids(prevRaids => {
+            // Reset all raids to empty first
+            const newRaids = prevRaids.map(raid => ({
+              ...raid,
+              groups: raid.groups.map(() => Array(SLOTS_PER_GROUP).fill(null)),
+            }));
 
-              // Apply each assignment
+            // Apply each assignment from the new team
+            if (Array.isArray(assignmentsData)) {
               for (const assignment of assignmentsData) {
                 const raid = newRaids.find(r => r.id === assignment.raidId);
                 if (raid && assignment.player) {
@@ -325,10 +326,10 @@ export default function RosterPage() {
                   }
                 }
               }
+            }
 
-              return newRaids;
-            });
-          }
+            return newRaids;
+          });
         }
       }
     } catch (error) {

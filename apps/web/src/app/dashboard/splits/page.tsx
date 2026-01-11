@@ -162,6 +162,14 @@ export default function RaidSplitsPage() {
 
   useEffect(() => {
     if (selectedTeam) {
+      // Clear raids when team changes
+      setRaids(prevRaids => prevRaids.map(raid => ({
+        ...raid,
+        groups: raid.size === '25'
+          ? Array(5).fill(null).map(() => Array(SLOTS_PER_GROUP).fill(null))
+          : Array(2).fill(null).map(() => Array(SLOTS_PER_GROUP).fill(null)),
+      })));
+      setPlayers([]);
       fetchPlayers();
     }
   }, [selectedTeam]);
