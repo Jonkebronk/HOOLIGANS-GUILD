@@ -25,12 +25,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, Target, Search, X, ExternalLink, Download, Upload, Copy, Check, Database, RefreshCw } from 'lucide-react';
+import { Loader2, Target, Search, X, ExternalLink, Download, Upload, Copy, Check, Database } from 'lucide-react';
 import { CLASS_COLORS, TbcItem, TbcEnchant, TbcGem } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, SLOT_ICONS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { GearPickerModal } from '@/components/gear-picker-modal';
-import { fetchWowSimsPreset, hasWowSimsPreset } from '@/lib/wowsims-presets';
-import { useToast } from '@/hooks/use-toast';
 
 const WOW_CLASSES = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
 
@@ -141,7 +139,6 @@ type PlayerGear = {
 type DialogContext = 'current' | 'bis';
 
 export default function BisListsPage() {
-  const { toast } = useToast();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState<string>('');
@@ -151,7 +148,6 @@ export default function BisListsPage() {
   const [bisConfig, setBisConfig] = useState<BisConfig[]>([]);
   const [currentGear, setCurrentGear] = useState<PlayerGear[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<string>('P1');
-  const [loadingPreset, setLoadingPreset] = useState(false);
 
   // Item selection dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -537,69 +533,6 @@ export default function BisListsPage() {
     window.open(wowsimsUrl, '_blank');
   };
 
-  // Load WoWSims BiS preset for current spec and phase
-  const handleLoadPreset = async () => {
-    if (!selectedPlayerData?.mainSpec) return;
-
-    // Check if spec has preset support
-    if (!hasWowSimsPreset(selectedPlayerData.mainSpec)) {
-      toast({
-        title: 'No Preset Available',
-        description: `No WoWSims preset available for ${selectedPlayerData.mainSpec}`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setLoadingPreset(true);
-    try {
-      const phaseNumber = parseInt(selectedPhase.replace('P', ''));
-      const preset = await fetchWowSimsPreset(selectedPlayerData.mainSpec, phaseNumber);
-
-      if (!preset || preset.items.length === 0) {
-        toast({
-          title: 'Preset Not Found',
-          description: `No WoWSims preset found for ${selectedPlayerData.mainSpec} ${selectedPhase}`,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Import the preset via bulk import API
-      const res = await fetch('/api/bis/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          spec: selectedPlayerData.mainSpec,
-          phase: selectedPhase,
-          items: preset.items,
-          source: preset.source,
-        }),
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        toast({
-          title: 'Preset Loaded',
-          description: `Imported ${result.imported} items from ${preset.source}`,
-        });
-        // Refresh BiS config
-        await fetchBisConfig(selectedPlayerData.mainSpec);
-      } else {
-        throw new Error('Failed to import preset');
-      }
-    } catch (error) {
-      console.error('Failed to load preset:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load WoWSims preset. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoadingPreset(false);
-    }
-  };
-
   // Export gear as JSON
   const handleExportJson = (gearType: 'current' | 'bis') => {
     if (!selectedPlayerData) return;
@@ -799,15 +732,24 @@ export default function BisListsPage() {
     const slotIcon = SLOT_ICONS[slot] || 'inv_misc_questionmark';
     const hasItem = !!wowheadId || !!item;
 
+    // Use slot placeholder icon, with Wowhead link wrapper for tooltip
     const iconElement = hasItem && wowheadId ? (
-      // Let Wowhead inject the correct icon via iconizeLinks
       <a
         href={`https://www.wowhead.com/tbc/item=${wowheadId}`}
         onClick={(e) => e.preventDefault()}
-        data-wh-icon-size="small"
-        className="wowhead-icon-link flex-shrink-0"
-        style={{ width: 32, height: 32 }}
-      />
+        className="flex-shrink-0"
+      >
+        <img
+          src={getItemIconUrl(icon || slotIcon, 'medium')}
+          alt={itemName || label}
+          className="w-8 h-8 rounded"
+          style={{
+            borderWidth: 2,
+            borderStyle: 'solid',
+            borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee',
+          }}
+        />
+      </a>
     ) : (
       <div className="relative flex-shrink-0">
         <img
@@ -1026,20 +968,6 @@ export default function BisListsPage() {
                         {phase}
                       </Button>
                     ))}
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="h-7 ml-auto"
-                      onClick={handleLoadPreset}
-                      disabled={loadingPreset}
-                    >
-                      {loadingPreset ? (
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4 mr-1" />
-                      )}
-                      Load WoWSims
-                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
