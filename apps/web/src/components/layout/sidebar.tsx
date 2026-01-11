@@ -18,7 +18,6 @@ import {
   ChevronDown,
   Droplets,
   Activity,
-  UserPlus,
 } from 'lucide-react';
 
 type NavItem = {
@@ -34,7 +33,6 @@ const navigation: NavItem[] = [
   { name: 'Raid Splits', href: '/dashboard/splits', icon: Users2 },
   { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
   { name: 'Performance', href: '/dashboard/performance', icon: Activity },
-  { name: 'Applications', href: '/dashboard/applications', icon: UserPlus },
   {
     name: 'Loot Council',
     icon: Sword,
