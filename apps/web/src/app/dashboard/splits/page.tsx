@@ -679,19 +679,18 @@ export default function RaidSplitsPage() {
 
       {/* Available Players - Role Columns */}
       <div className="mt-8">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-6">
           {/* Tank Column */}
-          <div className="flex flex-col">
+          <div className="flex flex-col max-w-[200px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Tank} alt="Tank" className="w-8 h-8" />
               </div>
             </div>
-            <div
-              className="text-center py-2 font-bold text-white"
-              style={{ backgroundColor: ROLE_COLORS.Tank }}
-            >
-              Tank
+            <div className="border-t-4 border-[#5a3a1a]" style={{ backgroundColor: ROLE_COLORS.Tank }}>
+              <div className="text-center py-1.5 font-bold text-white text-sm">
+                Tank
+              </div>
             </div>
             <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
               {roleGroupedPlayers.Tank.length === 0 ? (
@@ -725,17 +724,16 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Healer Column */}
-          <div className="flex flex-col">
+          <div className="flex flex-col max-w-[200px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Healer} alt="Healer" className="w-8 h-8" />
               </div>
             </div>
-            <div
-              className="text-center py-2 font-bold text-white"
-              style={{ backgroundColor: ROLE_COLORS.Healer }}
-            >
-              Healer
+            <div className="border-t-4 border-[#1a5a3a]" style={{ backgroundColor: ROLE_COLORS.Healer }}>
+              <div className="text-center py-1.5 font-bold text-white text-sm">
+                Healer
+              </div>
             </div>
             <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
               {roleGroupedPlayers.Healer.length === 0 ? (
@@ -769,17 +767,16 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Melee Column */}
-          <div className="flex flex-col">
+          <div className="flex flex-col max-w-[200px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Melee} alt="Melee" className="w-8 h-8" />
               </div>
             </div>
-            <div
-              className="text-center py-2 font-bold text-white"
-              style={{ backgroundColor: ROLE_COLORS.Melee }}
-            >
-              Melee
+            <div className="border-t-4 border-[#5a0000]" style={{ backgroundColor: ROLE_COLORS.Melee }}>
+              <div className="text-center py-1.5 font-bold text-white text-sm">
+                Melee
+              </div>
             </div>
             <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
               {roleGroupedPlayers.Melee.length === 0 ? (
@@ -813,17 +810,16 @@ export default function RaidSplitsPage() {
           </div>
 
           {/* Ranged Column */}
-          <div className="flex flex-col">
+          <div className="flex flex-col max-w-[200px]">
             <div className="flex justify-center py-3">
               <div className="w-12 h-12 rounded-full bg-[#1a1a1a] border-2 border-[#333] flex items-center justify-center">
                 <img src={ROLE_ICONS.Ranged} alt="Ranged" className="w-8 h-8" />
               </div>
             </div>
-            <div
-              className="text-center py-2 font-bold text-white"
-              style={{ backgroundColor: ROLE_COLORS.Ranged }}
-            >
-              Ranged
+            <div className="border-t-4 border-[#2a0050]" style={{ backgroundColor: ROLE_COLORS.Ranged }}>
+              <div className="text-center py-1.5 font-bold text-white text-sm">
+                Ranged
+              </div>
             </div>
             <div className="border-x border-b border-[#333] flex-1 min-h-[100px]">
               {roleGroupedPlayers.Ranged.length === 0 ? (
