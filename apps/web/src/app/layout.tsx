@@ -24,7 +24,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `const whTooltips = {colorLinks: false, iconizeLinks: false, renameLinks: false, hide: {droppedby: true, sellprice: true}};`,
+            __html: `const whTooltips = {colorLinks: true, iconizeLinks: true, iconSize: 'medium', renameLinks: false, hide: {droppedby: true, sellprice: true}};`,
           }}
         />
         <script src="https://wow.zamimg.com/js/tooltips.js" />

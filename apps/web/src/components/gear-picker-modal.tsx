@@ -117,10 +117,16 @@ export function GearPickerModal({
     }
   }, [open]);
 
-  // Refresh tooltips when results change
+  // Refresh tooltips when results change - give Wowhead time to inject icons
   useEffect(() => {
     if (open) {
+      // Initial refresh
       refreshWowheadTooltips();
+      // Additional refresh after DOM settles
+      const timer = setTimeout(() => {
+        refreshWowheadTooltips();
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [open, activeTab, phase, searchQuery]);
 
@@ -237,25 +243,15 @@ export function GearPickerModal({
     return gems;
   }, [activeTab, phase, searchQuery]);
 
-  // Determine which gem tabs to show based on sockets
-  const availableGemTabs = useMemo(() => {
-    const tabs: PickerTab[] = [];
-    for (const socket of gemSockets) {
-      if (socket.toLowerCase().includes('red') && !tabs.includes('gem-red')) {
-        tabs.push('gem-red');
-      }
-      if (socket.toLowerCase().includes('blue') && !tabs.includes('gem-blue')) {
-        tabs.push('gem-blue');
-      }
-      if (socket.toLowerCase().includes('yellow') && !tabs.includes('gem-yellow')) {
-        tabs.push('gem-yellow');
-      }
-      if (socket.toLowerCase().includes('meta') && !tabs.includes('gem-meta')) {
-        tabs.push('gem-meta');
-      }
+  // Always show all gem tabs so users can browse gems
+  // Head slot typically has meta socket, other slots have colored sockets
+  const availableGemTabs: PickerTab[] = useMemo(() => {
+    // Show meta for head slot, colored gems for other slots
+    if (slot === 'Head') {
+      return ['gem-meta', 'gem-red', 'gem-blue', 'gem-yellow'];
     }
-    return tabs;
-  }, [gemSockets]);
+    return ['gem-red', 'gem-blue', 'gem-yellow'];
+  }, [slot]);
 
   const renderTabButton = (
     tab: PickerTab,
@@ -368,18 +364,13 @@ export function GearPickerModal({
                       href={`https://www.wowhead.com/tbc/item=${item.id}`}
                       onClick={(e) => e.preventDefault()}
                       className="flex-shrink-0"
-                    >
-                      <img
-                        src={getItemIconUrl('inv_misc_questionmark', 'medium')}
-                        alt={item.name}
-                        className="w-9 h-9 rounded"
-                        style={{
-                          borderWidth: 2,
-                          borderStyle: 'solid',
-                          borderColor: TBC_QUALITY_COLORS[item.quality] || '#a335ee',
-                        }}
-                      />
-                    </a>
+                      style={{
+                        borderRadius: 4,
+                        borderWidth: 2,
+                        borderStyle: 'solid',
+                        borderColor: TBC_QUALITY_COLORS[item.quality] || '#a335ee',
+                      }}
+                    ></a>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span
