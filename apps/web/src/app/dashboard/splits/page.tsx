@@ -977,7 +977,7 @@ export default function RaidSplitsPage() {
     return (
       <div
         key={slotKey}
-        className={`h-6 flex items-center transition-all cursor-pointer border border-black/50 rounded ${
+        className={`h-8 flex items-center transition-all cursor-pointer border-2 border-black/60 rounded ${
           slot ? '' : 'bg-[#1a1a1a]'
         } ${isDragOver ? 'ring-2 ring-yellow-400/50' : ''}`}
         style={{
@@ -996,9 +996,9 @@ export default function RaidSplitsPage() {
             <img
               src={getSpecIconUrl(slot.mainSpec, slot.class)}
               alt={slot.mainSpec}
-              className="w-5 h-5 ml-0.5"
+              className="w-7 h-7 ml-0.5"
             />
-            <span className="flex-1 text-xs font-bold text-black pl-1 pr-0.5 truncate" style={{ textShadow: '0 0 1px rgba(255,255,255,0.3)' }}>
+            <span className="flex-1 text-sm font-bold text-black pl-1 pr-0.5" style={{ textShadow: '0 0 2px rgba(255,255,255,0.5)' }}>
               {slot.name}
             </span>
             <button
@@ -1030,49 +1030,49 @@ export default function RaidSplitsPage() {
         className={`bg-[#0d1117] border border-[#30363d] rounded-lg ${compact ? '' : 'mb-6'}`}
       >
         {/* Card Header */}
-        <div className="flex items-center justify-between px-2 py-1.5 border-b border-[#30363d]">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[#30363d]">
+          <div className="flex items-center gap-3">
             <Input
               value={raid.name}
               onChange={(e) => updateRaidName(raid.id, e.target.value)}
-              className="w-32 h-6 text-sm bg-transparent border-none text-white font-bold hover:bg-white/10 focus:bg-white/10 px-1"
+              className="w-36 h-8 text-lg bg-transparent border-none text-white font-bold hover:bg-white/10 focus:bg-white/10 px-1"
             />
-            <span className="text-xs text-gray-300 font-semibold">{totalAssigned}/{maxPlayers}</span>
+            <span className="text-base text-gray-300 font-semibold">{totalAssigned}/{maxPlayers}</span>
           </div>
-          <div className="flex gap-0.5 screenshot-hide">
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => copyRaidToClipboard(raid.id)} title="Copy">
-              <Copy className="h-3 w-3" />
+          <div className="flex gap-1 screenshot-hide">
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => copyRaidToClipboard(raid.id)} title="Copy">
+              <Copy className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openScreenshotDialog(raid.id)} title="Screenshot">
-              <Camera className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openScreenshotDialog(raid.id)} title="Screenshot">
+              <Camera className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => clearRaid(raid.id)} title="Clear">
-              <RotateCcw className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => clearRaid(raid.id)} title="Clear">
+              <RotateCcw className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openExportDialog(raid.id)} title="Export">
-              <Share2 className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openExportDialog(raid.id)} title="Export">
+              <Share2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => downloadRaid(raid.id)} title="Download">
-              <Download className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => downloadRaid(raid.id)} title="Download">
+              <Download className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         {/* Card Body */}
-        <div className="p-1">
+        <div className="p-2">
 
         {/* Groups Grid with Headers */}
         <div className="flex gap-1">
           {raid.groups.map((group, groupIndex) => (
-            <div key={groupIndex} className="w-[120px]">
+            <div key={groupIndex} className="w-[150px]">
               {/* Group Header */}
-              <div className="flex items-center justify-center gap-1 text-yellow-500 text-[10px] font-semibold py-0.5 mb-0.5">
-                <Users className="h-3 w-3" />
+              <div className="flex items-center justify-center gap-1 text-yellow-500 text-xs font-bold py-1 mb-1">
+                <Users className="h-4 w-4" />
                 Group {groupIndex + 1}
               </div>
               {/* Group Box */}
-              <div className="bg-[#111] border border-[#444] rounded">
-                <div className="space-y-0.5 p-0.5">
+              <div className="bg-[#111] border-2 border-[#444] rounded">
+                <div className="space-y-0.5 p-1">
                   {group.map((slot, slotIndex) => renderPlayerSlot(slot, raid.id, groupIndex, slotIndex))}
                 </div>
               </div>
