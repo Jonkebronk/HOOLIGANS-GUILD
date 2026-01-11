@@ -1040,9 +1040,6 @@ export default function RaidSplitsPage() {
             <span className="text-base text-gray-300 font-semibold">{totalAssigned}/{maxPlayers}</span>
           </div>
           <div className="flex gap-1 screenshot-hide">
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => copyRaidToClipboard(raid.id)} title="Copy">
-              <Copy className="h-4 w-4" />
-            </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openScreenshotDialog(raid.id)} title="Screenshot">
               <Camera className="h-4 w-4" />
             </Button>
@@ -1051,9 +1048,6 @@ export default function RaidSplitsPage() {
             </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openExportDialog(raid.id)} title="Export">
               <Share2 className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => downloadRaid(raid.id)} title="Download">
-              <Download className="h-4 w-4" />
             </Button>
           </div>
         </div>
