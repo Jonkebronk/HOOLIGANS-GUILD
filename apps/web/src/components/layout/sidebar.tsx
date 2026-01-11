@@ -29,9 +29,6 @@ type NavItem = {
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Roster', href: '/dashboard/roster', icon: Users },
-  { name: 'Items', href: '/dashboard/items', icon: Package },
-  { name: 'BiS Lists', href: '/dashboard/bis', icon: Scroll },
-  { name: 'Attendance', href: '/dashboard/attendance', icon: Calendar },
   { name: 'Raid Splits', href: '/dashboard/splits', icon: Users2 },
   { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
   {
@@ -39,6 +36,9 @@ const navigation: NavItem[] = [
     icon: Sword,
     children: [
       { name: 'Drops', href: '/dashboard/loot', icon: Droplets },
+      { name: 'Items', href: '/dashboard/items', icon: Package },
+      { name: 'BiS Lists', href: '/dashboard/bis', icon: Scroll },
+      { name: 'Attendance', href: '/dashboard/attendance', icon: Calendar },
     ]
   },
 ];

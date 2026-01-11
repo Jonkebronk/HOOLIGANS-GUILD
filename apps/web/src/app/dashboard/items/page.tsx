@@ -260,6 +260,63 @@ export default function ItemsPage() {
     }
   };
 
+  const handleOpenEditDialog = async (item: Item) => {
+    setEditingItem(item);
+    setEditForm({
+      lootPriority: item.lootPriority || '',
+      bisFor: item.bisFor || '',
+      bisNextPhase: item.bisNextPhase || '',
+    });
+    setIsEditDialogOpen(true);
+
+    // Load full item details including loot records
+    setLoadingItemDetails(true);
+    try {
+      const res = await fetch(`/api/items/${item.id}`);
+      if (res.ok) {
+        const fullItem = await res.json();
+        setEditingItem(fullItem);
+        setEditForm({
+          lootPriority: fullItem.lootPriority || '',
+          bisFor: fullItem.bisFor || '',
+          bisNextPhase: fullItem.bisNextPhase || '',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load item details:', error);
+    } finally {
+      setLoadingItemDetails(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingItem) return;
+
+    setIsSavingEdit(true);
+    try {
+      const res = await fetch(`/api/items/${editingItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setItems(items.map(item =>
+          item.id === editingItem.id
+            ? { ...item, ...editForm }
+            : item
+        ));
+        setIsEditDialogOpen(false);
+        setEditingItem(null);
+      }
+    } catch (error) {
+      console.error('Failed to save item:', error);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   const filteredItems = items.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRaid = raidFilter === 'all' || item.raid === raidFilter;
@@ -591,13 +648,18 @@ export default function ItemsPage() {
             <CardContent className="p-0">
               <div className="divide-y divide-border">
                 {filteredItems.map((item) => (
-                  <div key={item.id} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors">
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer group"
+                    onClick={() => handleOpenEditDialog(item)}
+                  >
                     <a
                       href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       data-wh-icon-size="0"
                       className="flex-shrink-0"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <img
                         src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
@@ -614,9 +676,13 @@ export default function ItemsPage() {
                         data-wh-icon-size="0"
                         className="font-medium truncate block hover:underline"
                         style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {item.name}
                       </a>
+                      {item.lootPriority && (
+                        <span className="text-xs text-yellow-500">{item.lootPriority}</span>
+                      )}
                     </div>
                     <div className="hidden sm:block w-24 text-sm text-muted-foreground">
                       {item.slot}
@@ -646,6 +712,14 @@ export default function ItemsPage() {
                     ) : (
                       <div className="hidden xl:block w-40" />
                     )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => { e.stopPropagation(); handleOpenEditDialog(item); }}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -653,6 +727,107 @@ export default function ItemsPage() {
           </Card>
         </>
       )}
+
+      {/* Edit Item Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              {editingItem && (
+                <>
+                  <img
+                    src={getItemIconUrl(editingItem.icon || 'inv_misc_questionmark', 'medium')}
+                    alt={editingItem.name}
+                    className="w-10 h-10 rounded"
+                    style={{
+                      borderWidth: 2,
+                      borderStyle: 'solid',
+                      borderColor: ITEM_QUALITY_COLORS[editingItem.quality] || ITEM_QUALITY_COLORS[4]
+                    }}
+                  />
+                  <span style={{ color: ITEM_QUALITY_COLORS[editingItem?.quality || 4] }}>
+                    {editingItem.name}
+                  </span>
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              Edit loot council information for this item.
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingItemDetails ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Loot Priority</Label>
+                <Textarea
+                  placeholder="e.g., Tanks > Melee DPS > Hunters"
+                  value={editForm.lootPriority}
+                  onChange={(e) => setEditForm({ ...editForm, lootPriority: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>BiS For (Current Phase)</Label>
+                <Textarea
+                  placeholder="e.g., Combat Rogues, Fury Warriors"
+                  value={editForm.bisFor}
+                  onChange={(e) => setEditForm({ ...editForm, bisFor: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>BiS Next Phase</Label>
+                <Textarea
+                  placeholder="e.g., Still BiS for Rogues in P2"
+                  value={editForm.bisNextPhase}
+                  onChange={(e) => setEditForm({ ...editForm, bisNextPhase: e.target.value })}
+                  rows={2}
+                />
+              </div>
+
+              {/* Looted By Section */}
+              <div className="space-y-2">
+                <Label>Looted By</Label>
+                <div className="bg-muted/50 rounded-md p-3 max-h-32 overflow-y-auto">
+                  {editingItem?.lootRecords && editingItem.lootRecords.length > 0 ? (
+                    <div className="space-y-1">
+                      {editingItem.lootRecords.map((record) => (
+                        <div key={record.id} className="flex items-center justify-between text-sm">
+                          <span style={{ color: record.player ? CLASS_COLORS[record.player.class] : undefined }}>
+                            {record.player?.name || 'Unknown'}
+                          </span>
+                          <span className="text-muted-foreground text-xs">
+                            {new Date(record.lootDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No loot records found</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={isSavingEdit}>
+              {isSavingEdit ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
