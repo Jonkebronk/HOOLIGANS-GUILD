@@ -819,7 +819,7 @@ export default function RaidSplitsPage() {
         </div>
 
         {/* Role Columns Section */}
-        <div className="ml-8">
+        <div className="ml-auto mr-16">
           {/* Import button above Tank */}
           <div className="mb-2">
             <Button
