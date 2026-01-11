@@ -113,6 +113,7 @@ export default function RaidSplitsPage() {
   // Refs for screenshot functionality
   const raidRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const tenManSectionRef = useRef<HTMLDivElement | null>(null);
+  const allRaidsSectionRef = useRef<HTMLDivElement | null>(null);
 
   // Screenshot dialog state
   const [isScreenshotDialogOpen, setIsScreenshotDialogOpen] = useState(false);
@@ -725,18 +726,49 @@ export default function RaidSplitsPage() {
   const sendPostAllToDiscord = async () => {
     if (!postAllChannel) return;
 
+    const element = allRaidsSectionRef.current;
+    if (!element) {
+      alert('Could not capture raids section');
+      return;
+    }
+
     setIsSendingPostAll(true);
     try {
+      // Hide X buttons and other elements for screenshot
+      const hideElements = element.querySelectorAll('.screenshot-hide');
+      hideElements.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
+
+      // Capture screenshot
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#0d1117',
+        scale: 4,
+        useCORS: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        windowWidth: element.scrollWidth + 40,
+        windowHeight: element.scrollHeight + 40,
+      });
+
+      // Restore hidden elements
+      hideElements.forEach(el => (el as HTMLElement).style.visibility = 'visible');
+
+      const imageData = canvas.toDataURL('image/png');
+
+      // Generate text content with mentions
       const { content, playerDiscordIds } = generatePostAllContent();
       const title = postAllTitle || 'Raid Compositions';
       const fullContent = `**${title}**\n\n${content}`;
 
-      const res = await fetch('/api/discord/send-message', {
+      // Send screenshot with text content
+      const res = await fetch('/api/discord/send-screenshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           channelId: postAllChannel,
-          content: fullContent,
+          imageData,
+          title: fullContent,
+          playerDiscordIds: [],  // Mentions are already in the content
         }),
       });
 
@@ -1315,7 +1347,7 @@ export default function RaidSplitsPage() {
       {/* Main Layout: Raids on left, Role Columns on right */}
       <div className="flex items-stretch gap-8">
         {/* Left Side: All Raids */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0" ref={allRaidsSectionRef}>
           {/* 25-Man Raid */}
           {mainRaid && renderRaidSection(mainRaid)}
 
