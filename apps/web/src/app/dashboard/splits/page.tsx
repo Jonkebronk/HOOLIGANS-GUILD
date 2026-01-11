@@ -1384,7 +1384,7 @@ export default function RaidSplitsPage() {
         <div className="flex-shrink-0 flex gap-6">
           {/* 25-Man Pool */}
           <div className="flex flex-col">
-            <div className="text-xs text-gray-400 mb-1">25-Man Pool</div>
+            <div className="text-base text-white font-bold mb-1">25-Man Pool</div>
             <div className="flex gap-1 flex-1">
             {(['Tank', 'Healer', 'Melee', 'Ranged'] as const).map((role) => (
               <div key={role} className="w-[100px] flex flex-col">
@@ -1420,7 +1420,7 @@ export default function RaidSplitsPage() {
 
           {/* 10-Man Pool */}
           <div className="flex flex-col">
-            <div className="text-xs text-gray-400 mb-1">10-Man Pool</div>
+            <div className="text-base text-white font-bold mb-1">10-Man Pool</div>
             <div className="flex gap-1 flex-1">
               {(['Tank', 'Healer', 'Melee', 'Ranged'] as const).map((role) => (
                 <div key={`10m-${role}`} className="w-[100px] flex flex-col">
