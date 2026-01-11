@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, X, Gem, Sparkles, Swords } from 'lucide-react';
-import { getItemIconUrl, refreshWowheadTooltips } from '@/lib/wowhead';
+import { refreshWowheadTooltips } from '@/lib/wowhead';
 
 // Import TBC data and types from shared package
 import {
@@ -360,25 +360,23 @@ export function GearPickerModal({
                         : 'hover:bg-muted/50'
                     }`}
                   >
+                    {/* Wowhead will inject icon into this link */}
                     <a
                       href={`https://www.wowhead.com/tbc/item=${item.id}`}
                       onClick={(e) => e.preventDefault()}
-                      className="flex-shrink-0"
-                      style={{
-                        borderRadius: 4,
-                        borderWidth: 2,
-                        borderStyle: 'solid',
-                        borderColor: TBC_QUALITY_COLORS[item.quality] || '#a335ee',
-                      }}
-                    ></a>
+                      data-wh-icon-size="medium"
+                      className="wowhead-icon-link flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span
-                          className="font-medium truncate"
+                        <a
+                          href={`https://www.wowhead.com/tbc/item=${item.id}`}
+                          onClick={(e) => e.preventDefault()}
+                          className="font-medium truncate hover:underline"
                           style={{ color: TBC_QUALITY_COLORS[item.quality] || '#a335ee' }}
                         >
                           {item.name}
-                        </span>
+                        </a>
                         <span className="text-xs text-muted-foreground flex-shrink-0">
                           P{item.phase}
                         </span>
@@ -431,28 +429,23 @@ export function GearPickerModal({
                         : 'hover:bg-muted/50'
                     }`}
                   >
-                    <div
-                      className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0"
-                      style={{
-                        backgroundColor: 'rgba(163, 53, 238, 0.2)',
-                        borderWidth: 2,
-                        borderStyle: 'solid',
-                        borderColor: TBC_QUALITY_COLORS[enchant.quality] || '#1eff00',
-                      }}
-                    >
-                      <Sparkles
-                        className="h-5 w-5"
-                        style={{ color: TBC_QUALITY_COLORS[enchant.quality] || '#1eff00' }}
-                      />
-                    </div>
+                    {/* Wowhead will inject icon - enchants use spell IDs */}
+                    <a
+                      href={`https://www.wowhead.com/tbc/spell=${enchant.effectId || enchant.id}`}
+                      onClick={(e) => e.preventDefault()}
+                      data-wh-icon-size="medium"
+                      className="wowhead-icon-link flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span
-                          className="font-medium truncate"
+                        <a
+                          href={`https://www.wowhead.com/tbc/spell=${enchant.effectId || enchant.id}`}
+                          onClick={(e) => e.preventDefault()}
+                          className="font-medium truncate hover:underline"
                           style={{ color: TBC_QUALITY_COLORS[enchant.quality] || '#1eff00' }}
                         >
                           {enchant.name}
-                        </span>
+                        </a>
                         {enchant.phase > 1 && (
                           <span className="text-xs text-muted-foreground flex-shrink-0">
                             P{enchant.phase}
@@ -489,31 +482,23 @@ export function GearPickerModal({
                         : 'hover:bg-muted/50'
                     }`}
                   >
-                    <div
-                      className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0"
-                      style={{
-                        backgroundColor: `${TBC_GEM_COLORS[gem.color]}20`,
-                        borderWidth: 2,
-                        borderStyle: 'solid',
-                        borderColor: TBC_QUALITY_COLORS[gem.quality] || '#a335ee',
-                      }}
-                    >
-                      <div
-                        className="w-5 h-5 rounded-sm"
-                        style={{
-                          backgroundColor: TBC_GEM_COLORS[gem.color] || '#888',
-                          boxShadow: `0 0 6px ${TBC_GEM_COLORS[gem.color] || '#888'}`,
-                        }}
-                      />
-                    </div>
+                    {/* Wowhead will inject gem icon */}
+                    <a
+                      href={`https://www.wowhead.com/tbc/item=${gem.id}`}
+                      onClick={(e) => e.preventDefault()}
+                      data-wh-icon-size="medium"
+                      className="wowhead-icon-link flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span
-                          className="font-medium truncate"
+                        <a
+                          href={`https://www.wowhead.com/tbc/item=${gem.id}`}
+                          onClick={(e) => e.preventDefault()}
+                          className="font-medium truncate hover:underline"
                           style={{ color: TBC_QUALITY_COLORS[gem.quality] || '#a335ee' }}
                         >
                           {gem.name}
-                        </span>
+                        </a>
                         {gem.phase > 1 && (
                           <span className="text-xs text-muted-foreground flex-shrink-0">
                             P{gem.phase}

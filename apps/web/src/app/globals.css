@@ -89,3 +89,35 @@
 .text-quality-rare { color: #0070dd; }
 .text-quality-epic { color: #a335ee; }
 .text-quality-legendary { color: #ff8000; }
+
+/* Wowhead icon styling */
+.wowhead-icon-link {
+  display: inline-block;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+/* Style the icon that Wowhead injects */
+.wowhead-icon-link ins.icontiny,
+.wowhead-icon-link ins.iconsmall,
+.wowhead-icon-link ins.iconmedium {
+  display: block !important;
+  border-radius: 4px;
+  margin: 0 !important;
+}
+
+/* Ensure Wowhead icons inside our containers look correct */
+a[href*="wowhead.com"] > ins {
+  border-radius: 4px;
+}
+
+/* Wowhead icon size overrides for different contexts */
+a[data-wh-icon-size="small"] ins {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+a[data-wh-icon-size="medium"] ins {
+  width: 36px !important;
+  height: 36px !important;
+}

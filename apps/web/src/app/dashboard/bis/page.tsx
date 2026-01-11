@@ -733,22 +733,14 @@ export default function BisListsPage() {
     const hasItem = !!wowheadId || !!item;
 
     const iconElement = hasItem && wowheadId ? (
+      // Let Wowhead inject the correct icon via iconizeLinks
       <a
         href={`https://www.wowhead.com/tbc/item=${wowheadId}`}
         onClick={(e) => e.preventDefault()}
-        className="relative block flex-shrink-0"
-      >
-        <img
-          src={getItemIconUrl(icon || 'inv_misc_questionmark', 'medium')}
-          alt={itemName || label}
-          className="w-8 h-8 rounded"
-          style={{
-            borderWidth: 2,
-            borderStyle: 'solid',
-            borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee',
-          }}
-        />
-      </a>
+        data-wh-icon-size="small"
+        className="wowhead-icon-link flex-shrink-0"
+        style={{ width: 32, height: 32 }}
+      />
     ) : (
       <div className="relative flex-shrink-0">
         <img
