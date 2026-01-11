@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { CLASS_COLORS } from '@hooligans/shared';
-import { ITEM_QUALITY_COLORS, getItemIconUrl } from '@/lib/wowhead';
+import { ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
 
 type Player = {
   id: string;
@@ -60,6 +60,11 @@ export function ItemsTable({
 }: ItemsTableProps) {
   const [editingLootPrio, setEditingLootPrio] = useState<string | null>(null);
 
+  // Refresh Wowhead tooltips when items change
+  useEffect(() => {
+    refreshWowheadTooltips();
+  }, [items]);
+
   const getRowColor = (item: LootItem) => {
     if (item.lootPrio) return 'bg-blue-900/20'; // Has loot priority
     if (!item.playerId) return 'bg-green-900/20'; // Unassigned
@@ -90,27 +95,25 @@ export function ItemsTable({
               <td className="py-1.5 px-2 text-muted-foreground">{index + 1}</td>
               <td className="py-1.5 px-2">
                 <div className="flex items-center gap-2">
-                  {item.wowheadId && (
-                    <img
-                      src={getItemIconUrl('inv_misc_questionmark', 'small')}
-                      alt=""
-                      className="w-6 h-6 rounded"
-                      style={{
-                        borderWidth: 1,
-                        borderStyle: 'solid',
-                        borderColor: ITEM_QUALITY_COLORS[item.quality || 4],
-                      }}
-                    />
+                  {item.wowheadId ? (
+                    <a
+                      href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-wowhead={`item=${item.wowheadId}&domain=tbc`}
+                      className="hover:underline truncate"
+                      style={{ color: ITEM_QUALITY_COLORS[item.quality || 4] }}
+                    >
+                      {item.itemName}
+                    </a>
+                  ) : (
+                    <span
+                      className="truncate"
+                      style={{ color: ITEM_QUALITY_COLORS[item.quality || 4] }}
+                    >
+                      {item.itemName}
+                    </span>
                   )}
-                  <a
-                    href={item.wowheadId ? `https://www.wowhead.com/tbc/item=${item.wowheadId}` : '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline truncate"
-                    style={{ color: ITEM_QUALITY_COLORS[item.quality || 4] }}
-                  >
-                    {item.itemName}
-                  </a>
                 </div>
               </td>
               <td className="py-1.5 px-2">
