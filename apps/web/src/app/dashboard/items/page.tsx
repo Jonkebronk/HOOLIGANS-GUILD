@@ -727,22 +727,44 @@ export default function ItemsPage() {
                     <div className="w-12 text-center">
                       <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-muted">{item.phase}</span>
                     </div>
-                    {item.bisSpecs && item.bisSpecs.length > 0 ? (
-                      <div className="hidden xl:flex gap-1 w-40">
-                        {item.bisSpecs.slice(0, 2).map((bisSpec) => (
-                          <span key={bisSpec.id} className="px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-400 truncate">
-                            {formatSpec(bisSpec.spec)}
-                          </span>
-                        ))}
-                        {item.bisSpecs.length > 2 && (
-                          <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
-                            +{item.bisSpecs.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="hidden xl:block w-40" />
-                    )}
+                    {/* BiS For (Current Phase) */}
+                    <div className="hidden xl:flex gap-1 w-32">
+                      {item.bisFor ? (
+                        <>
+                          {item.bisFor.split(',').slice(0, 2).map((name, idx) => (
+                            <span key={idx} className="px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-400 truncate">
+                              {name.trim()}
+                            </span>
+                          ))}
+                          {item.bisFor.split(',').length > 2 && (
+                            <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
+                              +{item.bisFor.split(',').length - 2}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/50">-</span>
+                      )}
+                    </div>
+                    {/* BiS Next Phase */}
+                    <div className="hidden xl:flex gap-1 w-32">
+                      {item.bisNextPhase ? (
+                        <>
+                          {item.bisNextPhase.split(',').slice(0, 2).map((name, idx) => (
+                            <span key={idx} className="px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-400 truncate">
+                              {name.trim()}
+                            </span>
+                          ))}
+                          {item.bisNextPhase.split(',').length > 2 && (
+                            <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
+                              +{item.bisNextPhase.split(',').length - 2}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/50">-</span>
+                      )}
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"

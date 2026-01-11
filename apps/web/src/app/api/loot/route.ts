@@ -9,7 +9,18 @@ export async function GET(request: Request) {
     const lootRecords = await prisma.lootRecord.findMany({
       where: teamId ? { teamId } : undefined,
       include: {
-        item: true,
+        item: {
+          select: {
+            id: true,
+            name: true,
+            wowheadId: true,
+            quality: true,
+            icon: true,
+            lootPriority: true,
+            bisFor: true,
+            bisNextPhase: true,
+          },
+        },
         player: true,
       },
       orderBy: { lootDate: 'desc' },

@@ -100,7 +100,8 @@ export default function DropsPage() {
         // Handle both: records with item relation AND records with direct itemName (from RC import)
         const items: LootItem[] = lootData.map((record: {
           id: string;
-          item?: { name: string; wowheadId?: number; quality?: number; icon?: string };
+          itemId?: string;
+          item?: { id: string; name: string; wowheadId?: number; quality?: number; icon?: string; lootPriority?: string; bisFor?: string; bisNextPhase?: string };
           itemName?: string;
           wowheadId?: number;
           quality?: number;
@@ -108,19 +109,30 @@ export default function DropsPage() {
           player?: { id: string; name: string; class: string };
           response?: string;
           lootDate?: string;
-        }) => ({
-          id: record.id,
-          itemName: record.item?.name || record.itemName || 'Unknown Item',
-          wowheadId: record.item?.wowheadId || record.wowheadId,
-          quality: record.item?.quality || record.quality || 4,
-          icon: record.item?.icon,
-          playerId: record.player?.id,
-          playerName: record.player?.name,
-          playerClass: record.player?.class,
-          response: record.response,
-          lootDate: record.lootDate,
-          lootPrio: record.lootPrio,
-        }));
+        }) => {
+          // Parse comma-separated player names into arrays
+          const parsePlayerList = (str: string | null | undefined): string[] => {
+            if (!str) return [];
+            return str.split(',').map(s => s.trim()).filter(Boolean);
+          };
+
+          return {
+            id: record.id,
+            itemId: record.item?.id || record.itemId,
+            itemName: record.item?.name || record.itemName || 'Unknown Item',
+            wowheadId: record.item?.wowheadId || record.wowheadId,
+            quality: record.item?.quality || record.quality || 4,
+            icon: record.item?.icon,
+            playerId: record.player?.id,
+            playerName: record.player?.name,
+            playerClass: record.player?.class,
+            response: record.response,
+            lootDate: record.lootDate,
+            lootPrio: record.item?.lootPriority || record.lootPrio,
+            bisPlayers: parsePlayerList(record.item?.bisFor),
+            bisNextPhasePlayers: parsePlayerList(record.item?.bisNextPhase),
+          };
+        });
         setLootItems(items);
 
         // Update raider stats with loot data
@@ -184,33 +196,67 @@ export default function DropsPage() {
   };
 
   const handleAssignPlayer = async (itemId: string, playerId: string) => {
-    // TODO: Implement API call to assign player to item
+    // Optimistic update
+    const player = players.find((p) => p.id === playerId);
     setLootItems((prev) =>
       prev.map((item) =>
         item.id === itemId
           ? {
               ...item,
-              playerId,
-              playerName: players.find((p) => p.id === playerId)?.name,
-              playerClass: players.find((p) => p.id === playerId)?.class,
+              playerId: playerId || undefined,
+              playerName: player?.name,
+              playerClass: player?.class,
             }
           : item
       )
     );
+
+    // Persist to database
+    try {
+      await fetch(`/api/loot/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId: playerId || null }),
+      });
+    } catch (error) {
+      console.error('Failed to assign player:', error);
+    }
   };
 
   const handleUpdateResponse = async (itemId: string, response: string) => {
-    // TODO: Implement API call to update response
+    // Optimistic update
     setLootItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, response } : item))
     );
+
+    // Persist to database
+    try {
+      await fetch(`/api/loot/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response: response || null }),
+      });
+    } catch (error) {
+      console.error('Failed to update response:', error);
+    }
   };
 
   const handleUpdateLootPrio = async (itemId: string, lootPrio: string) => {
-    // TODO: Implement API call to update loot priority
+    // Optimistic update
     setLootItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, lootPrio } : item))
     );
+
+    // Persist to database
+    try {
+      await fetch(`/api/loot/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lootPrio: lootPrio || null }),
+      });
+    } catch (error) {
+      console.error('Failed to update loot priority:', error);
+    }
   };
 
   const handleRCImport = async (items: ParsedItem[]) => {
