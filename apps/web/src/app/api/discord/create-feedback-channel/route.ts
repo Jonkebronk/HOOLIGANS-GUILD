@@ -77,17 +77,24 @@ export async function POST(request: Request) {
       .replace(/^-|-$/g, '');        // Remove leading/trailing dashes
     const channelName = `feedback-${sanitizedName}`.slice(0, 100);
 
-    // Build permission overwrites
-    const permissionOverwrites = [
+    // Build permission overwrites - Discord requires both allow and deny as strings
+    const permissionOverwrites: Array<{
+      id: string;
+      type: number;
+      allow: string;
+      deny: string;
+    }> = [
       {
         id: DISCORD_GUILD_ID, // @everyone
         type: 0, // role
+        allow: '0',
         deny: VIEW_CHANNEL,
       },
       {
         id: player.discordId, // The specific player
         type: 1, // member
         allow: VIEW_AND_SEND,
+        deny: '0',
       },
     ];
 
@@ -97,6 +104,7 @@ export async function POST(request: Request) {
         id: DISCORD_OFFICERS_ROLE_ID,
         type: 0, // role
         allow: VIEW_AND_SEND,
+        deny: '0',
       });
     }
 
