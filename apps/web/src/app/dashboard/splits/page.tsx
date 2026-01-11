@@ -569,7 +569,7 @@ export default function RaidSplitsPage() {
         <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'}`}>
           {raid.groups.map((_, groupIndex) => (
             <div key={groupIndex} className="w-[150px]">
-              <div className="text-yellow-500 text-xs font-medium pb-1 border-b-2 border-yellow-500">
+              <div className="text-yellow-500 text-xs font-medium pb-1 border-b-2 border-yellow-500 text-center">
                 Group {groupIndex + 1}
               </div>
             </div>
@@ -730,7 +730,7 @@ export default function RaidSplitsPage() {
             Import
           </Button>
         </div>
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-1">
           {/* Tank Column */}
           <div className="flex flex-col w-[220px]">
             <div className="flex justify-center py-3">
