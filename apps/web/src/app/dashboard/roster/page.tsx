@@ -96,6 +96,15 @@ export default function RosterPage() {
   const [importText, setImportText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
 
+  // Discord Role import state
+  const [isRoleImportDialogOpen, setIsRoleImportDialogOpen] = useState(false);
+  const [discordRoles, setDiscordRoles] = useState<{ id: string; name: string; color: string | null }[]>([]);
+  const [selectedRoleId, setSelectedRoleId] = useState('');
+  const [roleMembers, setRoleMembers] = useState<{ id: string; displayName: string; avatar: string | null }[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [isImportingRole, setIsImportingRole] = useState(false);
+
   // Edit player dialog state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
@@ -161,6 +170,99 @@ export default function RosterPage() {
   useEffect(() => {
     fetchPlayersAndAssignments();
   }, []);
+
+  // Fetch players only
+  const fetchPlayers = async () => {
+    try {
+      const res = await fetch('/api/players');
+      if (res.ok) {
+        const data = await res.json();
+        setPlayers(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch players:', error);
+    }
+  };
+
+  // Fetch Discord roles
+  const fetchDiscordRoles = async () => {
+    setLoadingRoles(true);
+    try {
+      const res = await fetch('/api/discord/roles');
+      if (res.ok) {
+        const data = await res.json();
+        setDiscordRoles(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Discord roles:', error);
+    } finally {
+      setLoadingRoles(false);
+    }
+  };
+
+  // Fetch members by role
+  const fetchMembersByRole = async (roleId: string) => {
+    if (!roleId) {
+      setRoleMembers([]);
+      return;
+    }
+    setLoadingMembers(true);
+    try {
+      const res = await fetch(`/api/discord/members?roleId=${roleId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setRoleMembers(data.members);
+      }
+    } catch (error) {
+      console.error('Failed to fetch members:', error);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  // Open role import dialog
+  const openRoleImportDialog = async () => {
+    setIsRoleImportDialogOpen(true);
+    setSelectedRoleId('');
+    setRoleMembers([]);
+    await fetchDiscordRoles();
+  };
+
+  // Handle role selection
+  const handleRoleSelect = (roleId: string) => {
+    setSelectedRoleId(roleId);
+    fetchMembersByRole(roleId);
+  };
+
+  // Import players from Discord role
+  const handleImportFromRole = async () => {
+    if (roleMembers.length === 0) return;
+
+    setIsImportingRole(true);
+    try {
+      const discordIds = roleMembers.map(m => m.id);
+      const res = await fetch('/api/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'bulk', discordIds }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(data.message);
+        await fetchPlayers();
+        setIsRoleImportDialogOpen(false);
+      } else {
+        const error = await res.json();
+        alert(`Failed to import: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('Failed to import players');
+    } finally {
+      setIsImportingRole(false);
+    }
+  };
 
   const fetchPlayersAndAssignments = async () => {
     try {
@@ -1211,6 +1313,15 @@ export default function RosterPage() {
           <Button
             variant="outline"
             size="sm"
+            className="bg-[#5865F2] border-[#5865F2] text-white hover:bg-[#4752C4] h-7 text-xs"
+            onClick={openRoleImportDialog}
+          >
+            <Upload className="h-3 w-3 mr-1" />
+            Import from Discord
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             className="bg-green-700 border-green-600 text-white hover:bg-green-600 h-7 text-xs"
             onClick={() => setIsAddDialogOpen(true)}
           >
@@ -1686,6 +1797,87 @@ export default function RosterPage() {
             <Button onClick={sendPostAllToDiscord} disabled={!postAllChannel || isSendingPostAll} className="bg-[#5865F2] hover:bg-[#4752C4]">
               {isSendingPostAll ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
               Post
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Discord Role Import Dialog */}
+      <Dialog open={isRoleImportDialogOpen} onOpenChange={setIsRoleImportDialogOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-[#5865F2]" />
+              Import from Discord Role
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Select a Discord role to import all members as players. Players will be created with pending status until configured.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Discord Role:</Label>
+              <Select value={selectedRoleId} onValueChange={handleRoleSelect}>
+                <SelectTrigger className="bg-black border-gray-600 text-white">
+                  <SelectValue placeholder={loadingRoles ? "Loading roles..." : "Select a role"} />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-gray-700 max-h-[300px]">
+                  {discordRoles.map((role) => (
+                    <SelectItem key={role.id} value={role.id} className="text-white hover:bg-gray-800">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: role.color || '#99AAB5' }}
+                        />
+                        {role.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedRoleId && (
+              <div className="space-y-2">
+                <Label className="text-gray-300">
+                  Members to import: {loadingMembers ? 'Loading...' : roleMembers.length}
+                </Label>
+                <div className="bg-black border border-gray-700 rounded-md p-2 max-h-[200px] overflow-y-auto">
+                  {loadingMembers ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                    </div>
+                  ) : roleMembers.length === 0 ? (
+                    <div className="text-center text-gray-500 py-2">No members found</div>
+                  ) : (
+                    <div className="space-y-1">
+                      {roleMembers.map((member) => (
+                        <div key={member.id} className="flex items-center gap-2 text-sm">
+                          {member.avatar ? (
+                            <img src={member.avatar} alt="" className="w-5 h-5 rounded-full" />
+                          ) : (
+                            <div className="w-5 h-5 rounded-full bg-gray-600" />
+                          )}
+                          <span>{member.displayName}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRoleImportDialogOpen(false)} className="bg-transparent border-gray-600">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleImportFromRole}
+              disabled={!selectedRoleId || roleMembers.length === 0 || isImportingRole || loadingMembers}
+              className="bg-[#5865F2] hover:bg-[#4752C4]"
+            >
+              {isImportingRole ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
+              {isImportingRole ? 'Importing...' : `Import ${roleMembers.length} Players`}
             </Button>
           </DialogFooter>
         </DialogContent>
