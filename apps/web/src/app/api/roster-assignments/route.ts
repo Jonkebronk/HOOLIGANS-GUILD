@@ -30,8 +30,22 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { raidId, groupIndex, slotIndex, playerId, teamId } = body;
 
+    console.log('POST roster-assignment:', { raidId, groupIndex, slotIndex, playerId, teamId });
+
     if (!teamId) {
       return NextResponse.json({ error: 'teamId is required' }, { status: 400 });
+    }
+
+    if (!playerId) {
+      console.error('Missing playerId');
+      return NextResponse.json({ error: 'playerId is required' }, { status: 400 });
+    }
+
+    // Verify player exists
+    const player = await prisma.player.findUnique({ where: { id: playerId } });
+    if (!player) {
+      console.error('Player not found:', playerId);
+      return NextResponse.json({ error: 'Player not found', playerId }, { status: 404 });
     }
 
     // Upsert the assignment
@@ -59,10 +73,11 @@ export async function POST(request: Request) {
       },
     });
 
+    console.log('Roster assignment saved successfully:', assignment.id, { raidId, groupIndex, slotIndex, playerId });
     return NextResponse.json(assignment, { status: 200 });
   } catch (error) {
     console.error('Failed to save roster assignment:', error);
-    return NextResponse.json({ error: 'Failed to save roster assignment' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save roster assignment', details: String(error) }, { status: 500 });
   }
 }
 
