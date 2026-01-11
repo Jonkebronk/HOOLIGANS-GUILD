@@ -576,6 +576,7 @@ export default function ItemsPage() {
                       href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                       target="_blank"
                       rel="noopener noreferrer"
+                      data-wh-icon-size="false"
                     >
                       <img
                         src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
