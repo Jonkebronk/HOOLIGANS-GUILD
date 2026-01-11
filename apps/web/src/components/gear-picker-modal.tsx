@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, X, Gem, Sparkles, Swords } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { refreshWowheadTooltips } from '@/lib/wowhead';
 
 // Import TBC data and types from shared package
@@ -32,15 +32,9 @@ import {
 
 // Import JSON data - these are static files
 import tbcItemsData from '../../../../packages/shared/src/data/tbc-items.json';
-import tbcEnchantsData from '../../../../packages/shared/src/data/tbc-enchants.json';
-import tbcGemsData from '../../../../packages/shared/src/data/tbc-gems.json';
 
 // Cast JSON data to proper types
 const tbcItems = tbcItemsData as TbcItem[];
-const tbcEnchants = tbcEnchantsData as TbcEnchant[];
-const tbcGems = tbcGemsData as TbcGem[];
-
-type PickerTab = 'items' | 'enchants' | 'gem-red' | 'gem-blue' | 'gem-yellow' | 'gem-meta';
 
 interface GearPickerModalProps {
   open: boolean;
@@ -80,39 +74,22 @@ const slotMapping: Record<string, string[]> = {
   Ranged: ['Ranged'],
 };
 
-// Map gem socket colors to filter values
-const gemColorToFilter: Record<string, TbcGemColor[]> = {
-  'gem-red': ['Red', 'Orange', 'Purple'], // Red socket accepts Red, Orange, Purple
-  'gem-blue': ['Blue', 'Green', 'Purple'], // Blue socket accepts Blue, Green, Purple
-  'gem-yellow': ['Yellow', 'Orange', 'Green'], // Yellow socket accepts Yellow, Orange, Green
-  'gem-meta': ['Meta'], // Meta socket only accepts Meta
-};
-
 export function GearPickerModal({
   open,
   onOpenChange,
   slot,
   slotLabel,
   onSelectItem,
-  onSelectEnchant,
-  onSelectGem,
   onClear,
   currentItem,
-  currentEnchant,
-  currentGems = [],
-  gemSockets = [],
   playerClass,
-  armorType,
 }: GearPickerModalProps) {
-  const [activeTab, setActiveTab] = useState<PickerTab>('items');
   const [phase, setPhase] = useState<string>('5');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGemSocket, setSelectedGemSocket] = useState(0);
 
   // Reset state when modal opens
   useEffect(() => {
     if (open) {
-      setActiveTab('items');
       setSearchQuery('');
     }
   }, [open]);
@@ -128,7 +105,7 @@ export function GearPickerModal({
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [open, activeTab, phase, searchQuery]);
+  }, [open, phase, searchQuery]);
 
   // Get valid slot names for this gear slot
   const validSlots = slotMapping[slot] || [slot];
@@ -175,117 +152,6 @@ export function GearPickerModal({
     return items.slice(0, 50); // Limit results
   }, [validSlots, phase, searchQuery, playerClass]);
 
-  // Filter enchants based on slot and phase
-  const filteredEnchants = useMemo(() => {
-    const maxPhase = parseInt(phase);
-    let enchants = tbcEnchants.filter((enchant) => {
-      // Filter by slot
-      if (!validSlots.includes(enchant.slot)) return false;
-
-      // Filter by phase
-      if (enchant.phase > maxPhase) return false;
-
-      // Filter by class if specified
-      if (enchant.classAllowlist && playerClass) {
-        if (!enchant.classAllowlist.includes(playerClass as never)) return false;
-      }
-
-      // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        if (!enchant.name.toLowerCase().includes(query)) return false;
-      }
-
-      return true;
-    });
-
-    // Sort by phase desc
-    enchants.sort((a, b) => (b.phase || 0) - (a.phase || 0));
-
-    return enchants;
-  }, [validSlots, phase, searchQuery, playerClass]);
-
-  // Filter gems based on socket color and phase
-  const filteredGems = useMemo(() => {
-    const maxPhase = parseInt(phase);
-    const validColors = gemColorToFilter[activeTab] || [];
-
-    if (validColors.length === 0) return [];
-
-    let gems = tbcGems.filter((gem) => {
-      // Filter by color (gems that fit this socket)
-      if (!validColors.includes(gem.color)) {
-        // Prismatic gems fit any socket
-        if (gem.color !== 'Prismatic') return false;
-      }
-
-      // Filter by phase
-      if (gem.phase > maxPhase) return false;
-
-      // Filter by search query
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        if (!gem.name.toLowerCase().includes(query)) return false;
-      }
-
-      return true;
-    });
-
-    // Sort by phase desc, then quality
-    gems.sort((a, b) => {
-      if ((b.phase || 0) !== (a.phase || 0)) {
-        return (b.phase || 0) - (a.phase || 0);
-      }
-      const qualityOrder = { Legendary: 5, Epic: 4, Rare: 3, Uncommon: 2, Common: 1 };
-      return (qualityOrder[b.quality] || 0) - (qualityOrder[a.quality] || 0);
-    });
-
-    return gems;
-  }, [activeTab, phase, searchQuery]);
-
-  // Always show all gem tabs so users can browse gems
-  // Head slot typically has meta socket, other slots have colored sockets
-  const availableGemTabs: PickerTab[] = useMemo(() => {
-    // Show meta for head slot, colored gems for other slots
-    if (slot === 'Head') {
-      return ['gem-meta', 'gem-red', 'gem-blue', 'gem-yellow'];
-    }
-    return ['gem-red', 'gem-blue', 'gem-yellow'];
-  }, [slot]);
-
-  const renderTabButton = (
-    tab: PickerTab,
-    label: string,
-    icon: React.ReactNode,
-    color?: string
-  ) => (
-    <button
-      key={tab}
-      onClick={() => setActiveTab(tab)}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t-lg text-sm font-medium transition-colors ${
-        activeTab === tab
-          ? 'bg-muted text-foreground border-b-2 border-primary'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-      }`}
-      style={{ color: activeTab === tab ? color : undefined }}
-    >
-      {icon}
-      {label}
-    </button>
-  );
-
-  const renderGemSocketIcon = (color: string, size = 16) => (
-    <div
-      className="rounded-sm"
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: TBC_GEM_COLORS[color as TbcGemColor] || '#888',
-        boxShadow: `0 0 4px ${TBC_GEM_COLORS[color as TbcGemColor] || '#888'}`,
-      }}
-    />
-  );
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col p-0">
@@ -293,26 +159,12 @@ export function GearPickerModal({
           <DialogTitle>Select {slotLabel}</DialogTitle>
         </DialogHeader>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-1 px-6 pt-4 border-b border-border">
-          {renderTabButton('items', 'Items', <Swords className="h-4 w-4" />)}
-          {renderTabButton('enchants', 'Enchants', <Sparkles className="h-4 w-4" />)}
-          {availableGemTabs.includes('gem-red') &&
-            renderTabButton('gem-red', '', renderGemSocketIcon('Red'), '#ff4444')}
-          {availableGemTabs.includes('gem-blue') &&
-            renderTabButton('gem-blue', '', renderGemSocketIcon('Blue'), '#4444ff')}
-          {availableGemTabs.includes('gem-yellow') &&
-            renderTabButton('gem-yellow', '', renderGemSocketIcon('Yellow'), '#ffff00')}
-          {availableGemTabs.includes('gem-meta') &&
-            renderTabButton('gem-meta', 'Meta', <Gem className="h-4 w-4" />, '#888888')}
-        </div>
-
         {/* Filters */}
         <div className="flex items-center gap-3 px-6 py-3 border-b border-border">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search..."
+              placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -330,7 +182,7 @@ export function GearPickerModal({
               <SelectItem value="5">Phase 5</SelectItem>
             </SelectContent>
           </Select>
-          {(currentItem || currentEnchant || currentGems.some(g => g)) && (
+          {currentItem && (
             <Button variant="outline" size="sm" onClick={onClear}>
               <X className="h-4 w-4 mr-1" />
               Clear
@@ -338,45 +190,43 @@ export function GearPickerModal({
           )}
         </div>
 
-        {/* Content */}
+        {/* Content - Items only */}
         <div className="flex-1 overflow-y-auto px-6 py-3 min-h-[400px]">
-          {activeTab === 'items' && (
-            <div className="space-y-1">
-              {filteredItems.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No items found for this slot
-                </div>
-              ) : (
-                filteredItems.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => {
-                      onSelectItem?.(item);
-                      onOpenChange(false);
-                    }}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                      currentItem?.id === item.id
-                        ? 'bg-primary/20 border border-primary'
-                        : 'hover:bg-muted/50'
-                    }`}
+          <div className="space-y-1">
+            {filteredItems.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No items found for this slot
+              </div>
+            ) : (
+              filteredItems.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    onSelectItem?.(item);
+                    onOpenChange(false);
+                  }}
+                  className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                    currentItem?.id === item.id
+                      ? 'bg-primary/20 border border-primary'
+                      : 'hover:bg-muted/50'
+                  }`}
+                >
+                  {/* Single Wowhead link - icon will be injected by Wowhead */}
+                  <a
+                    href={`https://www.wowhead.com/tbc/item=${item.id}`}
+                    onClick={(e) => e.preventDefault()}
+                    data-wh-icon-size="medium"
+                    className="flex items-center gap-2 flex-1 min-w-0"
                   >
-                    {/* Wowhead will inject icon into this link */}
-                    <a
-                      href={`https://www.wowhead.com/tbc/item=${item.id}`}
-                      onClick={(e) => e.preventDefault()}
-                      data-wh-icon-size="medium"
-                      className="wowhead-icon-link flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`https://www.wowhead.com/tbc/item=${item.id}`}
-                          onClick={(e) => e.preventDefault()}
-                          className="font-medium truncate hover:underline"
+                    {/* Item name and stats - Wowhead will prepend icon */}
+                    <span className="flex-1 min-w-0">
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="font-medium truncate"
                           style={{ color: TBC_QUALITY_COLORS[item.quality] || '#a335ee' }}
                         >
                           {item.name}
-                        </a>
+                        </span>
                         <span className="text-xs text-muted-foreground flex-shrink-0">
                           P{item.phase}
                         </span>
@@ -385,140 +235,29 @@ export function GearPickerModal({
                             iLvl {item.ilvl}
                           </span>
                         )}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate block">
                         {formatStats(item.stats)}
-                      </div>
+                      </span>
                       {item.gemSockets && item.gemSockets.length > 0 && (
-                        <div className="flex items-center gap-1 mt-1">
+                        <span className="flex items-center gap-1 mt-1">
                           {item.gemSockets.map((socket, idx) => (
-                            <div
+                            <span
                               key={idx}
-                              className="w-3 h-3 rounded-sm"
+                              className="w-3 h-3 rounded-sm inline-block"
                               style={{
                                 backgroundColor: TBC_GEM_COLORS[socket as TbcGemColor] || '#888',
                               }}
                             />
                           ))}
-                        </div>
+                        </span>
                       )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {activeTab === 'enchants' && (
-            <div className="space-y-1">
-              {filteredEnchants.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No enchants found for this slot
+                    </span>
+                  </a>
                 </div>
-              ) : (
-                filteredEnchants.map((enchant) => (
-                  <div
-                    key={enchant.id}
-                    onClick={() => {
-                      onSelectEnchant?.(enchant);
-                      onOpenChange(false);
-                    }}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                      currentEnchant?.id === enchant.id
-                        ? 'bg-primary/20 border border-primary'
-                        : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    {/* Wowhead will inject icon - enchants use spell IDs */}
-                    <a
-                      href={`https://www.wowhead.com/tbc/spell=${enchant.effectId || enchant.id}`}
-                      onClick={(e) => e.preventDefault()}
-                      data-wh-icon-size="medium"
-                      className="wowhead-icon-link flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`https://www.wowhead.com/tbc/spell=${enchant.effectId || enchant.id}`}
-                          onClick={(e) => e.preventDefault()}
-                          className="font-medium truncate hover:underline"
-                          style={{ color: TBC_QUALITY_COLORS[enchant.quality] || '#1eff00' }}
-                        >
-                          {enchant.name}
-                        </a>
-                        {enchant.phase > 1 && (
-                          <span className="text-xs text-muted-foreground flex-shrink-0">
-                            P{enchant.phase}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {formatStats(enchant.stats)}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {activeTab.startsWith('gem-') && (
-            <div className="space-y-1">
-              {filteredGems.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No gems found for this socket color
-                </div>
-              ) : (
-                filteredGems.map((gem) => (
-                  <div
-                    key={gem.id}
-                    onClick={() => {
-                      onSelectGem?.(gem, selectedGemSocket);
-                      onOpenChange(false);
-                    }}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                      currentGems[selectedGemSocket]?.id === gem.id
-                        ? 'bg-primary/20 border border-primary'
-                        : 'hover:bg-muted/50'
-                    }`}
-                  >
-                    {/* Wowhead will inject gem icon */}
-                    <a
-                      href={`https://www.wowhead.com/tbc/item=${gem.id}`}
-                      onClick={(e) => e.preventDefault()}
-                      data-wh-icon-size="medium"
-                      className="wowhead-icon-link flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`https://www.wowhead.com/tbc/item=${gem.id}`}
-                          onClick={(e) => e.preventDefault()}
-                          className="font-medium truncate hover:underline"
-                          style={{ color: TBC_QUALITY_COLORS[gem.quality] || '#a335ee' }}
-                        >
-                          {gem.name}
-                        </a>
-                        {gem.phase > 1 && (
-                          <span className="text-xs text-muted-foreground flex-shrink-0">
-                            P{gem.phase}
-                          </span>
-                        )}
-                        {gem.unique && (
-                          <span className="text-xs text-yellow-500 flex-shrink-0">
-                            Unique
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">
-                        {formatStats(gem.stats)}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
