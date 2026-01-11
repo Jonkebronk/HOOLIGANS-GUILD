@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
-import type { GearSlot, Phase } from '@prisma/client';
 
-// Map from simple slot names to GearSlot enum
-const SLOT_MAP: Record<string, GearSlot> = {
+// Map from simple slot names to GearSlot enum values
+const SLOT_MAP: Record<string, string> = {
   tier: 'Chest', // Tier token covers multiple slots, we'll use Chest as placeholder
   head: 'Head',
   shoulder: 'Shoulder',
@@ -25,7 +24,7 @@ export async function PATCH(
     const { slot, obtained, phase = 'P1' } = body as {
       slot: string;
       obtained: boolean;
-      phase?: Phase;
+      phase?: string;
     };
 
     if (!slot) {
@@ -38,12 +37,13 @@ export async function PATCH(
     }
 
     // Upsert the PlayerBisStatus record
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bisStatus = await prisma.playerBisStatus.upsert({
       where: {
         playerId_slot_phase: {
           playerId,
-          slot: gearSlot,
-          phase,
+          slot: gearSlot as any,
+          phase: phase as any,
         },
       },
       update: {
@@ -52,8 +52,8 @@ export async function PATCH(
       },
       create: {
         playerId,
-        slot: gearSlot,
-        phase,
+        slot: gearSlot as any,
+        phase: phase as any,
         obtained,
         obtainedDate: obtained ? new Date() : null,
       },
@@ -76,12 +76,12 @@ export async function GET(
   try {
     const { id: playerId } = await params;
     const { searchParams } = new URL(request.url);
-    const phase = (searchParams.get('phase') as Phase) || 'P1';
+    const phase = searchParams.get('phase') || 'P1';
 
     const bisStatuses = await prisma.playerBisStatus.findMany({
       where: {
         playerId,
-        phase,
+        phase: phase as any,
       },
     });
 
