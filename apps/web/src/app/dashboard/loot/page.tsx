@@ -52,21 +52,9 @@ type RaiderStats = {
   roleSubtype: string;
   lootThisRaid: number;
   totalLootCurrentPhase: number;
-  lootPoints: number;
   bisPercent: number;
   totalItems: number;
   daysSinceLastItem: string;
-  gearSlots: {
-    tier: boolean;
-    head: boolean;
-    shoulder: boolean;
-    chest: boolean;
-    wrist: boolean;
-    hands: boolean;
-    waist: boolean;
-    legs: boolean;
-    feet: boolean;
-  };
 };
 
 type ParsedItem = {
@@ -160,7 +148,6 @@ export default function DropsPage() {
 
     return playersList.map((player) => {
       const playerLoot = lootRecords.filter((r) => r.playerId === player.id);
-      const totalPoints = playerLoot.reduce((sum, r) => sum + (r.lootPoints || 0), 0);
       const totalItems = playerLoot.length;
 
       // Calculate days since last item
@@ -189,21 +176,9 @@ export default function DropsPage() {
         roleSubtype: player.roleSubtype,
         lootThisRaid: 0, // TODO: Calculate based on current raid session
         totalLootCurrentPhase: totalItems,
-        lootPoints: totalPoints,
         bisPercent: 0, // TODO: Calculate from PlayerBisStatus
         totalItems,
         daysSinceLastItem,
-        gearSlots: {
-          tier: false,
-          head: false,
-          shoulder: false,
-          chest: false,
-          wrist: false,
-          hands: false,
-          waist: false,
-          legs: false,
-          feet: false,
-        },
       };
     });
   };
@@ -236,44 +211,6 @@ export default function DropsPage() {
     setLootItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, lootPrio } : item))
     );
-  };
-
-  const handleToggleGearSlot = async (playerId: string, slot: string, checked: boolean) => {
-    // Update local state immediately for responsiveness
-    setRaiders((prev) =>
-      prev.map((raider) =>
-        raider.id === playerId
-          ? {
-              ...raider,
-              gearSlots: {
-                ...raider.gearSlots,
-                [slot]: checked,
-              },
-              bisPercent: calculateBisPercent({
-                ...raider.gearSlots,
-                [slot]: checked,
-              }),
-            }
-          : raider
-      )
-    );
-
-    // TODO: Implement API call to persist gear slot status
-    try {
-      await fetch(`/api/players/${playerId}/bis-status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slot, obtained: checked }),
-      });
-    } catch (error) {
-      console.error('Failed to update gear slot:', error);
-    }
-  };
-
-  const calculateBisPercent = (gearSlots: Record<string, boolean>) => {
-    const slots = Object.values(gearSlots);
-    const obtained = slots.filter(Boolean).length;
-    return (obtained / slots.length) * 100;
   };
 
   const handleRCImport = async (items: ParsedItem[]) => {
@@ -433,12 +370,12 @@ export default function DropsPage() {
         </Card>
 
         {/* Raiders Table (Right) */}
-        <Card className="xl:w-[700px]">
+        <Card className="xl:w-[420px]">
           <CardHeader className="py-3">
             <CardTitle className="text-base">Raiders ({raiders.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <RaidersTable raiders={raiders} onToggleGearSlot={handleToggleGearSlot} />
+            <RaidersTable raiders={raiders} />
           </CardContent>
         </Card>
       </div>
