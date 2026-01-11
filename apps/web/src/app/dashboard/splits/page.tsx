@@ -12,8 +12,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, CopyPlus, X } from 'lucide-react';
+import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, CopyPlus, X, Share2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { getSpecIconUrl, normalizeSpecName } from '@/lib/wowhead';
 import { SPEC_ROLES } from '@hooligans/shared';
 
@@ -96,6 +103,11 @@ export default function RaidSplitsPage() {
   const [pasteText, setPasteText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [importedSignups, setImportedSignups] = useState<RaidHelperSignup[]>([]);
+
+  // Export dialog state
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportRaidId, setExportRaidId] = useState<string | null>(null);
+  const [exportFormat, setExportFormat] = useState<'plain' | 'csv' | 'names' | 'mrt' | 'json'>('plain');
 
   // Multi-raid state: 1x 25-man + 3x 10-man
   const [raids, setRaids] = useState<RaidConfig[]>([
@@ -434,6 +446,95 @@ export default function RaidSplitsPage() {
     URL.revokeObjectURL(url);
   };
 
+  // Open export dialog
+  const openExportDialog = (raidId: string) => {
+    setExportRaidId(raidId);
+    setIsExportDialogOpen(true);
+  };
+
+  // Generate export content based on format
+  const getExportContent = (): string => {
+    if (!exportRaidId) return '';
+    const raid = raids.find(r => r.id === exportRaidId);
+    if (!raid) return '';
+
+    switch (exportFormat) {
+      case 'plain': {
+        const lines: string[] = [raid.name, ''];
+        raid.groups.forEach((group, index) => {
+          lines.push(`Group ${index + 1}:`);
+          group.forEach((player) => {
+            if (player) {
+              lines.push(`  ${player.name} - ${player.class} (${player.mainSpec?.replace(player.class, '') || ''})`);
+            }
+          });
+          lines.push('');
+        });
+        return lines.join('\n');
+      }
+
+      case 'csv': {
+        const lines: string[] = ['Group,Name,Class,Spec,Role'];
+        raid.groups.forEach((group, index) => {
+          group.forEach((player) => {
+            if (player) {
+              lines.push(`${index + 1},${player.name},${player.class},${player.mainSpec?.replace(player.class, '') || ''},${player.role}`);
+            }
+          });
+        });
+        return lines.join('\n');
+      }
+
+      case 'names': {
+        const names: string[] = [];
+        raid.groups.forEach((group) => {
+          group.forEach((player) => {
+            if (player) names.push(player.name);
+          });
+        });
+        return names.join('\n');
+      }
+
+      case 'mrt': {
+        // Method Raid Tools format for in-game import
+        // Format: Group1:Name1,Name2,Name3,Name4,Name5
+        const lines: string[] = [];
+        raid.groups.forEach((group, index) => {
+          const groupPlayers = group.filter(Boolean).map(p => p!.name);
+          if (groupPlayers.length > 0) {
+            lines.push(`Group${index + 1}:${groupPlayers.join(',')}`);
+          }
+        });
+        return lines.join('\n');
+      }
+
+      case 'json': {
+        const data = {
+          name: raid.name,
+          groups: raid.groups.map((group, index) => ({
+            group: index + 1,
+            members: group.filter(Boolean).map(p => ({
+              name: p!.name,
+              class: p!.class,
+              spec: p!.mainSpec?.replace(p!.class, '') || '',
+            })),
+          })),
+        };
+        return JSON.stringify(data, null, 2);
+      }
+
+      default:
+        return '';
+    }
+  };
+
+  // Copy export content to clipboard
+  const copyExportToClipboard = () => {
+    const content = getExportContent();
+    navigator.clipboard.writeText(content);
+    alert('Copied to clipboard!');
+  };
+
   // Import handlers
   const handleImportFromRaidHelper = async () => {
     setIsImporting(true);
@@ -762,8 +863,8 @@ export default function RaidSplitsPage() {
           <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => clearRaid(raid.id)} title="Clear raid">
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" title="Screenshot (coming soon)" disabled>
-            <Camera className="h-3.5 w-3.5" />
+          <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => openExportDialog(raid.id)} title="Export roster">
+            <Share2 className="h-3.5 w-3.5" />
           </Button>
           <Button variant="outline" size="icon" className="h-6 w-6 border-green-600 text-green-500 hover:text-green-400 hover:bg-green-900/20" onClick={() => downloadRaid(raid.id)} title="Download as text">
             <Download className="h-3.5 w-3.5" />
@@ -1170,6 +1271,65 @@ export default function RaidSplitsPage() {
                 {isImporting ? 'Importing...' : 'Fetch Signups'}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Dialog */}
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogContent className="bg-[#1a1a1a] border-gray-700 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5" />
+              Export Roster
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Select an export format and copy the text below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300">Export Format:</Label>
+              <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as typeof exportFormat)}>
+                <SelectTrigger className="bg-black border-gray-600 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a1a] border-gray-700">
+                  <SelectItem value="plain" className="text-white hover:bg-gray-800">
+                    Plain Text - Human readable format
+                  </SelectItem>
+                  <SelectItem value="csv" className="text-white hover:bg-gray-800">
+                    CSV - Spreadsheet compatible
+                  </SelectItem>
+                  <SelectItem value="names" className="text-white hover:bg-gray-800">
+                    Names Only - Simple list of names
+                  </SelectItem>
+                  <SelectItem value="mrt" className="text-white hover:bg-gray-800">
+                    MRT Format - Method Raid Tools import
+                  </SelectItem>
+                  <SelectItem value="json" className="text-white hover:bg-gray-800">
+                    JSON - Structured data format
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Textarea
+                value={getExportContent()}
+                readOnly
+                className="min-h-[200px] bg-black border-gray-600 text-white font-mono text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsExportDialogOpen(false)} className="bg-transparent border-gray-600">
+              Close
+            </Button>
+            <Button onClick={copyExportToClipboard}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copy to Clipboard
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
