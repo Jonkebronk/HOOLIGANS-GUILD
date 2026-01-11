@@ -488,6 +488,10 @@ export default function RaidSplitsPage() {
       if (!element) return;
 
       try {
+        // Hide X buttons for screenshot
+        const hideElements = element.querySelectorAll('.screenshot-hide');
+        hideElements.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
+
         const canvas = await html2canvas(element, {
           backgroundColor: '#0d1117',
           scale: 4,
@@ -495,9 +499,12 @@ export default function RaidSplitsPage() {
           logging: false,
           scrollX: 0,
           scrollY: -window.scrollY,
-          windowWidth: element.scrollWidth + 20,
-          windowHeight: element.scrollHeight + 20,
+          windowWidth: element.scrollWidth + 40,
+          windowHeight: element.scrollHeight + 40,
         });
+
+        // Restore X buttons
+        hideElements.forEach(el => (el as HTMLElement).style.visibility = 'visible');
 
         const link = document.createElement('a');
         link.download = '10-Man_Splits.png';
@@ -516,6 +523,10 @@ export default function RaidSplitsPage() {
     if (!raid || !element) return;
 
     try {
+      // Hide X buttons for screenshot
+      const hideElements = element.querySelectorAll('.screenshot-hide');
+      hideElements.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
+
       const canvas = await html2canvas(element, {
         backgroundColor: '#0d1117',
         scale: 4,
@@ -523,9 +534,12 @@ export default function RaidSplitsPage() {
         logging: false,
         scrollX: 0,
         scrollY: -window.scrollY,
-        windowWidth: element.scrollWidth + 20,
-        windowHeight: element.scrollHeight + 20,
+        windowWidth: element.scrollWidth + 40,
+        windowHeight: element.scrollHeight + 40,
       });
+
+      // Restore X buttons
+      hideElements.forEach(el => (el as HTMLElement).style.visibility = 'visible');
 
       const link = document.createElement('a');
       link.download = `${raid.name.replace(/\s+/g, '_')}.png`;
@@ -576,6 +590,10 @@ export default function RaidSplitsPage() {
 
     setIsSendingToDiscord(true);
     try {
+      // Hide X buttons for screenshot
+      const hideElements = element.querySelectorAll('.screenshot-hide');
+      hideElements.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
+
       const canvas = await html2canvas(element, {
         backgroundColor: '#0d1117',
         scale: 4,
@@ -583,9 +601,12 @@ export default function RaidSplitsPage() {
         logging: false,
         scrollX: 0,
         scrollY: -window.scrollY,
-        windowWidth: element.scrollWidth + 20,
-        windowHeight: element.scrollHeight + 20,
+        windowWidth: element.scrollWidth + 40,
+        windowHeight: element.scrollHeight + 40,
       });
+
+      // Restore X buttons
+      hideElements.forEach(el => (el as HTMLElement).style.visibility = 'visible');
 
       const imageData = canvas.toDataURL('image/png');
 
@@ -956,7 +977,7 @@ export default function RaidSplitsPage() {
     return (
       <div
         key={slotKey}
-        className={`h-8 flex items-center transition-all cursor-pointer border-2 border-black/50 rounded ${
+        className={`h-9 flex items-center transition-all cursor-pointer border-2 border-black/60 rounded ${
           slot ? '' : 'bg-[#1a1a1a]'
         } ${isDragOver ? 'ring-2 ring-yellow-400/50' : ''}`}
         style={{
@@ -975,9 +996,9 @@ export default function RaidSplitsPage() {
             <img
               src={getSpecIconUrl(slot.mainSpec, slot.class)}
               alt={slot.mainSpec}
-              className="w-7 h-7 ml-0.5"
+              className="w-8 h-8 ml-0.5"
             />
-            <span className="flex-1 text-sm font-bold text-black pl-2">
+            <span className="flex-1 text-base font-bold text-black pl-2 pr-1" style={{ textShadow: '0 0 2px rgba(255,255,255,0.3)' }}>
               {slot.name}
             </span>
             <button
@@ -985,7 +1006,7 @@ export default function RaidSplitsPage() {
                 e.stopPropagation();
                 removePlayerFromSlot(raidId, groupIndex, slotIndex);
               }}
-              className="px-2 text-red-700 hover:text-red-500"
+              className="px-1 text-red-700 hover:text-red-500 screenshot-hide"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1014,11 +1035,11 @@ export default function RaidSplitsPage() {
             <Input
               value={raid.name}
               onChange={(e) => updateRaidName(raid.id, e.target.value)}
-              className="w-36 h-7 text-sm bg-transparent border-none text-white font-semibold hover:bg-white/10 focus:bg-white/10 px-1"
+              className="w-40 h-8 text-lg bg-transparent border-none text-white font-bold hover:bg-white/10 focus:bg-white/10 px-1"
             />
-            <span className="text-sm text-gray-400 font-medium">{totalAssigned}/{maxPlayers}</span>
+            <span className="text-base text-gray-300 font-semibold">{totalAssigned}/{maxPlayers}</span>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 screenshot-hide">
             {is10Man && (
               <Button
                 variant="ghost"
@@ -1052,11 +1073,11 @@ export default function RaidSplitsPage() {
         <div className="p-4">
 
         {/* Group Headers Row */}
-        <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'}`}>
+        <div className={`flex ${is25Man ? 'gap-1' : 'gap-1'}`}>
           {raid.groups.map((_, groupIndex) => (
-            <div key={groupIndex} className="w-[160px]">
-              <div className="flex items-center justify-center gap-1.5 text-yellow-500 text-xs font-medium pb-1 border-b-2 border-yellow-500">
-                <Users className="h-3 w-3" />
+            <div key={groupIndex} className="w-[180px]">
+              <div className="flex items-center justify-center gap-1.5 text-yellow-500 text-sm font-semibold pb-1 border-b-2 border-yellow-500">
+                <Users className="h-4 w-4" />
                 Group {groupIndex + 1}
               </div>
             </div>
@@ -1064,10 +1085,10 @@ export default function RaidSplitsPage() {
         </div>
 
         {/* Groups Grid */}
-        <div className={`flex ${is25Man ? 'gap-0' : 'gap-0'} mt-1`}>
+        <div className={`flex ${is25Man ? 'gap-1' : 'gap-1'} mt-1`}>
           {raid.groups.map((group, groupIndex) => (
-            <div key={groupIndex} className="w-[150px] bg-[#111] border-2 border-[#444] rounded">
-              <div className="space-y-1 p-1">
+            <div key={groupIndex} className="w-[180px] bg-[#111] border-2 border-[#444] rounded">
+              <div className="space-y-1 p-1.5">
                 {group.map((slot, slotIndex) => renderPlayerSlot(slot, raid.id, groupIndex, slotIndex))}
               </div>
             </div>
