@@ -196,34 +196,34 @@ export function ItemsTable({
                 </div>
               </td>
               <td className="py-1.5 px-2">
-                <div className="flex flex-wrap gap-0.5">
+                <div className="flex flex-wrap gap-1">
                   {item.bisPlayers?.slice(0, 2).map((name) => (
                     <span
                       key={name}
-                      className="px-1 py-0.5 text-[10px] rounded bg-purple-500/20 text-purple-400"
+                      className="px-1.5 py-0.5 text-xs font-medium rounded bg-purple-500/30 text-purple-300 border border-purple-500/50"
                     >
                       {name}
                     </span>
                   ))}
                   {(item.bisPlayers?.length || 0) > 2 && (
-                    <span className="px-1 py-0.5 text-[10px] rounded bg-muted">
+                    <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
                       +{(item.bisPlayers?.length || 0) - 2}
                     </span>
                   )}
                 </div>
               </td>
               <td className="py-1.5 px-2">
-                <div className="flex flex-wrap gap-0.5">
+                <div className="flex flex-wrap gap-1">
                   {item.bisNextPhasePlayers?.slice(0, 2).map((name) => (
                     <span
                       key={name}
-                      className="px-1 py-0.5 text-[10px] rounded bg-blue-500/20 text-blue-400"
+                      className="px-1.5 py-0.5 text-xs font-medium rounded bg-blue-500/30 text-blue-300 border border-blue-500/50"
                     >
                       {name}
                     </span>
                   ))}
                   {(item.bisNextPhasePlayers?.length || 0) > 2 && (
-                    <span className="px-1 py-0.5 text-[10px] rounded bg-muted">
+                    <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
                       +{(item.bisNextPhasePlayers?.length || 0) - 2}
                     </span>
                   )}
