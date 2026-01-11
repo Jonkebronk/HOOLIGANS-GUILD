@@ -749,15 +749,28 @@ export default function BisListsPage() {
     const slotIcon = SLOT_ICONS[slot] || 'inv_misc_questionmark';
     const hasItem = !!wowheadId || !!itemName;
 
-    // Let Wowhead inject icons via iconizeLinks - use empty link with sizing
-    const iconElement = hasItem && wowheadId ? (
+    // Get the icon URL - use item icon if available, otherwise slot icon
+    const itemIcon = item?.icon;
+    const iconUrl = getItemIcon(itemIcon, slot, 'medium');
+
+    const iconElement = hasItem ? (
       <a
-        href={`https://www.wowhead.com/tbc/item=${wowheadId}`}
+        href={wowheadId ? `https://www.wowhead.com/tbc/item=${wowheadId}` : '#'}
         onClick={(e) => e.preventDefault()}
-        data-wh-icon-size="medium"
-        className="flex-shrink-0 wowhead-icon"
-        style={{ display: 'inline-block', width: 36, height: 36 }}
-      />
+        data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
+        className="flex-shrink-0"
+      >
+        <img
+          src={iconUrl}
+          alt={itemName || label}
+          className="w-9 h-9 rounded"
+          style={{
+            borderWidth: 2,
+            borderStyle: 'solid',
+            borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee',
+          }}
+        />
+      </a>
     ) : (
       <div className="relative flex-shrink-0">
         <img
