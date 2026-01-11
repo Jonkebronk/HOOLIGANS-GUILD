@@ -48,8 +48,7 @@ export default async function LoginPage({
 
         {/* Welcome Text */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white mb-1">Welcome to HOOLIGANS</h1>
-          <p className="text-gray-400">Smarter management for guilds and pugs.</p>
+          <h1 className="text-2xl font-bold text-white">Welcome to HOOLIGANS</h1>
         </div>
 
         {/* Login Card */}
