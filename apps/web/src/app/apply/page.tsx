@@ -381,15 +381,15 @@ export default function ApplyPage() {
                   <div className="space-y-2">
                     <Label htmlFor="offSpec">Off Spec</Label>
                     <Select
-                      value={formData.offSpec}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, offSpec: value }))}
+                      value={formData.offSpec || 'none'}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, offSpec: value === 'none' ? '' : value }))}
                       disabled={!formData.class}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select off-spec (optional)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {getSpecsForClass(formData.class).map((spec) => (
                           <SelectItem key={spec} value={spec}>
                             {spec.replace(formData.class, '')}
