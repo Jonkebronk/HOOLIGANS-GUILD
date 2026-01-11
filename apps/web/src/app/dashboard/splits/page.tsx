@@ -404,7 +404,18 @@ export default function RaidSplitsPage() {
         if (res.ok) {
           const event = await res.json();
           if (event.signUps) {
-            const signups: RaidHelperSignup[] = event.signUps.map((s: Record<string, unknown>) => {
+            // Filter out Tentative signups
+            const confirmedSignups = (event.signUps as Record<string, unknown>[]).filter((s) => {
+              const className = s.className as string || '';
+              const roleName = s.roleName as string || '';
+              const status = s.status as string || '';
+              // Exclude tentative/bench signups
+              return className !== 'Tentative' &&
+                     roleName !== 'Tentative' &&
+                     status === 'primary';
+            });
+
+            const signups: RaidHelperSignup[] = confirmedSignups.map((s: Record<string, unknown>) => {
               // Capitalize class name (raid-helper returns lowercase like "druid", "hunter")
               let rawClass = s.className as string | undefined;
 
