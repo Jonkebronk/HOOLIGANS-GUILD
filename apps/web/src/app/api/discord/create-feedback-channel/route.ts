@@ -54,6 +54,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate discordId is a snowflake (numeric string, 17-20 digits)
+    const isValidSnowflake = /^\d{17,20}$/.test(player.discordId);
+    if (!isValidSnowflake) {
+      return NextResponse.json(
+        {
+          error: 'Invalid Discord ID format',
+          hint: `Player "${player.name}" has discordId "${player.discordId}" which is not a valid Discord user ID. Discord IDs should be 17-20 digit numbers.`,
+          details: 'The player may need to be re-imported from Discord with their actual user ID.'
+        },
+        { status: 400 }
+      );
+    }
+
     // Check if channel already exists for this player
     const existingChannel = await prisma.feedbackChannel.findFirst({
       where: {
@@ -143,17 +156,35 @@ export async function POST(request: Request) {
 
     if (!discordResponse.ok) {
       const error = await discordResponse.json();
-      console.error('Discord API error:', error);
-      console.error('Request data:', { channelName, permissionOverwrites, parent_id: DISCORD_RAID_MANAGEMENT_CATEGORY_ID });
+      console.error('Discord API error:', JSON.stringify(error, null, 2));
+      console.error('Request data:', JSON.stringify(channelData, null, 2));
+
+      // Parse Discord's detailed errors
+      let detailedHint = 'Check bot permissions and env vars';
+      if (error.code === 50001) {
+        detailedHint = 'Bot lacks permissions - check Manage Channels permission';
+      } else if (error.code === 50013) {
+        detailedHint = 'Missing permissions to set overwrites';
+      } else if (error.code === 10003) {
+        detailedHint = 'Invalid category ID';
+      } else if (error.code === 50035) {
+        // Invalid Form Body - parse the errors object
+        const errorDetails = error.errors ? JSON.stringify(error.errors) : 'Unknown field error';
+        detailedHint = `Invalid Form Body: ${errorDetails}`;
+      }
+
       return NextResponse.json(
         {
           error: 'Failed to create Discord channel',
-          details: error,
-          discordError: error.message || error.code,
-          hint: error.code === 50001 ? 'Bot lacks permissions - check Manage Channels permission' :
-                error.code === 50013 ? 'Missing permissions to set overwrites' :
-                error.code === 10003 ? 'Invalid category ID' :
-                'Check bot permissions and env vars'
+          hint: detailedHint,
+          details: error.message || JSON.stringify(error),
+          discordCode: error.code,
+          requestData: {
+            channelName,
+            playerDiscordId: player.discordId,
+            guildId: DISCORD_GUILD_ID,
+            categoryId: DISCORD_RAID_MANAGEMENT_CATEGORY_ID || 'not set',
+          }
         },
         { status: discordResponse.status }
       );
