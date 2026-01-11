@@ -49,9 +49,10 @@ export async function GET(request: Request) {
 }
 
 // POST - Save BiS configuration for a spec/phase/slot
+// Accepts either itemId (from our DB) or wowheadId + itemName (from TBC picker)
 export async function POST(request: Request) {
   try {
-    const { spec, phase, slot, itemId } = await request.json();
+    const { spec, phase, slot, itemId, wowheadId, itemName } = await request.json();
 
     if (!spec || !phase || !slot) {
       return NextResponse.json(
@@ -60,10 +61,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get item details
+    // Get item details from our database if itemId is provided
     const item = itemId ? await prisma.item.findUnique({
       where: { id: itemId },
     }) : null;
+
+    // Determine final values - prefer itemId lookup, fall back to direct wowheadId/itemName
+    const finalWowheadId = item?.wowheadId || wowheadId || null;
+    const finalItemName = item?.name || itemName || '';
+    const finalSource = item ? `${item.raid} - ${item.boss}` : 'TBC Item Database';
 
     // Upsert the BiS configuration
     const bisConfig = await prisma.bisConfiguration.upsert({
@@ -75,17 +81,17 @@ export async function POST(request: Request) {
         },
       },
       update: {
-        itemName: item?.name || '',
-        wowheadId: item?.wowheadId || null,
-        source: item ? `${item.raid} - ${item.boss}` : null,
+        itemName: finalItemName,
+        wowheadId: finalWowheadId,
+        source: finalSource,
       },
       create: {
         spec,
         phase: phase as Phase,
         slot: slot as GearSlot,
-        itemName: item?.name || '',
-        wowheadId: item?.wowheadId || null,
-        source: item ? `${item.raid} - ${item.boss}` : null,
+        itemName: finalItemName,
+        wowheadId: finalWowheadId,
+        source: finalSource,
       },
     });
 
