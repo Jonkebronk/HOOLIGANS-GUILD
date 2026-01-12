@@ -80,6 +80,7 @@ export async function POST(request: Request) {
       skipped: 0,
       errors: [] as string[],
       importedIds: [] as string[],
+      skippedIds: [] as string[],
     };
 
     // Process each data row
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
 
         if (existing) {
           results.skipped++;
+          results.skippedIds.push(existing.id);
           continue;
         }
 

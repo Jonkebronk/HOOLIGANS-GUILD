@@ -78,9 +78,10 @@ export default function ItemsPage() {
   const [importUrl, setImportUrl] = useState('');
   const [isCsvImportDialogOpen, setIsCsvImportDialogOpen] = useState(false);
   const [csvData, setCsvData] = useState('');
-  const [csvImportResult, setCsvImportResult] = useState<{ imported: number; skipped: number; errors: string[]; importedIds?: string[] } | null>(null);
+  const [csvImportResult, setCsvImportResult] = useState<{ imported: number; skipped: number; errors: string[]; importedIds?: string[]; skippedIds?: string[] } | null>(null);
   const [isImportingCsv, setIsImportingCsv] = useState(false);
   const [isDeletingImport, setIsDeletingImport] = useState(false);
+  const [isDeletingExisting, setIsDeletingExisting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -341,6 +342,39 @@ export default function ItemsPage() {
       alert('Failed to delete items. Please try again.');
     } finally {
       setIsDeletingImport(false);
+    }
+  };
+
+  const handleDeleteExisting = async () => {
+    if (!csvImportResult?.skippedIds || csvImportResult.skippedIds.length === 0) {
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${csvImportResult.skippedIds.length} existing items? You can then re-import the CSV to add fresh copies.`)) {
+      return;
+    }
+
+    setIsDeletingExisting(true);
+    try {
+      const res = await fetch('/api/items/delete-batch', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: csvImportResult.skippedIds }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Deleted ${data.deleted} existing items. You can now import the CSV again.`);
+        setCsvImportResult(null);
+        await fetchItems();
+      } else {
+        alert('Failed to delete items');
+      }
+    } catch (error) {
+      console.error('Failed to delete existing items:', error);
+      alert('Failed to delete items. Please try again.');
+    } finally {
+      setIsDeletingExisting(false);
     }
   };
 
@@ -700,12 +734,22 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
                   </div>
                 )}
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCsvImportDialogOpen(false)} disabled={isImportingCsv || isDeletingImport}>
+              <DialogFooter className="flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setIsCsvImportDialogOpen(false)} disabled={isImportingCsv || isDeletingImport || isDeletingExisting}>
                   {csvImportResult ? 'Close' : 'Cancel'}
                 </Button>
+                {csvImportResult && csvImportResult.skippedIds && csvImportResult.skippedIds.length > 0 && (
+                  <Button variant="destructive" onClick={handleDeleteExisting} disabled={isDeletingExisting || isDeletingImport}>
+                    {isDeletingExisting ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
+                    {isDeletingExisting ? 'Deleting...' : `Delete Existing (${csvImportResult.skippedIds.length})`}
+                  </Button>
+                )}
                 {csvImportResult && csvImportResult.importedIds && csvImportResult.importedIds.length > 0 && (
-                  <Button variant="destructive" onClick={handleUndoCsvImport} disabled={isDeletingImport}>
+                  <Button variant="destructive" onClick={handleUndoCsvImport} disabled={isDeletingImport || isDeletingExisting}>
                     {isDeletingImport ? (
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     ) : (
