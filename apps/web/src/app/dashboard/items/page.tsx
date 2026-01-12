@@ -81,7 +81,7 @@ export default function ItemsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImportBossDialogOpen, setIsImportBossDialogOpen] = useState(false);
   const [isImportingBosses, setIsImportingBosses] = useState(false);
-  const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number; sourcesLoaded?: number; mappingsLoaded?: number; itemToBossSize?: number; debug?: { sampleDbItems: number[]; sampleTmbItems: number[]; matchingIds?: number[]; rawSourcesSample?: string; rawMappingsSample?: string } } | null>(null);
+  const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number; mappingsLoaded?: number; itemToBossSize?: number; debug?: { sampleDbItems: number[]; sampleTmbItems: number[]; matchingIds?: number[]; uniqueBosses?: string[]; rawSample?: string } } | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [editForm, setEditForm] = useState({ lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
@@ -504,11 +504,10 @@ export default function ItemsPage() {
                     {bossImportResult.notFound > 0 && (
                       <p className="text-muted-foreground">{bossImportResult.notFound} items not found in TMB database</p>
                     )}
-                    {bossImportResult.sourcesLoaded !== undefined && (
+                    {bossImportResult.mappingsLoaded !== undefined && (
                       <div className="text-xs text-muted-foreground border-t pt-2 mt-2 space-y-1">
-                        <p>TMB Sources loaded: {bossImportResult.sourcesLoaded}</p>
                         <p>TMB Mappings loaded: {bossImportResult.mappingsLoaded}</p>
-                        <p>Item-to-Boss map size: {bossImportResult.itemToBossSize}</p>
+                        <p>Unique items in TMB: {bossImportResult.itemToBossSize}</p>
                         {bossImportResult.debug && (
                           <>
                             <p className="font-medium mt-2">Sample DB Item IDs (wowheadId):</p>
@@ -517,10 +516,10 @@ export default function ItemsPage() {
                             <p className="font-mono">{bossImportResult.debug.sampleTmbItems?.join(', ') || 'none'}</p>
                             <p className="font-medium mt-1">Matching IDs found:</p>
                             <p className="font-mono">{bossImportResult.debug.matchingIds?.length || 0} - {bossImportResult.debug.matchingIds?.join(', ') || 'none'}</p>
-                            {bossImportResult.debug.rawSourcesSample && (
+                            {bossImportResult.debug.uniqueBosses && bossImportResult.debug.uniqueBosses.length > 0 && (
                               <>
-                                <p className="font-medium mt-2">Raw Sources SQL (first 200 chars):</p>
-                                <pre className="font-mono text-[10px] bg-black/20 p-1 rounded overflow-x-auto whitespace-pre-wrap break-all max-h-16 overflow-y-auto">{bossImportResult.debug.rawSourcesSample.substring(0, 200)}</pre>
+                                <p className="font-medium mt-1">Bosses found in TMB:</p>
+                                <p className="font-mono text-[10px]">{bossImportResult.debug.uniqueBosses.join(', ')}</p>
                               </>
                             )}
                           </>

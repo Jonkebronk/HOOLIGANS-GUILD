@@ -1,64 +1,46 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
 
-// TMB GitHub raw URLs for TBC item-boss data
-const TMB_ITEM_SOURCES_URL = 'https://raw.githubusercontent.com/thatsmybis/burning-crusade-item-db/master/thatsmybis/insert_item_sources.sql';
-const TMB_ITEM_ITEM_SOURCES_URL = 'https://raw.githubusercontent.com/thatsmybis/burning-crusade-item-db/master/thatsmybis/insert_item_item_sources.sql';
+// TMB GitHub raw URL for TBC loot tables (Lua format with boss->item mappings)
+const TMB_LOOT_TABLES_URL = 'https://raw.githubusercontent.com/thatsmybis/burning-crusade-item-db/main/thatsmybis/lootTables.txt';
 
-type ItemSource = {
-  id: number;
-  name: string;
-  instanceName: string;
-};
-
-type ItemSourceMapping = {
-  itemSourceId: number;
+type BossItemMapping = {
+  bossName: string;
   itemId: number;
 };
 
-// Parse the INSERT statements from TMB's SQL files
-function parseItemSources(sql: string): ItemSource[] {
-  const sources: ItemSource[] = [];
+// Parse the lootTables.txt Lua format
+// Format:
+// zone_id, "Zone Name"
+//     boss_id, "Boss Name"
+//         item_id, -- item-slug
+function parseLootTables(luaData: string): BossItemMapping[] {
+  const mappings: BossItemMapping[] = [];
+  const lines = luaData.split('\n');
 
-  // Match INSERT statements for item_sources
-  // Format: INSERT INTO `item_sources` (`id`, `name`, `slug`, `instance_id`, `npc_id`, `object_id`, `order`, `created_at`, `updated_at`) VALUES
-  // (85, 'Attumen the Huntsman', 'attumen-the-huntsman', 9, 15550, NULL, 1, ...),
-
-  const lines = sql.split('\n');
-  let currentInstance = '';
+  let currentBoss = '';
 
   for (const line of lines) {
-    // Check for instance comments like "-- Karazhan"
-    const instanceMatch = line.match(/^-- (.+)$/);
-    if (instanceMatch) {
-      currentInstance = instanceMatch[1].trim();
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Check for boss line: boss_id, "Boss Name" or null, "Trash"
+    // Pattern: either number or null, then comma, then quoted string
+    const bossMatch = trimmed.match(/^(?:null|\d+),\s*"([^"]+)"/);
+    if (bossMatch) {
+      currentBoss = bossMatch[1];
       continue;
     }
 
-    // Match value tuples: (id, 'name', 'slug', instance_id, npc_id, ...)
-    const valueMatches = line.matchAll(/\((\d+),\s*'([^']+)',\s*'([^']+)',\s*(\d+)/g);
-    for (const match of valueMatches) {
-      sources.push({
-        id: parseInt(match[1]),
-        name: match[2],
-        instanceName: currentInstance || 'Unknown',
+    // Check for item line: item_id, -- item-slug
+    // Pattern: just a number at the start, followed by comma
+    const itemMatch = trimmed.match(/^(\d+),/);
+    if (itemMatch && currentBoss) {
+      mappings.push({
+        bossName: currentBoss,
+        itemId: parseInt(itemMatch[1]),
       });
     }
-  }
-
-  return sources;
-}
-
-function parseItemItemSources(sql: string): ItemSourceMapping[] {
-  const mappings: ItemSourceMapping[] = [];
-
-  // Format: (item_source_id, item_id, 'created_at'),
-  const matches = sql.matchAll(/\((\d+),\s*(\d+),/g);
-  for (const match of matches) {
-    mappings.push({
-      itemSourceId: parseInt(match[1]),
-      itemId: parseInt(match[2]),
-    });
   }
 
   return mappings;
@@ -66,44 +48,33 @@ function parseItemItemSources(sql: string): ItemSourceMapping[] {
 
 export async function POST() {
   try {
-    // Fetch TMB data files
-    const [sourcesRes, mappingsRes] = await Promise.all([
-      fetch(TMB_ITEM_SOURCES_URL),
-      fetch(TMB_ITEM_ITEM_SOURCES_URL),
-    ]);
+    // Fetch TMB loot tables
+    const response = await fetch(TMB_LOOT_TABLES_URL);
 
-    if (!sourcesRes.ok || !mappingsRes.ok) {
+    if (!response.ok) {
       return NextResponse.json(
-        { error: 'Failed to fetch TMB data files' },
+        { error: 'Failed to fetch TMB loot tables' },
         { status: 500 }
       );
     }
 
-    const sourcesSql = await sourcesRes.text();
-    const mappingsSql = await mappingsRes.text();
+    const luaData = await response.text();
 
-    // Parse the SQL files
-    const sources = parseItemSources(sourcesSql);
-    const mappings = parseItemItemSources(mappingsSql);
+    // Parse the Lua file
+    const mappings = parseLootTables(luaData);
 
-    console.log(`Parsed ${sources.length} item sources and ${mappings.length} item-source mappings`);
+    console.log(`Parsed ${mappings.length} boss-item mappings from lootTables.txt`);
 
-    // Create lookup maps
-    const sourceById = new Map<number, ItemSource>();
-    for (const source of sources) {
-      sourceById.set(source.id, source);
-    }
-
+    // Create lookup map: itemId -> bossName
     const itemToBoss = new Map<number, string>();
     for (const mapping of mappings) {
-      const source = sourceById.get(mapping.itemSourceId);
-      if (source && !itemToBoss.has(mapping.itemId)) {
-        // Only set if not already set (first source wins)
-        itemToBoss.set(mapping.itemId, source.name);
+      if (!itemToBoss.has(mapping.itemId)) {
+        // Only set if not already set (first boss wins)
+        itemToBoss.set(mapping.itemId, mapping.bossName);
       }
     }
 
-    console.log(`Created lookup for ${itemToBoss.size} items to bosses`);
+    console.log(`Created lookup for ${itemToBoss.size} unique items to bosses`);
 
     // Get all items from our database
     const items = await prisma.item.findMany({
@@ -153,23 +124,23 @@ export async function POST() {
     const tmbIdSet = new Set(itemToBoss.keys());
     const matchingIds = [...dbIdSet].filter(id => tmbIdSet.has(id as number)).slice(0, 10);
 
+    // Get unique bosses found
+    const uniqueBosses = [...new Set(mappings.map(m => m.bossName))].slice(0, 10);
+
     return NextResponse.json({
       success: true,
       totalItems: items.length,
       updated,
       alreadySet,
       notFound,
-      sourcesLoaded: sources.length,
       mappingsLoaded: mappings.length,
       itemToBossSize: itemToBoss.size,
       debug: {
         sampleDbItems,
         sampleTmbItems,
-        sampleMappings: mappings.slice(0, 5),
-        sampleSources: sources.slice(0, 5),
         matchingIds,
-        rawSourcesSample: sourcesSql.substring(0, 500),
-        rawMappingsSample: mappingsSql.substring(0, 500),
+        uniqueBosses,
+        rawSample: luaData.substring(0, 500),
       }
     });
   } catch (error) {
@@ -184,36 +155,24 @@ export async function POST() {
 // GET to preview what would be updated
 export async function GET() {
   try {
-    // Fetch TMB data files
-    const [sourcesRes, mappingsRes] = await Promise.all([
-      fetch(TMB_ITEM_SOURCES_URL),
-      fetch(TMB_ITEM_ITEM_SOURCES_URL),
-    ]);
+    // Fetch TMB loot tables
+    const response = await fetch(TMB_LOOT_TABLES_URL);
 
-    if (!sourcesRes.ok || !mappingsRes.ok) {
+    if (!response.ok) {
       return NextResponse.json(
-        { error: 'Failed to fetch TMB data files' },
+        { error: 'Failed to fetch TMB loot tables' },
         { status: 500 }
       );
     }
 
-    const sourcesSql = await sourcesRes.text();
-    const mappingsSql = await mappingsRes.text();
+    const luaData = await response.text();
+    const mappings = parseLootTables(luaData);
 
-    const sources = parseItemSources(sourcesSql);
-    const mappings = parseItemItemSources(mappingsSql);
-
-    // Create lookup
-    const sourceById = new Map<number, ItemSource>();
-    for (const source of sources) {
-      sourceById.set(source.id, source);
-    }
-
+    // Create lookup map
     const itemToBoss = new Map<number, string>();
     for (const mapping of mappings) {
-      const source = sourceById.get(mapping.itemSourceId);
-      if (source && !itemToBoss.has(mapping.itemId)) {
-        itemToBoss.set(mapping.itemId, source.name);
+      if (!itemToBoss.has(mapping.itemId)) {
+        itemToBoss.set(mapping.itemId, mapping.bossName);
       }
     }
 
@@ -245,8 +204,8 @@ export async function GET() {
     }));
 
     return NextResponse.json({
-      sourcesLoaded: sources.length,
       mappingsLoaded: mappings.length,
+      itemToBossSize: itemToBoss.size,
       itemsToUpdate: items.length,
       preview,
     });
