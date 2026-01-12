@@ -93,7 +93,7 @@ export async function POST(request: Request) {
         quality: quality ?? 4, // Default to epic
         slot,
         raid,
-        boss: boss || null,
+        boss: boss || 'Unknown', // Boss is required, default to Unknown
         phase,
         lootPriority: lootPriority || null,
         bisSpecs: bisSpecs ? {
@@ -108,6 +108,7 @@ export async function POST(request: Request) {
     return NextResponse.json(item, { status: 201 });
   } catch (error) {
     console.error('Failed to create item:', error);
-    return NextResponse.json({ error: 'Failed to create item' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: `Failed to create item: ${errorMessage}` }, { status: 500 });
   }
 }
