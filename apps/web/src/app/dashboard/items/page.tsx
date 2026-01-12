@@ -293,9 +293,23 @@ export default function ItemsPage() {
     }
   };
 
+  // Extract wowhead ID from URL or plain number
+  const parseWowheadId = (input: string): number | null => {
+    if (!input) return null;
+    // If it's just a number, return it
+    const num = parseInt(input);
+    if (!isNaN(num) && num > 0) return num;
+    // Try to extract from URL like https://www.wowhead.com/tbc/item=32837/...
+    const match = input.match(/item[=\/](\d+)/i);
+    if (match) return parseInt(match[1]);
+    return null;
+  };
+
   const handleAddItem = async () => {
-    if (!newItem.wowheadId || !newItem.name) {
-      alert('Item Name and Wowhead ID are required');
+    const wowheadId = parseWowheadId(newItem.wowheadId);
+
+    if (!wowheadId || !newItem.name) {
+      alert('Item Name and valid Wowhead ID are required');
       return;
     }
     if (!newItem.slot) {
@@ -318,7 +332,7 @@ export default function ItemsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newItem.name,
-          wowheadId: parseInt(newItem.wowheadId),
+          wowheadId: wowheadId,
           slot: newItem.slot,
           raid: newItem.raid,
           boss: newItem.boss || null,
@@ -618,15 +632,15 @@ export default function ItemsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="wowheadId">Wowhead Item ID</Label>
+                  <Label htmlFor="wowheadId">Wowhead Item ID or URL</Label>
                   <Input
                     id="wowheadId"
                     value={newItem.wowheadId}
                     onChange={(e) => setNewItem({ ...newItem, wowheadId: e.target.value })}
-                    placeholder="e.g., 32837"
+                    placeholder="e.g., 32837 or paste Wowhead URL"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Find the ID in the Wowhead URL: wowhead.com/tbc/item=<strong>32837</strong>
+                    Enter the item ID (32837) or paste the full Wowhead URL
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

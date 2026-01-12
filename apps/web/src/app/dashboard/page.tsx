@@ -176,116 +176,6 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Loot</CardTitle>
-            <CardDescription>Latest items distributed by the loot council</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : recentLoot.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No loot recorded yet
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentLoot.map((loot) => (
-                  <div
-                    key={loot.id}
-                    className="flex items-center gap-3 py-2 border-b border-border last:border-0"
-                  >
-                    {/* Item Icon */}
-                    <a
-                      href={`https://www.wowhead.com/tbc/item=${loot.item.wowheadId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-wowhead={`item=${loot.item.wowheadId}&domain=tbc`}
-                    >
-                      <img
-                        src={getItemIconUrl(loot.item.icon || 'inv_misc_questionmark', 'medium')}
-                        alt={loot.item.name}
-                        className="w-9 h-9 rounded"
-                        style={{
-                          borderWidth: 2,
-                          borderStyle: 'solid',
-                          borderColor: ITEM_QUALITY_COLORS[loot.item.quality] || ITEM_QUALITY_COLORS[4]
-                        }}
-                      />
-                    </a>
-                    <div className="flex-1 min-w-0">
-                      <a
-                        href={`https://www.wowhead.com/tbc/item=${loot.item.wowheadId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-wowhead={`item=${loot.item.wowheadId}&domain=tbc`}
-                        className="font-medium hover:underline block truncate"
-                        style={{ color: ITEM_QUALITY_COLORS[loot.item.quality] || ITEM_QUALITY_COLORS[4] }}
-                      >
-                        {loot.item.name}
-                      </a>
-                      <p className="text-sm">
-                        <span style={{ color: CLASS_COLORS[loot.player?.class] }}>{loot.player?.name}</span>
-                        <span className="text-muted-foreground"> - {RESPONSE_LABELS[loot.response] || loot.response}</span>
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(loot.lootDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Loot Council Criteria</CardTitle>
-            <CardDescription>How we evaluate loot distribution</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <CriteriaItem
-                title="Engagement"
-                description="Active participation in raids, strategy discussions, and consistent effort to improve."
-              />
-              <CriteriaItem
-                title="Attendance / Reliability"
-                description="Maintaining high presence and being prepared before raids start."
-              />
-              <CriteriaItem
-                title="Performance"
-                description="DPS/HPS output, teamwork, following strategies, and handling boss mechanics."
-              />
-              <CriteriaItem
-                title="Magnitude of Upgrade"
-                description="How much the item improves the character. BiS items are prioritized."
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Leadership</CardTitle>
-          <CardDescription>Your loot council team</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <LeadershipBadge name="Johnnypapa" role="Guildmaster" />
-            <LeadershipBadge name="Shredd" role="Officer" />
-            <LeadershipBadge name="Viktorin" role="Officer" />
-            <LeadershipBadge name="Ambo" role="Officer" />
-            <LeadershipBadge name="Quest" role="Officer" />
-          </div>
-        </CardContent>
-      </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>Class Discords</CardTitle>
@@ -463,6 +353,116 @@ export default function DashboardPage() {
                 </span>
               </a>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Loot</CardTitle>
+            <CardDescription>Latest items distributed by the loot council</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : recentLoot.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No loot recorded yet
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentLoot.map((loot) => (
+                  <div
+                    key={loot.id}
+                    className="flex items-center gap-3 py-2 border-b border-border last:border-0"
+                  >
+                    {/* Item Icon */}
+                    <a
+                      href={`https://www.wowhead.com/tbc/item=${loot.item.wowheadId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-wowhead={`item=${loot.item.wowheadId}&domain=tbc`}
+                    >
+                      <img
+                        src={getItemIconUrl(loot.item.icon || 'inv_misc_questionmark', 'medium')}
+                        alt={loot.item.name}
+                        className="w-9 h-9 rounded"
+                        style={{
+                          borderWidth: 2,
+                          borderStyle: 'solid',
+                          borderColor: ITEM_QUALITY_COLORS[loot.item.quality] || ITEM_QUALITY_COLORS[4]
+                        }}
+                      />
+                    </a>
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={`https://www.wowhead.com/tbc/item=${loot.item.wowheadId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-wowhead={`item=${loot.item.wowheadId}&domain=tbc`}
+                        className="font-medium hover:underline block truncate"
+                        style={{ color: ITEM_QUALITY_COLORS[loot.item.quality] || ITEM_QUALITY_COLORS[4] }}
+                      >
+                        {loot.item.name}
+                      </a>
+                      <p className="text-sm">
+                        <span style={{ color: CLASS_COLORS[loot.player?.class] }}>{loot.player?.name}</span>
+                        <span className="text-muted-foreground"> - {RESPONSE_LABELS[loot.response] || loot.response}</span>
+                      </p>
+                    </div>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(loot.lootDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Loot Council Criteria</CardTitle>
+            <CardDescription>How we evaluate loot distribution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <CriteriaItem
+                title="Engagement"
+                description="Active participation in raids, strategy discussions, and consistent effort to improve."
+              />
+              <CriteriaItem
+                title="Attendance / Reliability"
+                description="Maintaining high presence and being prepared before raids start."
+              />
+              <CriteriaItem
+                title="Performance"
+                description="DPS/HPS output, teamwork, following strategies, and handling boss mechanics."
+              />
+              <CriteriaItem
+                title="Magnitude of Upgrade"
+                description="How much the item improves the character. BiS items are prioritized."
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Leadership</CardTitle>
+          <CardDescription>Your loot council team</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            <LeadershipBadge name="Johnnypapa" role="Guildmaster" />
+            <LeadershipBadge name="Shredd" role="Officer" />
+            <LeadershipBadge name="Viktorin" role="Officer" />
+            <LeadershipBadge name="Ambo" role="Officer" />
+            <LeadershipBadge name="Quest" role="Officer" />
           </div>
         </CardContent>
       </Card>
