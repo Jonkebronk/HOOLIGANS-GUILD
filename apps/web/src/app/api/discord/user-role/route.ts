@@ -24,7 +24,7 @@ export async function GET() {
     });
 
     if (!user?.discordId) {
-      return NextResponse.json({ role: null });
+      return NextResponse.json({ role: null, debug: 'No Discord ID linked to user account' });
     }
 
     // Fetch member from Discord
@@ -38,7 +38,13 @@ export async function GET() {
     );
 
     if (!memberRes.ok) {
-      return NextResponse.json({ role: null });
+      const errorText = await memberRes.text();
+      return NextResponse.json({
+        role: null,
+        debug: `Discord member fetch failed: ${memberRes.status}`,
+        discordId: user.discordId,
+        guildId: DISCORD_GUILD_ID,
+      });
     }
 
     const member = await memberRes.json();
@@ -55,7 +61,7 @@ export async function GET() {
     );
 
     if (!rolesRes.ok) {
-      return NextResponse.json({ role: null });
+      return NextResponse.json({ role: null, debug: `Discord roles fetch failed: ${rolesRes.status}` });
     }
 
     const allRoles = await rolesRes.json();
@@ -89,6 +95,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Failed to fetch user Discord role:', error);
-    return NextResponse.json({ role: null });
+    return NextResponse.json({ role: null, debug: `Exception: ${error}` });
   }
 }
