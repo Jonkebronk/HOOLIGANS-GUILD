@@ -13,9 +13,10 @@ function cleanDiscordId(id: string | undefined): string | undefined {
 }
 
 // Discord permission flags
-const VIEW_CHANNEL = '1024';
-const SEND_MESSAGES = '2048';
-const VIEW_AND_SEND = String(parseInt(VIEW_CHANNEL) | parseInt(SEND_MESSAGES)); // 3072
+const VIEW_CHANNEL = 1024n;
+const SEND_MESSAGES = 2048n;
+const READ_MESSAGE_HISTORY = 65536n;
+const PLAYER_PERMISSIONS = String(VIEW_CHANNEL | SEND_MESSAGES | READ_MESSAGE_HISTORY); // 68608
 
 export async function POST(request: Request) {
   // Clean all Discord IDs (remove angle brackets from mention format)
@@ -121,12 +122,12 @@ export async function POST(request: Request) {
         id: guildId, // @everyone
         type: 0, // role
         allow: '0',
-        deny: VIEW_CHANNEL,
+        deny: String(VIEW_CHANNEL),
       },
       {
         id: playerDiscordId, // The specific player
         type: 1, // member
-        allow: VIEW_AND_SEND,
+        allow: PLAYER_PERMISSIONS,
         deny: '0',
       },
     ];
@@ -136,7 +137,7 @@ export async function POST(request: Request) {
       permissionOverwrites.push({
         id: officersRoleId,
         type: 0, // role
-        allow: VIEW_AND_SEND,
+        allow: PLAYER_PERMISSIONS,
         deny: '0',
       });
     }
@@ -211,6 +212,26 @@ export async function POST(request: Request) {
     }
 
     const discordChannel = await discordResponse.json();
+
+    // Send welcome message tagging the player
+    try {
+      await fetch(
+        `https://discord.com/api/v10/channels/${discordChannel.id}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: `Hey <@${playerDiscordId}>! This channel has been created for your performance feedback. Officers will share notes and discuss your raid performance here. Feel free to ask questions or share your thoughts!`,
+          }),
+        }
+      );
+    } catch (msgError) {
+      // Don't fail the whole request if message fails
+      console.error('Failed to send welcome message:', msgError);
+    }
 
     // Save to database
     const feedbackChannel = await prisma.feedbackChannel.create({

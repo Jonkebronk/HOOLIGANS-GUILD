@@ -63,7 +63,8 @@
       "WebFetch(domain:develop.battle.net)",
       "WebFetch(domain:www.warcraftlogs.com)",
       "WebFetch(domain:community.developer.battle.net)",
-      "WebFetch(domain:us.forums.blizzard.com)"
+      "WebFetch(domain:us.forums.blizzard.com)",
+      "Bash(git update-index:*)"
     ]
   }
 }
