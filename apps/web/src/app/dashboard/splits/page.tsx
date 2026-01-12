@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, CopyPlus, X, Share2, Send, Hash } from 'lucide-react';
+import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, X, Share2, Send, Hash, Wand2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -25,6 +25,8 @@ import {
 import { getSpecIconUrl, normalizeSpecName } from '@/lib/wowhead';
 import { SPEC_ROLES } from '@hooligans/shared';
 import { useTeam } from '@/components/providers/team-provider';
+import { KarazhanOverview } from '@/components/splits/karazhan-overview';
+import { autoSortByLootNeeds, getRoleComposition, LootOptimizerPlayer, LootOptimizerItem } from '@/lib/loot-optimizer';
 
 // WoWSims TBC class colors
 const WOWSIMS_CLASS_COLORS: Record<string, string> = {
@@ -132,6 +134,11 @@ export default function RaidSplitsPage() {
   const [postAllTitle, setPostAllTitle] = useState('');
   const [isSendingPostAll, setIsSendingPostAll] = useState(false);
 
+  // Karazhan loot optimizer state
+  const [karazhanItems, setKarazhanItems] = useState<LootOptimizerItem[]>([]);
+  const [isAutoSorting, setIsAutoSorting] = useState(false);
+  const [conflictScores, setConflictScores] = useState<number[]>([]);
+
   // Multi-raid state: 1x 25-man + 3x 10-man
   const [raids, setRaids] = useState<RaidConfig[]>([
     {
@@ -170,7 +177,9 @@ export default function RaidSplitsPage() {
           : Array(2).fill(null).map(() => Array(SLOTS_PER_GROUP).fill(null)),
       })));
       setPlayers([]);
+      setConflictScores([]);
       fetchPlayersAndAssignments();
+      fetchKarazhanItems();
     }
   }, [selectedTeam]);
 
@@ -190,6 +199,92 @@ export default function RaidSplitsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch Karazhan items for loot optimization
+  const fetchKarazhanItems = async () => {
+    if (!selectedTeam) return;
+    try {
+      const res = await fetch(`/api/items/karazhan-needs?teamId=${selectedTeam.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setKarazhanItems(data.items || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Karazhan items:', error);
+    }
+  };
+
+  // Auto-sort 10-man splits by loot needs
+  const handleAutoSort = async () => {
+    setIsAutoSorting(true);
+
+    // Get all imported players available for 10-man
+    const importedPlayers = players.filter(p => p.id.startsWith('imported-'));
+
+    if (importedPlayers.length === 0) {
+      alert('No imported players to sort. Import players from Raid-Helper first.');
+      setIsAutoSorting(false);
+      return;
+    }
+
+    // Fetch latest Karazhan items if not loaded
+    let items = karazhanItems;
+    if (items.length === 0) {
+      await fetchKarazhanItems();
+      items = karazhanItems;
+    }
+
+    // Convert players to optimizer format
+    const optimizerPlayers: LootOptimizerPlayer[] = importedPlayers.map(p => ({
+      id: p.id,
+      name: p.name,
+      class: p.class,
+      role: p.role === 'Tank' ? 'Tank' : p.role === 'Heal' ? 'Healer' : 'DPS',
+      roleSubtype: p.roleSubtype === 'DPS_Melee' ? 'Melee' : p.roleSubtype === 'DPS_Ranged' || p.roleSubtype === 'DPS_Caster' ? 'Ranged' : undefined,
+    }));
+
+    // Run the optimizer
+    const result = autoSortByLootNeeds(optimizerPlayers, items, 3);
+    setConflictScores(result.conflictScores);
+
+    // Update the 10-man splits with the sorted groups
+    setRaids(prevRaids => {
+      const newRaids = [...prevRaids];
+
+      // Map optimizer groups to raid groups
+      result.groups.forEach((group, index) => {
+        const raidId = `split-10-${index + 1}`;
+        const raidIndex = newRaids.findIndex(r => r.id === raidId);
+        if (raidIndex === -1) return;
+
+        // Find the original player objects
+        const raidGroups: (Player | null)[][] = [
+          Array(5).fill(null),
+          Array(5).fill(null),
+        ];
+
+        group.forEach((optimizerPlayer, playerIndex) => {
+          const originalPlayer = players.find(p => p.id === optimizerPlayer.id);
+          if (originalPlayer) {
+            const groupIdx = Math.floor(playerIndex / 5);
+            const slotIdx = playerIndex % 5;
+            if (groupIdx < 2 && slotIdx < 5) {
+              raidGroups[groupIdx][slotIdx] = originalPlayer;
+            }
+          }
+        });
+
+        newRaids[raidIndex] = {
+          ...newRaids[raidIndex],
+          groups: raidGroups,
+        };
+      });
+
+      return newRaids;
+    });
+
+    setIsAutoSorting(false);
   };
 
   // Splits page doesn't save to database - session only
@@ -1472,6 +1567,21 @@ export default function RaidSplitsPage() {
               <Button
                 variant="ghost"
                 size="sm"
+                className="h-6 text-purple-400 hover:text-purple-300 hover:bg-purple-900/20"
+                onClick={handleAutoSort}
+                disabled={isAutoSorting}
+                title="Auto-sort players by loot needs to minimize conflicts"
+              >
+                {isAutoSorting ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4 mr-1" />
+                )}
+                Auto-Sort by Loot
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-6 text-gray-400 hover:text-white hover:bg-white/10"
                 onClick={() => {
                   setScreenshotRaidId('all-10-man');
@@ -1484,13 +1594,25 @@ export default function RaidSplitsPage() {
               </Button>
             </div>
             <div className="flex gap-3">
-              {splitRaids.map(raid => (
+              {splitRaids.map((raid, index) => (
                 <div key={raid.id}>
                   {renderRaidSection(raid, true)}
+                  {conflictScores[index] !== undefined && (
+                    <div className="text-center text-xs text-yellow-500 mt-1">
+                      Loot Conflicts: {conflictScores[index]}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Karazhan Loot Overview */}
+          {selectedTeam && (
+            <div className="mt-6">
+              <KarazhanOverview teamId={selectedTeam.id} />
+            </div>
+          )}
         </div>
 
         {/* Role Columns Section - Side by Side */}
