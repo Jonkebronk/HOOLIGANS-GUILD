@@ -280,29 +280,29 @@ export default function DropsPage() {
     }
   };
 
-  const handleClearUnassigned = async () => {
+  const handleNewSession = async () => {
     if (!selectedTeam) return;
 
-    const unassignedCount = lootItems.filter(item => !item.playerId).length;
-    if (unassignedCount === 0) {
+    const totalCount = lootItems.length;
+    if (totalCount === 0) {
       return;
     }
 
-    if (!confirm(`Clear ${unassignedCount} unassigned items? This will start a new loot session.`)) {
+    if (!confirm(`Clear all ${totalCount} items and start a new loot session?`)) {
       return;
     }
 
     try {
-      const res = await fetch(`/api/loot/clear-unassigned?teamId=${selectedTeam.id}`, {
+      const res = await fetch(`/api/loot/clear-session?teamId=${selectedTeam.id}`, {
         method: 'DELETE',
       });
 
       if (res.ok) {
-        // Remove unassigned items from local state
-        setLootItems((prev) => prev.filter(item => item.playerId));
+        // Clear all items from local state
+        setLootItems([]);
       }
     } catch (error) {
-      console.error('Failed to clear unassigned items:', error);
+      console.error('Failed to clear session:', error);
     }
   };
 
@@ -336,7 +336,7 @@ export default function DropsPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={handleClearUnassigned}>
+          <Button variant="outline" size="sm" onClick={handleNewSession}>
             <Trash2 className="h-4 w-4 mr-2" />
             New Session
           </Button>
