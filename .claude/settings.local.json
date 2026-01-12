@@ -68,7 +68,8 @@
       "WebFetch(domain:rclootcouncil.com)",
       "Bash(git reset:*)",
       "WebFetch(domain:thatsmybis.com)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(npx turbo run build)"
     ]
   }
 }

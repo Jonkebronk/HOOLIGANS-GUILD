@@ -82,59 +82,85 @@ export function BisListView({
         const quality = item?.item?.quality ?? 4; // Default to epic
         const qualityColor = ITEM_QUALITY_COLORS[quality] || ITEM_QUALITY_COLORS[4];
 
+        const handleSlotClick = (e: React.MouseEvent) => {
+          if (editable) {
+            e.preventDefault();
+            e.stopPropagation();
+            onSlotClick?.(slot);
+          }
+        };
+
         return (
           <div
             key={slot}
-            onClick={() => editable && onSlotClick?.(slot)}
+            onClick={handleSlotClick}
             className={`flex items-center gap-3 p-2 rounded border border-border/50 ${
               editable ? 'cursor-pointer hover:bg-muted/30 transition-colors' : ''
             } ${!item ? 'opacity-50' : ''}`}
           >
             {/* Item icon */}
-            <a
-              href={item?.wowheadId ? `https://www.wowhead.com/tbc/item=${item.wowheadId}` : '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-wowhead={item?.wowheadId ? `item=${item.wowheadId}&domain=tbc` : undefined}
-              onClick={(e) => {
-                if (editable) {
-                  e.preventDefault();
-                  onSlotClick?.(slot);
-                }
-              }}
-              className="flex-shrink-0"
-            >
-              <img
-                src={iconUrl}
-                alt={item?.itemName || slot}
-                className="w-8 h-8 rounded"
-                style={{
-                  borderWidth: 2,
-                  borderStyle: 'solid',
-                  borderColor: item ? qualityColor : '#666',
-                }}
-              />
-            </a>
+            {item?.wowheadId && !editable ? (
+              <a
+                href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-wowhead={`item=${item.wowheadId}&domain=tbc`}
+                className="flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img
+                  src={iconUrl}
+                  alt={item.itemName}
+                  className="w-8 h-8 rounded"
+                  style={{
+                    borderWidth: 2,
+                    borderStyle: 'solid',
+                    borderColor: qualityColor,
+                  }}
+                />
+              </a>
+            ) : (
+              <div
+                className="flex-shrink-0"
+                data-wowhead={item?.wowheadId ? `item=${item.wowheadId}&domain=tbc` : undefined}
+              >
+                <img
+                  src={iconUrl}
+                  alt={item?.itemName || slot}
+                  className="w-8 h-8 rounded"
+                  style={{
+                    borderWidth: 2,
+                    borderStyle: 'solid',
+                    borderColor: item ? qualityColor : '#666',
+                  }}
+                />
+              </div>
+            )}
 
             {/* Item name and slot */}
             <div className="flex-1 min-w-0">
               {item ? (
-                <a
-                  href={item.wowheadId ? `https://www.wowhead.com/tbc/item=${item.wowheadId}` : '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-wowhead={item.wowheadId ? `item=${item.wowheadId}&domain=tbc` : undefined}
-                  onClick={(e) => {
-                    if (editable) {
-                      e.preventDefault();
-                      onSlotClick?.(slot);
-                    }
-                  }}
-                  className="text-sm font-medium hover:underline block truncate"
-                  style={{ color: qualityColor }}
-                >
-                  {item.itemName}
-                </a>
+                item.wowheadId && !editable ? (
+                  <a
+                    href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-wowhead={`item=${item.wowheadId}&domain=tbc`}
+                    className="text-sm font-medium hover:underline block truncate"
+                    style={{ color: qualityColor }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {item.itemName}
+                  </a>
+                ) : (
+                  <span
+                    className="text-sm font-medium block truncate"
+                    style={{ color: qualityColor }}
+                    data-wowhead={item.wowheadId ? `item=${item.wowheadId}&domain=tbc` : undefined}
+                  >
+                    {item.itemName}
+                  </span>
+                )
               ) : (
                 <span className="text-sm text-muted-foreground">
                   {editable ? 'Click to set item' : 'Not configured'}
