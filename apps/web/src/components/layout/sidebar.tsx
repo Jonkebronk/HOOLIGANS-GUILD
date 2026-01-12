@@ -12,12 +12,12 @@ import {
   Package,
   Calendar,
   Users2,
-  BarChart3,
   Settings,
   Scroll,
   ChevronDown,
   Droplets,
   Activity,
+  History,
 } from 'lucide-react';
 
 type NavItem = {
@@ -31,7 +31,6 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Roster', href: '/dashboard/roster', icon: Users },
   { name: 'Raid Splits', href: '/dashboard/splits', icon: Users2 },
-  { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
   { name: 'Performance', href: '/dashboard/performance', icon: Activity },
   {
     name: 'Loot Council',
@@ -41,6 +40,7 @@ const navigation: NavItem[] = [
       { name: 'Items', href: '/dashboard/items', icon: Package },
       { name: 'BiS Lists', href: '/dashboard/bis', icon: Scroll },
       { name: 'Attendance', href: '/dashboard/attendance', icon: Calendar },
+      { name: 'Loot History', href: '/dashboard/reports', icon: History },
     ]
   },
 ];
