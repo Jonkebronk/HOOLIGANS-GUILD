@@ -501,7 +501,7 @@ model RaidPerformance {
   teamId          String
   team            Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
   raidDate        DateTime
-  raidNames       String    // JSON array of raid names, e.g., ["Karazhan", "Gruul's Lair"]
+  raidNames       String    @default("[]") // JSON array of raid names, e.g., ["Karazhan", "Gruul's Lair"]
   wclUrl          String?   // Warcraft Logs URL
   rpbUrl          String?   // RPB analysis sheet URL
   claUrl          String?   // CLA analysis sheet URL
