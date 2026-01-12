@@ -66,6 +66,11 @@ export async function GET() {
     // Fetch Discord roles and auto-add user to matching teams
     if (user?.discordId) {
       const discordRoles = await getUserDiscordRoles(user.discordId);
+      console.log('User Discord roles:', discordRoles);
+
+      // Get all teams for debugging
+      const allTeams = await prisma.team.findMany({ select: { id: true, name: true } });
+      console.log('All teams in DB:', allTeams.map(t => t.name));
 
       if (discordRoles.length > 0) {
         // Find teams that match Discord role names (case-insensitive)
@@ -78,6 +83,7 @@ export async function GET() {
           },
           select: { id: true, name: true },
         });
+        console.log('Matching teams:', matchingTeams.map(t => t.name));
 
         // Auto-add user to matching teams they're not already in
         for (const team of matchingTeams) {
