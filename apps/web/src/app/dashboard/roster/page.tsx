@@ -497,10 +497,7 @@ export default function RosterPage() {
       sourceInfo = 'available';
     }
 
-    // Track what assignments need to be saved/deleted
-    const assignmentsToSave: { raidId: string; groupIndex: number; slotIndex: number; playerId: string }[] = [];
-    const assignmentsToDelete: { raidId: string; groupIndex: number; slotIndex: number }[] = [];
-
+    // Update state and save to database
     setRaids(prevRaids => {
       const newRaids = prevRaids.map(raid => ({
         ...raid,
@@ -511,7 +508,7 @@ export default function RosterPage() {
       if (!targetRaid) return prevRaids;
 
       const alreadyInRaid = targetRaid.groups.flat().some(p => p?.id === playerToAssign!.id);
-      console.log('setRaids inner: sourceInfo=', sourceInfo, 'alreadyInRaid=', alreadyInRaid, 'player=', playerToAssign?.name);
+      console.log('setRaids: sourceInfo=', sourceInfo, 'alreadyInRaid=', alreadyInRaid, 'player=', playerToAssign?.name);
 
       if (sourceInfo && sourceInfo !== 'available') {
         const sourceRaid = newRaids.find(r => r.id === sourceInfo.raidId);
@@ -523,11 +520,12 @@ export default function RosterPage() {
             sourceRaid.groups[sourceInfo.groupIndex][sourceInfo.slotIndex] = targetPlayer;
 
             // Save both positions
-            assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: playerToAssign!.id });
+            console.log('Saving swap within raid');
+            saveAssignment(raidId, groupIndex, slotIndex, playerToAssign!.id);
             if (targetPlayer) {
-              assignmentsToSave.push({ raidId: sourceInfo.raidId, groupIndex: sourceInfo.groupIndex, slotIndex: sourceInfo.slotIndex, playerId: targetPlayer.id });
+              saveAssignment(sourceInfo.raidId, sourceInfo.groupIndex, sourceInfo.slotIndex, targetPlayer.id);
             } else {
-              assignmentsToDelete.push({ raidId: sourceInfo.raidId, groupIndex: sourceInfo.groupIndex, slotIndex: sourceInfo.slotIndex });
+              deleteAssignment(sourceInfo.raidId, sourceInfo.groupIndex, sourceInfo.slotIndex);
             }
           } else {
             // Move between raids
@@ -536,13 +534,14 @@ export default function RosterPage() {
             targetRaid.groups[groupIndex][slotIndex] = playerToAssign;
 
             // Save target position
-            assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: playerToAssign!.id });
+            console.log('Saving move between raids');
+            saveAssignment(raidId, groupIndex, slotIndex, playerToAssign!.id);
 
             if (targetPlayer) {
               sourceRaid.groups[sourceInfo.groupIndex][sourceInfo.slotIndex] = targetPlayer;
-              assignmentsToSave.push({ raidId: sourceInfo.raidId, groupIndex: sourceInfo.groupIndex, slotIndex: sourceInfo.slotIndex, playerId: targetPlayer.id });
+              saveAssignment(sourceInfo.raidId, sourceInfo.groupIndex, sourceInfo.slotIndex, targetPlayer.id);
             } else {
-              assignmentsToDelete.push({ raidId: sourceInfo.raidId, groupIndex: sourceInfo.groupIndex, slotIndex: sourceInfo.slotIndex });
+              deleteAssignment(sourceInfo.raidId, sourceInfo.groupIndex, sourceInfo.slotIndex);
             }
           }
         }
@@ -552,23 +551,13 @@ export default function RosterPage() {
             return prevRaids;
           }
           targetRaid.groups[groupIndex][slotIndex] = playerToAssign;
-          assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: playerToAssign!.id });
+          console.log('Saving from pool:', playerToAssign?.name, 'to', raidId, groupIndex, slotIndex);
+          saveAssignment(raidId, groupIndex, slotIndex, playerToAssign!.id);
         }
       }
 
       return newRaids;
     });
-
-    // Save assignments to database
-    console.log('handleDrop: Assignments to save:', assignmentsToSave);
-    console.log('handleDrop: Assignments to delete:', assignmentsToDelete);
-    console.log('handleDrop: selectedTeam:', selectedTeam);
-    console.log('handleDrop: About to call saveAssignment for', assignmentsToSave.length, 'assignments');
-    assignmentsToSave.forEach((a, i) => {
-      console.log('handleDrop: Calling saveAssignment #', i, a);
-      saveAssignment(a.raidId, a.groupIndex, a.slotIndex, a.playerId);
-    });
-    assignmentsToDelete.forEach(a => deleteAssignment(a.raidId, a.groupIndex, a.slotIndex));
 
     setDraggedPlayer(null);
     setDragSource(null);
