@@ -177,39 +177,13 @@ export default function RaidSplitsPage() {
   const fetchPlayersAndAssignments = async () => {
     if (!selectedTeam) return;
     try {
-      const [playersRes, assignmentsRes] = await Promise.all([
-        fetch(`/api/players?teamId=${selectedTeam.id}`),
-        fetch(`/api/roster-assignments?teamId=${selectedTeam.id}`),
-      ]);
+      // Only fetch players - splits are session-only, not persisted
+      const playersRes = await fetch(`/api/players?teamId=${selectedTeam.id}`);
 
       if (playersRes.ok) {
         const playersData = await playersRes.json();
         setPlayers(playersData);
-
-        if (assignmentsRes.ok) {
-          const assignmentsData = await assignmentsRes.json();
-          setRaids(prevRaids => {
-            const newRaids = prevRaids.map(raid => ({
-              ...raid,
-              groups: raid.size === '25'
-                ? Array(5).fill(null).map(() => Array(SLOTS_PER_GROUP).fill(null))
-                : Array(2).fill(null).map(() => Array(SLOTS_PER_GROUP).fill(null)),
-            }));
-
-            if (Array.isArray(assignmentsData)) {
-              for (const assignment of assignmentsData) {
-                const raid = newRaids.find(r => r.id === assignment.raidId);
-                if (raid && assignment.player) {
-                  const player = playersData.find((p: Player) => p.id === assignment.playerId);
-                  if (player && raid.groups[assignment.groupIndex]) {
-                    raid.groups[assignment.groupIndex][assignment.slotIndex] = player;
-                  }
-                }
-              }
-            }
-            return newRaids;
-          });
-        }
+        // Don't load roster assignments - splits page is independent
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -218,33 +192,14 @@ export default function RaidSplitsPage() {
     }
   };
 
-  // Save assignment to database
-  const saveAssignment = async (raidId: string, groupIndex: number, slotIndex: number, playerId: string) => {
-    if (!selectedTeam) return;
-    try {
-      const res = await fetch('/api/roster-assignments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ raidId, groupIndex, slotIndex, playerId, teamId: selectedTeam.id }),
-      });
-      if (!res.ok) {
-        console.error('Failed to save assignment');
-      }
-    } catch (error) {
-      console.error('Failed to save assignment:', error);
-    }
+  // Splits page doesn't save to database - session only
+  const saveAssignment = async (_raidId: string, _groupIndex: number, _slotIndex: number, _playerId: string) => {
+    // No-op: Splits are session-only, not persisted to database
   };
 
-  // Delete assignment from database
-  const deleteAssignment = async (raidId: string, groupIndex: number, slotIndex: number) => {
-    if (!selectedTeam) return;
-    try {
-      await fetch(`/api/roster-assignments?teamId=${selectedTeam.id}&raidId=${raidId}&groupIndex=${groupIndex}&slotIndex=${slotIndex}`, {
-        method: 'DELETE',
-      });
-    } catch (error) {
-      console.error('Failed to delete assignment:', error);
-    }
+  // Splits page doesn't delete from database - session only
+  const deleteAssignment = async (_raidId: string, _groupIndex: number, _slotIndex: number) => {
+    // No-op: Splits are session-only, not persisted to database
   };
 
   // Get all players assigned to a specific raid
@@ -485,19 +440,8 @@ export default function RaidSplitsPage() {
     });
   };
 
-  // Clear raid
+  // Clear raid (session only - no database)
   const clearRaid = async (raidId: string) => {
-    // Delete all assignments for this raid from database
-    if (selectedTeam) {
-      try {
-        await fetch(`/api/roster-assignments?teamId=${selectedTeam.id}&raidId=${raidId}`, {
-          method: 'DELETE',
-        });
-      } catch (error) {
-        console.error('Failed to clear raid assignments:', error);
-      }
-    }
-
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
         if (raid.id !== raidId) return raid;
