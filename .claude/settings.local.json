@@ -64,7 +64,10 @@
       "WebFetch(domain:www.warcraftlogs.com)",
       "WebFetch(domain:community.developer.battle.net)",
       "WebFetch(domain:us.forums.blizzard.com)",
-      "Bash(git update-index:*)"
+      "Bash(git update-index:*)",
+      "WebFetch(domain:rclootcouncil.com)",
+      "Bash(git reset:*)",
+      "WebFetch(domain:thatsmybis.com)"
     ]
   }
 }

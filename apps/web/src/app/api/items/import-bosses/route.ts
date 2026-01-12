@@ -143,6 +143,11 @@ export async function POST() {
       }
     }
 
+    // Get sample item IDs from our DB for debugging
+    const sampleDbItems = items.slice(0, 5).map(i => i.wowheadId);
+    // Get sample item IDs from TMB for debugging
+    const sampleTmbItems = Array.from(itemToBoss.keys()).slice(0, 5);
+
     return NextResponse.json({
       success: true,
       totalItems: items.length,
@@ -151,6 +156,13 @@ export async function POST() {
       notFound,
       sourcesLoaded: sources.length,
       mappingsLoaded: mappings.length,
+      itemToBossSize: itemToBoss.size,
+      debug: {
+        sampleDbItems,
+        sampleTmbItems,
+        sampleMappings: mappings.slice(0, 5),
+        sampleSources: sources.slice(0, 5),
+      }
     });
   } catch (error) {
     console.error('Failed to import boss data:', error);

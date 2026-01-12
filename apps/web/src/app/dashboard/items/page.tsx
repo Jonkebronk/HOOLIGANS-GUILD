@@ -81,7 +81,7 @@ export default function ItemsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImportBossDialogOpen, setIsImportBossDialogOpen] = useState(false);
   const [isImportingBosses, setIsImportingBosses] = useState(false);
-  const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number } | null>(null);
+  const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number; sourcesLoaded?: number; mappingsLoaded?: number; itemToBossSize?: number; debug?: { sampleDbItems: number[]; sampleTmbItems: number[] } } | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [editForm, setEditForm] = useState({ lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
@@ -246,9 +246,18 @@ export default function ItemsPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setBossImportResult({ updated: data.updated, notFound: data.notFound });
+        setBossImportResult({
+          updated: data.updated,
+          notFound: data.notFound,
+          sourcesLoaded: data.sourcesLoaded,
+          mappingsLoaded: data.mappingsLoaded,
+          itemToBossSize: data.itemToBossSize,
+          debug: data.debug,
+        });
         // Refresh items list
-        await fetchItems();
+        if (data.updated > 0) {
+          await fetchItems();
+        }
       } else {
         alert(data.error || 'Failed to import boss data');
       }
@@ -490,10 +499,25 @@ export default function ItemsPage() {
                   This will update all items that currently have &quot;Unknown&quot; boss with the correct boss name from the TMB TBC database.
                 </p>
                 {bossImportResult && (
-                  <div className="bg-muted/50 rounded-md p-3 text-sm">
+                  <div className="bg-muted/50 rounded-md p-3 text-sm space-y-2">
                     <p className="text-green-500">Updated {bossImportResult.updated} items with boss data</p>
                     {bossImportResult.notFound > 0 && (
                       <p className="text-muted-foreground">{bossImportResult.notFound} items not found in TMB database</p>
+                    )}
+                    {bossImportResult.sourcesLoaded !== undefined && (
+                      <div className="text-xs text-muted-foreground border-t pt-2 mt-2 space-y-1">
+                        <p>TMB Sources loaded: {bossImportResult.sourcesLoaded}</p>
+                        <p>TMB Mappings loaded: {bossImportResult.mappingsLoaded}</p>
+                        <p>Item-to-Boss map size: {bossImportResult.itemToBossSize}</p>
+                        {bossImportResult.debug && (
+                          <>
+                            <p className="font-medium mt-2">Sample DB Item IDs (wowheadId):</p>
+                            <p className="font-mono">{bossImportResult.debug.sampleDbItems?.join(', ') || 'none'}</p>
+                            <p className="font-medium mt-1">Sample TMB Item IDs:</p>
+                            <p className="font-mono">{bossImportResult.debug.sampleTmbItems?.join(', ') || 'none'}</p>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
