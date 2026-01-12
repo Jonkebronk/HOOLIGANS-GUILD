@@ -77,8 +77,9 @@ export default function ItemsPage() {
   const [importUrl, setImportUrl] = useState('');
   const [isCsvImportDialogOpen, setIsCsvImportDialogOpen] = useState(false);
   const [csvData, setCsvData] = useState('');
-  const [csvImportResult, setCsvImportResult] = useState<{ imported: number; skipped: number; errors: string[] } | null>(null);
+  const [csvImportResult, setCsvImportResult] = useState<{ imported: number; skipped: number; errors: string[]; importedIds?: string[] } | null>(null);
   const [isImportingCsv, setIsImportingCsv] = useState(false);
+  const [isDeletingImport, setIsDeletingImport] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -304,6 +305,41 @@ export default function ItemsPage() {
       setCsvImportResult({ imported: 0, skipped: 0, errors: ['Failed to import CSV. Please try again.'] });
     } finally {
       setIsImportingCsv(false);
+    }
+  };
+
+  const handleUndoCsvImport = async () => {
+    if (!csvImportResult?.importedIds || csvImportResult.importedIds.length === 0) {
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${csvImportResult.importedIds.length} imported items?`)) {
+      return;
+    }
+
+    setIsDeletingImport(true);
+    try {
+      const res = await fetch('/api/items/delete-batch', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: csvImportResult.importedIds }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Deleted ${data.deleted} items`);
+        setCsvImportResult(null);
+        setCsvData('');
+        setIsCsvImportDialogOpen(false);
+        await fetchItems();
+      } else {
+        alert('Failed to delete items');
+      }
+    } catch (error) {
+      console.error('Failed to undo import:', error);
+      alert('Failed to delete items. Please try again.');
+    } finally {
+      setIsDeletingImport(false);
     }
   };
 
@@ -664,9 +700,19 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
                 )}
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCsvImportDialogOpen(false)} disabled={isImportingCsv}>
+                <Button variant="outline" onClick={() => setIsCsvImportDialogOpen(false)} disabled={isImportingCsv || isDeletingImport}>
                   {csvImportResult ? 'Close' : 'Cancel'}
                 </Button>
+                {csvImportResult && csvImportResult.importedIds && csvImportResult.importedIds.length > 0 && (
+                  <Button variant="destructive" onClick={handleUndoCsvImport} disabled={isDeletingImport}>
+                    {isDeletingImport ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-2" />
+                    )}
+                    {isDeletingImport ? 'Deleting...' : `Undo Import (${csvImportResult.importedIds.length})`}
+                  </Button>
+                )}
                 {!csvImportResult && (
                   <Button onClick={handleImportCsv} disabled={!csvData.trim() || isImportingCsv}>
                     {isImportingCsv ? (
