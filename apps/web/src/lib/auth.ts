@@ -19,6 +19,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Save Discord ID on every sign-in (for users created before this was added)
+      if (account?.provider === 'discord' && profile && user.id) {
+        const discordProfile = profile as { id: string; username: string };
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              discordId: discordProfile.id,
+              discordName: discordProfile.username,
+            },
+          });
+        } catch (error) {
+          console.error('Failed to update Discord ID on sign-in:', error);
+        }
+      }
+      return true;
+    },
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
