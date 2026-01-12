@@ -16,6 +16,7 @@ import { useTeam } from '@/components/providers/team-provider';
 import { ItemsTable } from '@/components/drops/items-table';
 import { RaidersTable } from '@/components/drops/raiders-table';
 import { RCImportDialog } from '@/components/drops/rc-import-dialog';
+import { RCExportDialog } from '@/components/drops/rc-export-dialog';
 import { RAIDS } from '@hooligans/shared';
 
 type Player = {
@@ -340,6 +341,7 @@ export default function DropsPage() {
             New Session
           </Button>
           <RCImportDialog onImport={handleRCImport} />
+          <RCExportDialog items={lootItems} />
           <Button size="sm">
             <Plus className="h-4 w-4 mr-2" />
             Add Item
