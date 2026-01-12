@@ -44,21 +44,31 @@ const QUALITY_TO_COLOR: Record<number, string> = {
   5: 'ff8000', // Legendary
 };
 
+// Map our response types to RCLootCouncil response names
+const RESPONSE_TO_RCLC: Record<string, string> = {
+  BiS: 'mainspec',
+  GreaterUpgrade: 'mainspec',
+  MinorUpgrade: 'minor upgrade',
+  Offspec: 'offspec',
+  PvP: 'pvp',
+  Disenchant: 'disenchant',
+};
+
 // Map response types to RCLootCouncil response IDs
 const RESPONSE_TO_ID: Record<string, number> = {
   BiS: 1,
-  GreaterUpgrade: 2,
-  MinorUpgrade: 3,
-  Offspec: 4,
-  PvP: 5,
-  Disenchant: 6,
+  GreaterUpgrade: 1,
+  MinorUpgrade: 2,
+  Offspec: 3,
+  PvP: 4,
+  Disenchant: 5,
 };
 
 function generateItemLink(item: LootItem): string {
   const colorCode = QUALITY_TO_COLOR[item.quality || 4];
   const itemId = item.wowheadId || 0;
   // Format: |cffCOLOR|Hitem:ITEMID::::::::LEVEL:::::::::|h[NAME]|h|r
-  return `|cff${colorCode}|Hitem:${itemId}::::::::70:::::::::|h[${item.itemName}]|h|r`;
+  return `|cff${colorCode}|Hitem:${itemId}::::::::60:::::::::|h[${item.itemName}]|h|r`;
 }
 
 // Map WoW class names to uppercase format expected by RCLootCouncil
@@ -95,9 +105,9 @@ function generateCSVExport(items: LootItem[]): string {
     return '';
   }
 
-  // CSV header matching RCLootCouncil import format exactly (with spaces after commas)
+  // CSV header matching RCLootCouncil import format exactly (NO spaces after commas)
   const header =
-    'player, date, time, id, item, itemID, itemString, response, votes, class, instance, boss, difficultyID, mapID, groupSize, gear1, gear2, responseID, isAwardReason, subType, equipLoc, note, owner';
+    'player,date,time,id,item,itemID,itemString,response,votes,class,instance,boss,difficultyID,mapID,groupSize,gear1,gear2,responseID,isAwardReason,subType,equipLoc,note,owner';
 
   const rows = assignedItems.map((item) => {
     const date = formatDate(item.lootDate);
@@ -105,8 +115,8 @@ function generateCSVExport(items: LootItem[]): string {
     const itemLink = generateItemLink(item);
     const itemId = item.wowheadId || 0;
     const itemString = `item:${itemId}:0:0:0:0:0:0:0`;
-    const response = item.response || 'Award';
-    const responseId = RESPONSE_TO_ID[item.response || ''] || 0;
+    const response = RESPONSE_TO_RCLC[item.response || ''] || 'mainspec';
+    const responseId = RESPONSE_TO_ID[item.response || ''] || 1;
     const playerClass = CLASS_NAME_MAP[item.playerClass || ''] || '';
 
     return [
@@ -117,14 +127,14 @@ function generateCSVExport(items: LootItem[]): string {
       itemLink, // item (item link)
       itemId, // itemID
       itemString, // itemString
-      response, // response
+      response, // response (mainspec, offspec, etc)
       0, // votes
       playerClass, // class (UPPERCASE)
       '', // instance
       '', // boss
       '', // difficultyID
       '', // mapID
-      25, // groupSize
+      40, // groupSize
       '', // gear1
       '', // gear2
       responseId, // responseID
@@ -133,7 +143,7 @@ function generateCSVExport(items: LootItem[]): string {
       '', // equipLoc
       '', // note
       '', // owner
-    ].join(', ');
+    ].join(',');
   });
 
   return [header, ...rows].join('\n');
