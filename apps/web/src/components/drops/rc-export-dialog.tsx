@@ -68,7 +68,7 @@ function generateItemLink(item: LootItem): string {
   const colorCode = QUALITY_TO_COLOR[item.quality || 4];
   const itemId = item.wowheadId || 0;
   // Format: |cffCOLOR|Hitem:ITEMID::::::::LEVEL:::::::::|h[NAME]|h|r
-  return `|cff${colorCode}|Hitem:${itemId}::::::::60:::::::::|h[${item.itemName}]|h|r`;
+  return `|cff${colorCode}|Hitem:${itemId}::::::::70:::::::::|h[${item.itemName}]|h|r`;
 }
 
 // Map WoW class names to uppercase format expected by RCLootCouncil
@@ -134,7 +134,7 @@ function generateCSVExport(items: LootItem[]): string {
       '', // boss
       '', // difficultyID
       '', // mapID
-      40, // groupSize
+      25, // groupSize (TBC 25-man default)
       '', // gear1
       '', // gear2
       responseId, // responseID
