@@ -253,8 +253,7 @@ export async function fetchWowheadIcon(itemId: number): Promise<string | null> {
   try {
     // Use Wowhead's tooltip API to get item data including icon
     const res = await fetch(
-      `https://nether.wowhead.com/tooltip/item/${itemId}?dataEnv=4&locale=0`,
-      { next: { revalidate: 86400 } } // Cache for 24 hours
+      `https://nether.wowhead.com/tooltip/item/${itemId}?dataEnv=4&locale=0`
     );
 
     if (!res.ok) return null;

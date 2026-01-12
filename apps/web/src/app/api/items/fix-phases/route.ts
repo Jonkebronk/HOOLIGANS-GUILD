@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@hooligans/database';
+import { prisma, Phase } from '@hooligans/database';
 
 // Raid to Phase mapping
-const RAID_PHASE_MAP: Record<string, string> = {
+const RAID_PHASE_MAP: Record<string, Phase> = {
   'Karazhan': 'P1',
   "Gruul's Lair": 'P1',
   "Magtheridon's Lair": 'P1',
@@ -19,7 +19,7 @@ export async function POST() {
     const results: Record<string, number> = {};
 
     // Update each raid's items to the correct phase
-    for (const [raid, phase] of Object.entries(RAID_PHASE_MAP)) {
+    for (const [raid, phase] of Object.entries(RAID_PHASE_MAP) as [string, Phase][]) {
       const updateResult = await prisma.item.updateMany({
         where: { raid },
         data: { phase },
