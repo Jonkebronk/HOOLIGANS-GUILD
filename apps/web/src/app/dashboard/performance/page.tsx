@@ -411,7 +411,7 @@ export default function PerformancePage() {
               </div>
             </div>
             <TabsContent value="rpb" className="mt-0 p-4 pt-2">
-              <div className="h-[800px] bg-muted rounded-lg overflow-hidden">
+              <div className="h-[calc(100vh-320px)] min-h-[600px] bg-muted rounded-lg overflow-hidden">
                 <iframe
                   src="https://docs.google.com/spreadsheets/d/1CVUc5YIl8cTD6HYw8JCF7b91JLHrMMPrwpEQfANl_BA/edit?rm=minimal"
                   className="w-full h-full border-0"
@@ -420,7 +420,7 @@ export default function PerformancePage() {
               </div>
             </TabsContent>
             <TabsContent value="cla" className="mt-0 p-4 pt-2">
-              <div className="h-[800px] bg-muted rounded-lg overflow-hidden">
+              <div className="h-[calc(100vh-320px)] min-h-[600px] bg-muted rounded-lg overflow-hidden">
                 <iframe
                   src="https://docs.google.com/spreadsheets/d/1PqP0g10a652X4OgURb8lELLjGGBUv591q8zYpET-0QI/edit?rm=minimal"
                   className="w-full h-full border-0"
