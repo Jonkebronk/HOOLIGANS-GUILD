@@ -18,6 +18,22 @@ const CLASS_DISCORDS: { name: string; url: string }[] = [
   { name: 'Warlock', url: 'https://discord.com/invite/D6TrRkq' },
   { name: 'Warrior', url: 'https://discord.com/invite/RbCZJtw' },
 ];
+
+// WeakAura links from Wago.io
+const WEAKAURA_LINKS: { name: string; url: string; isClass?: boolean }[] = [
+  { name: 'General', url: 'https://wago.io/search/imports/wow/tbc-weakaura/' },
+  { name: 'Rocket Boots', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=rocket%2Bboots' },
+  { name: 'Druid', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Druid', isClass: true },
+  { name: 'Hunter', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Hunter', isClass: true },
+  { name: 'Mage', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Mage', isClass: true },
+  { name: 'Paladin', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Paladin', isClass: true },
+  { name: 'Priest', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Priest', isClass: true },
+  { name: 'Rogue', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Rogue', isClass: true },
+  { name: 'Shaman', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Shaman', isClass: true },
+  { name: 'Warlock', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Warlock', isClass: true },
+  { name: 'Warrior', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Warrior', isClass: true },
+];
+
 import { useTeam } from '@/components/providers/team-provider';
 
 type LootRecord = {
@@ -370,6 +386,45 @@ export default function DashboardPage() {
                 <p className="text-xs text-muted-foreground">Database, guides & news</p>
               </div>
             </a>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>WeakAuras</CardTitle>
+          <CardDescription>Browse TBC WeakAuras on Wago.io</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {WEAKAURA_LINKS.map((link) => (
+              <a
+                key={link.name}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-3 py-2 group"
+              >
+                {link.isClass ? (
+                  <img
+                    src={getClassIconUrl(link.name)}
+                    alt={link.name}
+                    className="w-5 h-5 rounded"
+                  />
+                ) : (
+                  <div className="w-5 h-5 rounded bg-purple-600 flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">W</span>
+                  </div>
+                )}
+                <span
+                  className="text-xs font-medium flex items-center gap-1"
+                  style={{ color: link.isClass ? CLASS_COLORS[link.name] : undefined }}
+                >
+                  {link.name}
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </span>
+              </a>
+            ))}
           </div>
         </CardContent>
       </Card>
