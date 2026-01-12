@@ -128,8 +128,17 @@ export async function GET() {
     // Sort by timestamp descending (most recent first)
     logLinks.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    // Limit to 10 most recent
-    return NextResponse.json(logLinks.slice(0, 10));
+    // Deduplicate by report ID (keep first occurrence which is most recent)
+    const seenReportIds = new Set<string>();
+    const uniqueLinks = logLinks.filter((link) => {
+      const reportId = link.url.match(/\/reports\/([a-zA-Z0-9]+)/)?.[1];
+      if (!reportId || seenReportIds.has(reportId)) return false;
+      seenReportIds.add(reportId);
+      return true;
+    });
+
+    // Limit to 3 most recent
+    return NextResponse.json(uniqueLinks.slice(0, 3));
   } catch (error) {
     console.error('Failed to fetch log links:', error);
     return NextResponse.json(

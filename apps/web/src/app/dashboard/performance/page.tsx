@@ -210,64 +210,177 @@ export default function PerformancePage() {
         </Button>
       </div>
 
-      {/* Log Links from Discord */}
-      <Card>
-        <CardHeader className="py-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <LinkIcon className="h-4 w-4" />
-            Recent Warcraft Logs
-            <span className="text-muted-foreground font-normal text-sm ml-2">
-              (copy & paste into RPB/CLA)
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingLogs ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : logLinks.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-4">
-              No log links found. Post WCL links in your Discord logs channel.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {logLinks.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                >
-                  <div className="flex-1 min-w-0">
-                    <a
-                      href={log.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-500 hover:underline truncate block"
-                    >
-                      {log.url}
-                    </a>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(log.timestamp).toLocaleString()} by {log.author}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(log.url, log.id)}
-                    className="ml-2 shrink-0"
+      {/* Top row: Log Links and Feedback Channels side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Log Links from Discord */}
+        <Card>
+          <CardHeader className="py-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <LinkIcon className="h-4 w-4" />
+              Recent Logs
+              <span className="text-muted-foreground font-normal text-sm ml-2">
+                (copy & paste into sheets)
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingLogs ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : logLinks.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">
+                No log links found.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {logLinks.map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
                   >
-                    {copiedId === log.id ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              ))}
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={log.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-500 hover:underline truncate block"
+                      >
+                        {log.url.split('/reports/')[1]}
+                      </a>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(log.timestamp).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(log.url, log.id)}
+                      className="ml-2 shrink-0"
+                    >
+                      {copiedId === log.id ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Feedback Channels */}
+        <Card>
+          <CardHeader className="py-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Feedback Channels
+              <span className="text-muted-foreground font-normal text-sm ml-2">
+                ({allFeedbackChannels.filter(c => !c.isArchived).length} active)
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-auto max-h-[200px]">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 bg-card z-10">
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">
+                      Player
+                    </th>
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">
+                      Status
+                    </th>
+                    <th className="text-right py-2 px-3 font-medium text-muted-foreground">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {players.map((player) => {
+                    const channel = getPlayerChannelStatus(player.id);
+                    const isCreating = creatingChannel === player.id;
+
+                    return (
+                      <tr
+                        key={player.id}
+                        className="border-b border-border/50 hover:bg-muted/50"
+                      >
+                        <td className="py-1.5 px-3">
+                          <span
+                            style={{ color: CLASS_COLORS[player.class] }}
+                            className="font-medium"
+                          >
+                            {player.name}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-3">
+                          {channel ? (
+                            <span className="px-2 py-0.5 text-xs rounded bg-green-500/20 text-green-500">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </td>
+                        <td className="py-1.5 px-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {channel ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleArchiveChannel(channel.discordChannelId, true)
+                                  }
+                                  disabled={archivingChannel === channel.discordChannelId}
+                                  title="Archive"
+                                  className="h-7 w-7 p-0"
+                                >
+                                  {archivingChannel === channel.discordChannelId ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Archive className="h-3.5 w-3.5" />
+                                  )}
+                                </Button>
+                                <a
+                                  href={`https://discord.com/channels/${process.env.NEXT_PUBLIC_DISCORD_GUILD_ID}/${channel.discordChannelId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </Button>
+                                </a>
+                              </>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCreateFeedbackChannel(player.id)}
+                                disabled={isCreating || !player.discordId}
+                                className="h-7 text-xs"
+                              >
+                                {isCreating ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Plus className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* RPB & CLA Analysis Tabs */}
       <Card>
@@ -298,7 +411,7 @@ export default function PerformancePage() {
               </div>
             </div>
             <TabsContent value="rpb" className="mt-0 p-4 pt-2">
-              <div className="h-[600px] bg-muted rounded-lg overflow-hidden">
+              <div className="h-[800px] bg-muted rounded-lg overflow-hidden">
                 <iframe
                   src="https://docs.google.com/spreadsheets/d/1CVUc5YIl8cTD6HYw8JCF7b91JLHrMMPrwpEQfANl_BA/edit?rm=minimal"
                   className="w-full h-full border-0"
@@ -307,7 +420,7 @@ export default function PerformancePage() {
               </div>
             </TabsContent>
             <TabsContent value="cla" className="mt-0 p-4 pt-2">
-              <div className="h-[600px] bg-muted rounded-lg overflow-hidden">
+              <div className="h-[800px] bg-muted rounded-lg overflow-hidden">
                 <iframe
                   src="https://docs.google.com/spreadsheets/d/1PqP0g10a652X4OgURb8lELLjGGBUv591q8zYpET-0QI/edit?rm=minimal"
                   className="w-full h-full border-0"
@@ -319,141 +432,6 @@ export default function PerformancePage() {
         </CardContent>
       </Card>
 
-      {/* Feedback Channels */}
-      <Card>
-        <CardHeader className="py-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Feedback Channels
-            <span className="text-muted-foreground font-normal text-sm ml-2">
-              ({allFeedbackChannels.filter(c => !c.isArchived).length} active)
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-auto max-h-[400px]">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-card z-10">
-                <tr className="border-b border-border">
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                    Player
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="text-right py-2 px-3 font-medium text-muted-foreground">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {players.map((player) => {
-                  const channel = getPlayerChannelStatus(player.id);
-                  const isCreating = creatingChannel === player.id;
-
-                  return (
-                    <tr
-                      key={player.id}
-                      className="border-b border-border/50 hover:bg-muted/50"
-                    >
-                      <td className="py-2 px-3">
-                        <span
-                          style={{ color: CLASS_COLORS[player.class] }}
-                          className="font-medium"
-                        >
-                          {player.name}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3">
-                        {channel ? (
-                          <span
-                            className={`px-2 py-0.5 text-xs rounded ${
-                              channel.isArchived
-                                ? 'bg-muted text-muted-foreground'
-                                : 'bg-green-500/20 text-green-500'
-                            }`}
-                          >
-                            {channel.isArchived ? 'Archived' : 'Active'}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-xs">
-                            No channel
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2 px-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {channel ? (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleArchiveChannel(
-                                    channel.discordChannelId,
-                                    !channel.isArchived
-                                  )
-                                }
-                                disabled={archivingChannel === channel.discordChannelId}
-                                title={channel.isArchived ? 'Unarchive' : 'Archive'}
-                              >
-                                {archivingChannel === channel.discordChannelId ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : channel.isArchived ? (
-                                  <ArchiveRestore className="h-4 w-4" />
-                                ) : (
-                                  <Archive className="h-4 w-4" />
-                                )}
-                              </Button>
-                              <a
-                                href={`https://discord.com/channels/${process.env.NEXT_PUBLIC_DISCORD_GUILD_ID}/${channel.discordChannelId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <Button variant="ghost" size="sm">
-                                  <ExternalLink className="h-4 w-4" />
-                                </Button>
-                              </a>
-                            </>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleCreateFeedbackChannel(player.id)}
-                              disabled={isCreating || !player.discordId}
-                              title={
-                                !player.discordId
-                                  ? 'Player has no Discord ID linked'
-                                  : 'Create feedback channel'
-                              }
-                            >
-                              {isCreating ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <>
-                                  <Plus className="h-4 w-4 mr-1" />
-                                  Create
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {players.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="py-8 text-center text-muted-foreground">
-                      No players found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
