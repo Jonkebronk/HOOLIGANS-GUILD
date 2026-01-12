@@ -61,6 +61,32 @@ function generateItemLink(item: LootItem): string {
   return `|cff${colorCode}|Hitem:${itemId}::::::::70:::::::::|h[${item.itemName}]|h|r`;
 }
 
+// Map WoW class names to uppercase format expected by RCLootCouncil
+const CLASS_NAME_MAP: Record<string, string> = {
+  Druid: 'DRUID',
+  Hunter: 'HUNTER',
+  Mage: 'MAGE',
+  Paladin: 'PALADIN',
+  Priest: 'PRIEST',
+  Rogue: 'ROGUE',
+  Shaman: 'SHAMAN',
+  Warlock: 'WARLOCK',
+  Warrior: 'WARRIOR',
+};
+
+function formatDate(dateStr?: string): string {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = String(d.getFullYear()).slice(-2); // Last 2 digits only
+  return `${day}/${month}/${year}`;
+}
+
+function formatTime(dateStr?: string): string {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  return d.toLocaleTimeString('en-GB', { hour12: false });
+}
+
 function generateCSVExport(items: LootItem[]): string {
   // Filter to only items with player assignments
   const assignedItems = items.filter((item) => item.playerId && item.playerName);
@@ -69,43 +95,36 @@ function generateCSVExport(items: LootItem[]): string {
     return '';
   }
 
-  // CSV header matching RCLootCouncil import format
+  // CSV header matching RCLootCouncil import format exactly (with spaces after commas)
   const header =
-    'player,date,time,id,item,itemID,itemString,response,votes,class,instance,boss,gear1,gear2,responseID,isAwardReason,subType,equipLoc,note,owner';
+    'player, date, time, id, item, itemID, itemString, response, votes, class, instance, boss, difficultyID, mapID, groupSize, gear1, gear2, responseID, isAwardReason, subType, equipLoc, note, owner';
 
-  const rows = assignedItems.map((item, index) => {
-    const date = item.lootDate
-      ? new Date(item.lootDate).toLocaleDateString('en-GB').replace(/\//g, '/')
-      : new Date().toLocaleDateString('en-GB').replace(/\//g, '/');
-    const time = item.lootDate
-      ? new Date(item.lootDate).toLocaleTimeString('en-GB', { hour12: false })
-      : new Date().toLocaleTimeString('en-GB', { hour12: false });
-
+  const rows = assignedItems.map((item) => {
+    const date = formatDate(item.lootDate);
+    const time = formatTime(item.lootDate);
     const itemLink = generateItemLink(item);
     const itemId = item.wowheadId || 0;
     const itemString = `item:${itemId}:0:0:0:0:0:0:0`;
     const response = item.response || 'Award';
     const responseId = RESPONSE_TO_ID[item.response || ''] || 0;
-    const playerClass = item.playerClass || '';
-
-    // Escape any commas in fields
-    const escapedName = item.playerName?.includes(',')
-      ? `"${item.playerName}"`
-      : item.playerName;
+    const playerClass = CLASS_NAME_MAP[item.playerClass || ''] || '';
 
     return [
-      escapedName, // player
-      date, // date
-      time, // time
-      index + 1, // id (row number)
+      item.playerName, // player
+      date, // date (dd/mm/yy)
+      time, // time (hh:mm:ss)
+      '', // id (leave empty, addon generates it)
       itemLink, // item (item link)
       itemId, // itemID
       itemString, // itemString
       response, // response
       0, // votes
-      playerClass, // class
+      playerClass, // class (UPPERCASE)
       '', // instance
       '', // boss
+      '', // difficultyID
+      '', // mapID
+      25, // groupSize
       '', // gear1
       '', // gear2
       responseId, // responseID
@@ -114,7 +133,7 @@ function generateCSVExport(items: LootItem[]): string {
       '', // equipLoc
       '', // note
       '', // owner
-    ].join(',');
+    ].join(', ');
   });
 
   return [header, ...rows].join('\n');
