@@ -317,15 +317,29 @@ export default function RosterPage() {
             }));
 
             // Apply each assignment from the new team
+            console.log('Loading assignments:', assignmentsData?.length, 'assignments for', playersData?.length, 'players');
             if (Array.isArray(assignmentsData)) {
               for (const assignment of assignmentsData) {
                 const raid = newRaids.find(r => r.id === assignment.raidId);
-                if (raid && assignment.player) {
-                  const player = playersData.find((p: Player) => p.id === assignment.playerId);
-                  if (player && raid.groups[assignment.groupIndex]) {
-                    raid.groups[assignment.groupIndex][assignment.slotIndex] = player;
-                  }
+                if (!raid) {
+                  console.warn('Assignment skipped - raid not found:', assignment.raidId, assignment);
+                  continue;
                 }
+                if (!assignment.player) {
+                  console.warn('Assignment skipped - no player in assignment:', assignment);
+                  continue;
+                }
+                const player = playersData.find((p: Player) => p.id === assignment.playerId);
+                if (!player) {
+                  console.warn('Assignment skipped - player not in playersData:', assignment.playerId, assignment.player?.name);
+                  continue;
+                }
+                if (!raid.groups[assignment.groupIndex]) {
+                  console.warn('Assignment skipped - invalid groupIndex:', assignment.groupIndex, 'for raid', raid.id);
+                  continue;
+                }
+                raid.groups[assignment.groupIndex][assignment.slotIndex] = player;
+                console.log('Assignment loaded:', player.name, 'to', raid.id, `group ${assignment.groupIndex}, slot ${assignment.slotIndex}`);
               }
             }
 

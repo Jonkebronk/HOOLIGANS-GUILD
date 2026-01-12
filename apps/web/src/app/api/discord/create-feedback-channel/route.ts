@@ -6,13 +6,24 @@ const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
 const DISCORD_OFFICERS_ROLE_ID = process.env.DISCORD_OFFICERS_ROLE_ID;
 const DISCORD_RAID_MANAGEMENT_CATEGORY_ID = process.env.DISCORD_RAID_MANAGEMENT_CATEGORY_ID;
 
+// Strip angle brackets from Discord IDs (from Discord mention format like <@123456>)
+function cleanDiscordId(id: string | undefined): string | undefined {
+  if (!id) return id;
+  return id.replace(/[<>@#&!]/g, '');
+}
+
 // Discord permission flags
 const VIEW_CHANNEL = '1024';
 const SEND_MESSAGES = '2048';
 const VIEW_AND_SEND = String(parseInt(VIEW_CHANNEL) | parseInt(SEND_MESSAGES)); // 3072
 
 export async function POST(request: Request) {
-  if (!DISCORD_BOT_TOKEN || !DISCORD_GUILD_ID) {
+  // Clean all Discord IDs (remove angle brackets from mention format)
+  const guildId = cleanDiscordId(DISCORD_GUILD_ID);
+  const officersRoleId = cleanDiscordId(DISCORD_OFFICERS_ROLE_ID);
+  const categoryId = cleanDiscordId(DISCORD_RAID_MANAGEMENT_CATEGORY_ID);
+
+  if (!DISCORD_BOT_TOKEN || !guildId) {
     return NextResponse.json(
       { error: 'Discord bot not configured' },
       { status: 500 }
@@ -54,13 +65,16 @@ export async function POST(request: Request) {
       );
     }
 
+    // Clean the player's Discord ID (remove angle brackets if present)
+    const playerDiscordId = cleanDiscordId(player.discordId)!;
+
     // Validate discordId is a snowflake (numeric string, 17-20 digits)
-    const isValidSnowflake = /^\d{17,20}$/.test(player.discordId);
+    const isValidSnowflake = /^\d{17,20}$/.test(playerDiscordId);
     if (!isValidSnowflake) {
       return NextResponse.json(
         {
           error: 'Invalid Discord ID format',
-          hint: `Player "${player.name}" has discordId "${player.discordId}" which is not a valid Discord user ID. Discord IDs should be 17-20 digit numbers.`,
+          hint: `Player "${player.name}" has discordId "${player.discordId}" (cleaned: "${playerDiscordId}") which is not a valid Discord user ID. Discord IDs should be 17-20 digit numbers.`,
           details: 'The player may need to be re-imported from Discord with their actual user ID.'
         },
         { status: 400 }
@@ -98,13 +112,13 @@ export async function POST(request: Request) {
       deny: string;
     }> = [
       {
-        id: DISCORD_GUILD_ID, // @everyone
+        id: guildId, // @everyone
         type: 0, // role
         allow: '0',
         deny: VIEW_CHANNEL,
       },
       {
-        id: player.discordId, // The specific player
+        id: playerDiscordId, // The specific player
         type: 1, // member
         allow: VIEW_AND_SEND,
         deny: '0',
@@ -112,9 +126,9 @@ export async function POST(request: Request) {
     ];
 
     // Add officers role if configured
-    if (DISCORD_OFFICERS_ROLE_ID) {
+    if (officersRoleId) {
       permissionOverwrites.push({
-        id: DISCORD_OFFICERS_ROLE_ID,
+        id: officersRoleId,
         type: 0, // role
         allow: VIEW_AND_SEND,
         deny: '0',
@@ -136,14 +150,14 @@ export async function POST(request: Request) {
     };
 
     // Add to category if configured
-    if (DISCORD_RAID_MANAGEMENT_CATEGORY_ID) {
-      channelData.parent_id = DISCORD_RAID_MANAGEMENT_CATEGORY_ID;
+    if (categoryId) {
+      channelData.parent_id = categoryId;
     }
 
     console.log('Creating Discord channel:', JSON.stringify(channelData, null, 2));
 
     const discordResponse = await fetch(
-      `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/channels`,
+      `https://discord.com/api/v10/guilds/${guildId}/channels`,
       {
         method: 'POST',
         headers: {
@@ -181,9 +195,9 @@ export async function POST(request: Request) {
           discordCode: error.code,
           requestData: {
             channelName,
-            playerDiscordId: player.discordId,
-            guildId: DISCORD_GUILD_ID,
-            categoryId: DISCORD_RAID_MANAGEMENT_CATEGORY_ID || 'not set',
+            playerDiscordId,
+            guildId,
+            categoryId: categoryId || 'not set',
           }
         },
         { status: discordResponse.status }
