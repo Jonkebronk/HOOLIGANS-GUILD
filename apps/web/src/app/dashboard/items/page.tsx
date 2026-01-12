@@ -249,7 +249,6 @@ export default function ItemsPage() {
         setBossImportResult({
           updated: data.updated,
           notFound: data.notFound,
-          sourcesLoaded: data.sourcesLoaded,
           mappingsLoaded: data.mappingsLoaded,
           itemToBossSize: data.itemToBossSize,
           debug: data.debug,
