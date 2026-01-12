@@ -195,10 +195,10 @@ export function ItemPickerModal({
               ))}
             </SelectContent>
           </Select>
-          {currentWowheadId && (
-            <Button variant="outline" size="sm" onClick={onClear}>
+          {onClear && (
+            <Button variant="destructive" size="sm" onClick={onClear}>
               <X className="h-4 w-4 mr-1" />
-              Clear
+              Clear Slot
             </Button>
           )}
         </div>
