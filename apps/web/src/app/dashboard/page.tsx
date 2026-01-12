@@ -279,7 +279,7 @@ export default function DashboardPage() {
           <div className="flex flex-wrap gap-4">
             <LeadershipBadge name="Johnnypapa" role="Guildmaster" />
             <LeadershipBadge name="Shredd" role="Officer" />
-            <LeadershipBadge name="Vicked" role="Officer" />
+            <LeadershipBadge name="Viktorin" role="Officer" />
             <LeadershipBadge name="Ambo" role="Officer" />
             <LeadershipBadge name="Quest" role="Officer" />
           </div>
