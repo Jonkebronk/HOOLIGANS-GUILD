@@ -511,6 +511,7 @@ export default function RosterPage() {
       if (!targetRaid) return prevRaids;
 
       const alreadyInRaid = targetRaid.groups.flat().some(p => p?.id === playerToAssign!.id);
+      console.log('setRaids inner: sourceInfo=', sourceInfo, 'alreadyInRaid=', alreadyInRaid, 'player=', playerToAssign?.name);
 
       if (sourceInfo && sourceInfo !== 'available') {
         const sourceRaid = newRaids.find(r => r.id === sourceInfo.raidId);
