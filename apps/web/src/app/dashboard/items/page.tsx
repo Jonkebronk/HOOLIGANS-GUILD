@@ -89,7 +89,7 @@ export default function ItemsPage() {
   const [isFixingPhases, setIsFixingPhases] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
-  const [editForm, setEditForm] = useState({ boss: '', lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
+  const [editForm, setEditForm] = useState({ boss: '', raid: '', lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [loadingItemDetails, setLoadingItemDetails] = useState(false);
   const [players, setPlayers] = useState<{ id: string; name: string; class: string }[]>([]);
@@ -417,6 +417,7 @@ export default function ItemsPage() {
     setEditingItem(item);
     setEditForm({
       boss: item.boss || '',
+      raid: item.raid || '',
       lootPriority: item.lootPriority || '',
       bisFor: parsePlayerList(item.bisFor),
       bisNextPhase: parsePlayerList(item.bisNextPhase),
@@ -437,6 +438,7 @@ export default function ItemsPage() {
         setEditingItem(fullItem);
         setEditForm({
           boss: fullItem.boss || '',
+          raid: fullItem.raid || '',
           lootPriority: fullItem.lootPriority || '',
           bisFor: parsePlayerList(fullItem.bisFor),
           bisNextPhase: parsePlayerList(fullItem.bisNextPhase),
@@ -457,6 +459,7 @@ export default function ItemsPage() {
       // Convert arrays to comma-separated strings for storage
       const dataToSave = {
         boss: editForm.boss,
+        raid: editForm.raid,
         lootPriority: editForm.lootPriority,
         bisFor: editForm.bisFor.join(', '),
         bisNextPhase: editForm.bisNextPhase.join(', '),
@@ -1094,13 +1097,28 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
             </div>
           ) : (
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Boss</Label>
-                <Input
-                  placeholder="e.g., Illidan Stormrage"
-                  value={editForm.boss}
-                  onChange={(e) => setEditForm({ ...editForm, boss: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Boss</Label>
+                  <Input
+                    placeholder="e.g., Illidan Stormrage"
+                    value={editForm.boss}
+                    onChange={(e) => setEditForm({ ...editForm, boss: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Raid</Label>
+                  <Select value={editForm.raid} onValueChange={(value) => setEditForm({ ...editForm, raid: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select raid" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RAIDS.map((raid) => (
+                        <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">

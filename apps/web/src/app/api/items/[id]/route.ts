@@ -48,12 +48,13 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    const { boss, lootPriority, bisFor, bisNextPhase } = body;
+    const { boss, raid, lootPriority, bisFor, bisNextPhase } = body;
 
     const item = await prisma.item.update({
       where: { id },
       data: {
         boss,
+        raid,
         lootPriority,
         bisFor,
         bisNextPhase,
