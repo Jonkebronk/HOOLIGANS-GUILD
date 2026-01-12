@@ -76,6 +76,7 @@ export default function PerformancePage() {
   const [selectedPerformance, setSelectedPerformance] = useState<RaidPerformance | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [creatingChannel, setCreatingChannel] = useState<string | null>(null);
+  const [archivingChannel, setArchivingChannel] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -203,6 +204,29 @@ export default function PerformancePage() {
   };
 
   const handleArchiveChannel = async (channelId: string, archive: boolean) => {
+    if (!selectedPerformance) return;
+
+    setArchivingChannel(channelId);
+
+    // Optimistic update - immediately update UI
+    const updateChannelStatus = (isArchived: boolean) => {
+      const updatedPerformance = {
+        ...selectedPerformance,
+        feedbackChannels: selectedPerformance.feedbackChannels.map((c) =>
+          c.discordChannelId === channelId
+            ? { ...c, isArchived, archivedAt: isArchived ? new Date().toISOString() : undefined }
+            : c
+        ),
+      };
+      setSelectedPerformance(updatedPerformance);
+      setPerformances((prev) =>
+        prev.map((p) => (p.id === updatedPerformance.id ? updatedPerformance : p))
+      );
+    };
+
+    // Apply optimistic update
+    updateChannelStatus(archive);
+
     try {
       const res = await fetch('/api/discord/archive-channel', {
         method: 'PATCH',
@@ -210,19 +234,17 @@ export default function PerformancePage() {
         body: JSON.stringify({ channelId, archive }),
       });
 
-      if (res.ok && selectedPerformance) {
-        // Refresh the selected performance
-        const performanceRes = await fetch(`/api/performance/${selectedPerformance.id}`);
-        if (performanceRes.ok) {
-          const updated = await performanceRes.json();
-          setSelectedPerformance(updated);
-          setPerformances((prev) =>
-            prev.map((p) => (p.id === updated.id ? updated : p))
-          );
-        }
+      if (!res.ok) {
+        // Revert on failure
+        updateChannelStatus(!archive);
+        console.error('Failed to archive/unarchive channel');
       }
     } catch (error) {
+      // Revert on error
+      updateChannelStatus(!archive);
       console.error('Failed to archive/unarchive channel:', error);
+    } finally {
+      setArchivingChannel(null);
     }
   };
 
@@ -577,9 +599,12 @@ export default function PerformancePage() {
                                         !channel.isArchived
                                       )
                                     }
+                                    disabled={archivingChannel === channel.discordChannelId}
                                     title={channel.isArchived ? 'Unarchive' : 'Archive'}
                                   >
-                                    {channel.isArchived ? (
+                                    {archivingChannel === channel.discordChannelId ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : channel.isArchived ? (
                                       <ArchiveRestore className="h-4 w-4" />
                                     ) : (
                                       <Archive className="h-4 w-4" />
