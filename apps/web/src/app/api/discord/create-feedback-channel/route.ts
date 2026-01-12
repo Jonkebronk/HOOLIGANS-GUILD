@@ -23,6 +23,12 @@ export async function POST(request: Request) {
   const officersRoleId = cleanDiscordId(DISCORD_OFFICERS_ROLE_ID);
   const categoryId = cleanDiscordId(DISCORD_RAID_MANAGEMENT_CATEGORY_ID);
 
+  console.log('Discord channel creation - cleaned IDs:', {
+    guildId: { raw: DISCORD_GUILD_ID, cleaned: guildId },
+    officersRoleId: { raw: DISCORD_OFFICERS_ROLE_ID, cleaned: officersRoleId },
+    categoryId: { raw: DISCORD_RAID_MANAGEMENT_CATEGORY_ID, cleaned: categoryId },
+  });
+
   if (!DISCORD_BOT_TOKEN || !guildId) {
     return NextResponse.json(
       { error: 'Discord bot not configured' },
