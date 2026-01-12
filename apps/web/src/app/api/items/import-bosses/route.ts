@@ -197,12 +197,13 @@ export async function GET() {
       }
     }
 
-    // Get items that would be updated
+    // Get items that would be updated (boss is null, empty, or 'Unknown')
     const items = await prisma.item.findMany({
       where: {
         wowheadId: { not: null },
         OR: [
-          { boss: null },
+          { boss: { equals: null } },
+          { boss: '' },
           { boss: 'Unknown' },
         ],
       },
