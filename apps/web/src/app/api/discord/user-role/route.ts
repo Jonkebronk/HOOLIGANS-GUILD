@@ -70,10 +70,16 @@ export async function GET() {
     const topRole = userRoles[0];
 
     // Check for officer/admin/GM roles by name
+    // Roles that grant edit access to spec presets
     const roleNames = userRoles.map((r: { name: string }) => r.name.toLowerCase());
     const isGM = roleNames.some((name: string) => name.includes('gm') || name.includes('guild master'));
     const isAdmin = roleNames.some((name: string) => name.includes('admin'));
-    const isOfficer = roleNames.some((name: string) => name.includes('officer') || name.includes('raid lead'));
+    const isOfficer = roleNames.some((name: string) =>
+      name.includes('officer') ||
+      name.includes('raid lead') ||
+      name.includes('raider') ||
+      name.includes('class lead')
+    );
 
     return NextResponse.json({
       role: topRole ? topRole.name : null,

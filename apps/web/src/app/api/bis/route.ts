@@ -62,7 +62,12 @@ async function checkOfficerPermission(): Promise<{ hasPermission: boolean; error
     const roleNames = userRoles.map((r: { name: string }) => r.name.toLowerCase());
     const isGM = roleNames.some((name: string) => name.includes('gm') || name.includes('guild master'));
     const isAdmin = roleNames.some((name: string) => name.includes('admin'));
-    const isOfficer = roleNames.some((name: string) => name.includes('officer') || name.includes('raid lead'));
+    const isOfficer = roleNames.some((name: string) =>
+      name.includes('officer') ||
+      name.includes('raid lead') ||
+      name.includes('raider') ||
+      name.includes('class lead')
+    );
 
     return { hasPermission: isGM || isAdmin || isOfficer };
   } catch (error) {
