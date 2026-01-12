@@ -305,6 +305,55 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Resources</CardTitle>
+          <CardDescription>Useful tools for TBC Classic</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
+            <a
+              href="https://www.wowsims.com/tbc/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+            >
+              <img
+                src="https://www.wowsims.com/tbc/assets/img/logo.png"
+                alt="WoWSims"
+                className="w-8 h-8"
+              />
+              <div>
+                <p className="font-medium text-sm flex items-center gap-1">
+                  WoWSims TBC
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </p>
+                <p className="text-xs text-muted-foreground">Gear optimizer & simulator</p>
+              </div>
+            </a>
+            <a
+              href="https://www.youtube.com/watch?v=5wYOVq0s9wY"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+            >
+              <div className="w-8 h-8 rounded bg-red-600 flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-sm flex items-center gap-1">
+                  How to Sim Guide
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </p>
+                <p className="text-xs text-muted-foreground">Video tutorial for WoWSims</p>
+              </div>
+            </a>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
