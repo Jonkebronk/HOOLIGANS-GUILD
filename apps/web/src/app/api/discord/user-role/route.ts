@@ -70,16 +70,13 @@ export async function GET() {
     const topRole = userRoles[0];
 
     // Check for officer/admin/GM roles by name
-    // Roles that grant edit access to spec presets
     const roleNames = userRoles.map((r: { name: string }) => r.name.toLowerCase());
-    const isGM = roleNames.some((name: string) => name.includes('gm') || name.includes('guild master'));
+    const isGM = roleNames.some((name: string) => name.includes('gm') || name.includes('guild master') || name.includes('guildmaster'));
     const isAdmin = roleNames.some((name: string) => name.includes('admin'));
-    const isOfficer = roleNames.some((name: string) =>
-      name.includes('officer') ||
-      name.includes('raid lead') ||
-      name.includes('raider') ||
-      name.includes('class lead')
-    );
+    const isOfficer = roleNames.some((name: string) => name.includes('officer') || name.includes('raid lead'));
+
+    // Debug: log all role names for troubleshooting
+    console.log('User Discord roles:', roleNames);
 
     return NextResponse.json({
       role: topRole ? topRole.name : null,
@@ -87,6 +84,8 @@ export async function GET() {
       isGM,
       isAdmin,
       isOfficer,
+      // Debug: include all role names
+      allRoles: roleNames,
     });
   } catch (error) {
     console.error('Failed to fetch user Discord role:', error);
