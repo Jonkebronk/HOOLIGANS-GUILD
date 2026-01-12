@@ -170,22 +170,80 @@ export default function RaidSplitsPage() {
           : Array(2).fill(null).map(() => Array(SLOTS_PER_GROUP).fill(null)),
       })));
       setPlayers([]);
-      fetchPlayers();
+      fetchPlayersAndAssignments();
     }
   }, [selectedTeam]);
 
-  const fetchPlayers = async () => {
+  const fetchPlayersAndAssignments = async () => {
     if (!selectedTeam) return;
     try {
-      const res = await fetch(`/api/players?teamId=${selectedTeam.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPlayers(data);
+      const [playersRes, assignmentsRes] = await Promise.all([
+        fetch(`/api/players?teamId=${selectedTeam.id}`),
+        fetch(`/api/roster-assignments?teamId=${selectedTeam.id}`),
+      ]);
+
+      if (playersRes.ok) {
+        const playersData = await playersRes.json();
+        setPlayers(playersData);
+
+        if (assignmentsRes.ok) {
+          const assignmentsData = await assignmentsRes.json();
+          setRaids(prevRaids => {
+            const newRaids = prevRaids.map(raid => ({
+              ...raid,
+              groups: raid.size === '25'
+                ? Array(5).fill(null).map(() => Array(SLOTS_PER_GROUP).fill(null))
+                : Array(2).fill(null).map(() => Array(SLOTS_PER_GROUP).fill(null)),
+            }));
+
+            if (Array.isArray(assignmentsData)) {
+              for (const assignment of assignmentsData) {
+                const raid = newRaids.find(r => r.id === assignment.raidId);
+                if (raid && assignment.player) {
+                  const player = playersData.find((p: Player) => p.id === assignment.playerId);
+                  if (player && raid.groups[assignment.groupIndex]) {
+                    raid.groups[assignment.groupIndex][assignment.slotIndex] = player;
+                  }
+                }
+              }
+            }
+            return newRaids;
+          });
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch players:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Save assignment to database
+  const saveAssignment = async (raidId: string, groupIndex: number, slotIndex: number, playerId: string) => {
+    if (!selectedTeam) return;
+    try {
+      const res = await fetch('/api/roster-assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ raidId, groupIndex, slotIndex, playerId, teamId: selectedTeam.id }),
+      });
+      if (!res.ok) {
+        console.error('Failed to save assignment');
+      }
+    } catch (error) {
+      console.error('Failed to save assignment:', error);
+    }
+  };
+
+  // Delete assignment from database
+  const deleteAssignment = async (raidId: string, groupIndex: number, slotIndex: number) => {
+    if (!selectedTeam) return;
+    try {
+      await fetch(`/api/roster-assignments?teamId=${selectedTeam.id}&raidId=${raidId}&groupIndex=${groupIndex}&slotIndex=${slotIndex}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to delete assignment:', error);
     }
   };
 
@@ -282,8 +340,21 @@ export default function RaidSplitsPage() {
   ) => {
     e.preventDefault();
     setDragOverSlot(null);
-    if (!draggedPlayer) return;
 
+    // Get player from state, or fallback to dataTransfer if state was cleared
+    let playerToAssign = draggedPlayer;
+    let sourceInfo = dragSource;
+
+    if (!playerToAssign) {
+      // State was cleared (handleDragEnd fired first) - get player ID from dataTransfer
+      const playerId = e.dataTransfer.getData('text/plain');
+      if (!playerId) return;
+      playerToAssign = players.find(p => p.id === playerId) || null;
+      if (!playerToAssign) return;
+      sourceInfo = 'available';
+    }
+
+    // Update state and save to database
     setRaids(prevRaids => {
       const newRaids = prevRaids.map(raid => ({
         ...raid,
@@ -293,33 +364,49 @@ export default function RaidSplitsPage() {
       const targetRaid = newRaids.find(r => r.id === raidId);
       if (!targetRaid) return prevRaids;
 
-      const alreadyInRaid = targetRaid.groups.flat().some(p => p?.id === draggedPlayer.id);
+      const alreadyInRaid = targetRaid.groups.flat().some(p => p?.id === playerToAssign!.id);
 
-      if (dragSource && dragSource !== 'available') {
-        const sourceRaid = newRaids.find(r => r.id === dragSource.raidId);
+      if (sourceInfo && sourceInfo !== 'available') {
+        const sourceRaid = newRaids.find(r => r.id === sourceInfo.raidId);
         if (sourceRaid) {
-          if (dragSource.raidId === raidId) {
+          if (sourceInfo.raidId === raidId) {
             // Swap within same raid
             const targetPlayer = targetRaid.groups[groupIndex][slotIndex];
-            targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
-            sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = targetPlayer;
+            targetRaid.groups[groupIndex][slotIndex] = playerToAssign;
+            sourceRaid.groups[sourceInfo.groupIndex][sourceInfo.slotIndex] = targetPlayer;
+
+            // Save both positions
+            saveAssignment(raidId, groupIndex, slotIndex, playerToAssign!.id);
+            if (targetPlayer) {
+              saveAssignment(sourceInfo.raidId, sourceInfo.groupIndex, sourceInfo.slotIndex, targetPlayer.id);
+            } else {
+              deleteAssignment(sourceInfo.raidId, sourceInfo.groupIndex, sourceInfo.slotIndex);
+            }
           } else {
             // Move between raids
-            sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = null;
+            sourceRaid.groups[sourceInfo.groupIndex][sourceInfo.slotIndex] = null;
             const targetPlayer = targetRaid.groups[groupIndex][slotIndex];
-            targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
+            targetRaid.groups[groupIndex][slotIndex] = playerToAssign;
+
+            // Save target position
+            saveAssignment(raidId, groupIndex, slotIndex, playerToAssign!.id);
+
             if (targetPlayer) {
-              sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = targetPlayer;
+              sourceRaid.groups[sourceInfo.groupIndex][sourceInfo.slotIndex] = targetPlayer;
+              saveAssignment(sourceInfo.raidId, sourceInfo.groupIndex, sourceInfo.slotIndex, targetPlayer.id);
+            } else {
+              deleteAssignment(sourceInfo.raidId, sourceInfo.groupIndex, sourceInfo.slotIndex);
             }
           }
         }
-      } else if (dragSource === 'available') {
+      } else if (sourceInfo === 'available') {
         // From available pool - allow duplicates in 10-mans
         if (raidId.startsWith('split-10') || !alreadyInRaid) {
           if (raidId.startsWith('split-10') && alreadyInRaid) {
             return prevRaids;
           }
-          targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
+          targetRaid.groups[groupIndex][slotIndex] = playerToAssign;
+          saveAssignment(raidId, groupIndex, slotIndex, playerToAssign!.id);
         }
       }
 
@@ -333,6 +420,9 @@ export default function RaidSplitsPage() {
   const handleDropToAvailable = (e: DragEvent) => {
     e.preventDefault();
     if (!draggedPlayer || dragSource === 'available' || !dragSource) return;
+
+    // Delete assignment from database
+    deleteAssignment(dragSource.raidId, dragSource.groupIndex, dragSource.slotIndex);
 
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
@@ -369,6 +459,8 @@ export default function RaidSplitsPage() {
           for (let si = 0; si < newGroups[gi].length; si++) {
             if (newGroups[gi][si] === null) {
               newGroups[gi][si] = player;
+              // Save to database
+              saveAssignment(raidId, gi, si, player.id);
               return { ...raid, groups: newGroups };
             }
           }
@@ -380,6 +472,9 @@ export default function RaidSplitsPage() {
 
   // Remove player from slot
   const removePlayerFromSlot = (raidId: string, groupIndex: number, slotIndex: number) => {
+    // Delete from database
+    deleteAssignment(raidId, groupIndex, slotIndex);
+
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
         if (raid.id !== raidId) return raid;
@@ -391,7 +486,18 @@ export default function RaidSplitsPage() {
   };
 
   // Clear raid
-  const clearRaid = (raidId: string) => {
+  const clearRaid = async (raidId: string) => {
+    // Delete all assignments for this raid from database
+    if (selectedTeam) {
+      try {
+        await fetch(`/api/roster-assignments?teamId=${selectedTeam.id}&raidId=${raidId}`, {
+          method: 'DELETE',
+        });
+      } catch (error) {
+        console.error('Failed to clear raid assignments:', error);
+      }
+    }
+
     setRaids(prevRaids => {
       return prevRaids.map(raid => {
         if (raid.id !== raidId) return raid;
