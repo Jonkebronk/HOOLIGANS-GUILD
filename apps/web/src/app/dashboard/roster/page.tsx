@@ -473,7 +473,27 @@ export default function RosterPage() {
   ) => {
     e.preventDefault();
     setDragOverSlot(null);
-    if (!draggedPlayer) return;
+
+    // Get player from state, or fallback to dataTransfer if state was cleared
+    let playerToAssign = draggedPlayer;
+    let sourceInfo = dragSource;
+
+    if (!playerToAssign) {
+      // State was cleared (handleDragEnd fired first) - get player ID from dataTransfer
+      const playerId = e.dataTransfer.getData('text/plain');
+      console.log('handleDrop: draggedPlayer was null, using dataTransfer playerId:', playerId);
+      if (!playerId) {
+        console.error('handleDrop: No player data available');
+        return;
+      }
+      playerToAssign = players.find(p => p.id === playerId) || null;
+      if (!playerToAssign) {
+        console.error('handleDrop: Player not found:', playerId);
+        return;
+      }
+      // If state was cleared, assume it was from 'available' (pool)
+      sourceInfo = 'available';
+    }
 
     // Track what assignments need to be saved/deleted
     const assignmentsToSave: { raidId: string; groupIndex: number; slotIndex: number; playerId: string }[] = [];
@@ -488,48 +508,48 @@ export default function RosterPage() {
       const targetRaid = newRaids.find(r => r.id === raidId);
       if (!targetRaid) return prevRaids;
 
-      const alreadyInRaid = targetRaid.groups.flat().some(p => p?.id === draggedPlayer.id);
+      const alreadyInRaid = targetRaid.groups.flat().some(p => p?.id === playerToAssign!.id);
 
-      if (dragSource && dragSource !== 'available') {
-        const sourceRaid = newRaids.find(r => r.id === dragSource.raidId);
+      if (sourceInfo && sourceInfo !== 'available') {
+        const sourceRaid = newRaids.find(r => r.id === sourceInfo.raidId);
         if (sourceRaid) {
-          if (dragSource.raidId === raidId) {
+          if (sourceInfo.raidId === raidId) {
             // Swap within same raid
             const targetPlayer = targetRaid.groups[groupIndex][slotIndex];
-            targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
-            sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = targetPlayer;
+            targetRaid.groups[groupIndex][slotIndex] = playerToAssign;
+            sourceRaid.groups[sourceInfo.groupIndex][sourceInfo.slotIndex] = targetPlayer;
 
             // Save both positions
-            assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: draggedPlayer.id });
+            assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: playerToAssign!.id });
             if (targetPlayer) {
-              assignmentsToSave.push({ raidId: dragSource.raidId, groupIndex: dragSource.groupIndex, slotIndex: dragSource.slotIndex, playerId: targetPlayer.id });
+              assignmentsToSave.push({ raidId: sourceInfo.raidId, groupIndex: sourceInfo.groupIndex, slotIndex: sourceInfo.slotIndex, playerId: targetPlayer.id });
             } else {
-              assignmentsToDelete.push({ raidId: dragSource.raidId, groupIndex: dragSource.groupIndex, slotIndex: dragSource.slotIndex });
+              assignmentsToDelete.push({ raidId: sourceInfo.raidId, groupIndex: sourceInfo.groupIndex, slotIndex: sourceInfo.slotIndex });
             }
           } else {
             // Move between raids
-            sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = null;
+            sourceRaid.groups[sourceInfo.groupIndex][sourceInfo.slotIndex] = null;
             const targetPlayer = targetRaid.groups[groupIndex][slotIndex];
-            targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
+            targetRaid.groups[groupIndex][slotIndex] = playerToAssign;
 
             // Save target position
-            assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: draggedPlayer.id });
+            assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: playerToAssign!.id });
 
             if (targetPlayer) {
-              sourceRaid.groups[dragSource.groupIndex][dragSource.slotIndex] = targetPlayer;
-              assignmentsToSave.push({ raidId: dragSource.raidId, groupIndex: dragSource.groupIndex, slotIndex: dragSource.slotIndex, playerId: targetPlayer.id });
+              sourceRaid.groups[sourceInfo.groupIndex][sourceInfo.slotIndex] = targetPlayer;
+              assignmentsToSave.push({ raidId: sourceInfo.raidId, groupIndex: sourceInfo.groupIndex, slotIndex: sourceInfo.slotIndex, playerId: targetPlayer.id });
             } else {
-              assignmentsToDelete.push({ raidId: dragSource.raidId, groupIndex: dragSource.groupIndex, slotIndex: dragSource.slotIndex });
+              assignmentsToDelete.push({ raidId: sourceInfo.raidId, groupIndex: sourceInfo.groupIndex, slotIndex: sourceInfo.slotIndex });
             }
           }
         }
-      } else if (dragSource === 'available') {
+      } else if (sourceInfo === 'available') {
         if (raidId.startsWith('split-10') || !alreadyInRaid) {
           if (raidId.startsWith('split-10') && alreadyInRaid) {
             return prevRaids;
           }
-          targetRaid.groups[groupIndex][slotIndex] = draggedPlayer;
-          assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: draggedPlayer.id });
+          targetRaid.groups[groupIndex][slotIndex] = playerToAssign;
+          assignmentsToSave.push({ raidId, groupIndex, slotIndex, playerId: playerToAssign!.id });
         }
       }
 
