@@ -248,6 +248,26 @@ export const TBC_RAIDS = [
   { id: '4075', name: 'Sunwell Plateau', zoneId: 4075, phase: 'P5' },
 ];
 
+// Fetch item icon from Wowhead API
+export async function fetchWowheadIcon(itemId: number): Promise<string | null> {
+  try {
+    // Use Wowhead's tooltip API to get item data including icon
+    const res = await fetch(
+      `https://nether.wowhead.com/tooltip/item/${itemId}?dataEnv=4&locale=0`,
+      { next: { revalidate: 86400 } } // Cache for 24 hours
+    );
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    // The icon field contains the icon name (e.g., "inv_helmet_04")
+    return data.icon || null;
+  } catch (error) {
+    console.error(`Failed to fetch icon for item ${itemId}:`, error);
+    return null;
+  }
+}
+
 // Gear slot icons
 export const SLOT_ICONS: Record<string, string> = {
   Head: 'inv_helmet_01',

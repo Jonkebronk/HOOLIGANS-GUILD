@@ -82,6 +82,7 @@ export default function ItemsPage() {
   const [isImportBossDialogOpen, setIsImportBossDialogOpen] = useState(false);
   const [isImportingBosses, setIsImportingBosses] = useState(false);
   const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number; mappingsLoaded?: number; itemToBossSize?: number; debug?: { sampleDbItems: number[]; sampleTmbItems: number[]; matchingIds?: number[]; uniqueBosses?: string[]; rawSample?: string } } | null>(null);
+  const [isFixingPhases, setIsFixingPhases] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [editForm, setEditForm] = useState({ boss: '', lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
@@ -265,6 +266,30 @@ export default function ItemsPage() {
       alert('Failed to import boss data. Please try again.');
     } finally {
       setIsImportingBosses(false);
+    }
+  };
+
+  const handleFixPhases = async () => {
+    if (!confirm('This will update all items to have the correct phase based on their raid. Continue?')) {
+      return;
+    }
+
+    setIsFixingPhases(true);
+    try {
+      const res = await fetch('/api/items/fix-phases', { method: 'POST' });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(`Fixed phases for ${data.totalUpdated} items!`);
+        await fetchItems();
+      } else {
+        alert(data.error || 'Failed to fix phases');
+      }
+    } catch (error) {
+      console.error('Failed to fix phases:', error);
+      alert('Failed to fix phases. Please try again.');
+    } finally {
+      setIsFixingPhases(false);
     }
   };
 
@@ -546,6 +571,14 @@ export default function ItemsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          <Button variant="outline" onClick={handleFixPhases} disabled={isFixingPhases}>
+            {isFixingPhases ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Filter className="h-4 w-4 mr-2" />
+            )}
+            {isFixingPhases ? 'Fixing...' : 'Fix Phases'}
+          </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" />Add Item</Button>

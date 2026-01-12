@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { fetchWowheadIcon } from '@/lib/wowhead';
 
 // GET /api/players/[id]/gear - Get all current gear for a player
 export async function GET(
@@ -17,7 +18,25 @@ export async function GET(
       orderBy: { slot: 'asc' },
     });
 
-    return NextResponse.json(gear);
+    // Backfill missing icons
+    const gearWithIcons = await Promise.all(
+      gear.map(async (g) => {
+        let icon = g.icon || g.item?.icon;
+        if (!icon && g.wowheadId) {
+          icon = await fetchWowheadIcon(g.wowheadId);
+          // Save for next time
+          if (icon) {
+            await prisma.playerGear.update({
+              where: { id: g.id },
+              data: { icon },
+            });
+          }
+        }
+        return { ...g, icon };
+      })
+    );
+
+    return NextResponse.json(gearWithIcons);
   } catch (error) {
     console.error('Failed to fetch player gear:', error);
     return NextResponse.json(
@@ -44,6 +63,12 @@ export async function PUT(
       );
     }
 
+    // Fetch icon from Wowhead if not provided but wowheadId is
+    let finalIcon = icon || null;
+    if (!finalIcon && wowheadId) {
+      finalIcon = await fetchWowheadIcon(wowheadId);
+    }
+
     // Upsert the gear slot
     const gear = await prisma.playerGear.upsert({
       where: {
@@ -56,7 +81,7 @@ export async function PUT(
         itemId: itemId || null,
         wowheadId: wowheadId || null,
         itemName: itemName || null,
-        icon: icon || null,
+        icon: finalIcon,
         enchantId: enchantId || null,
         gem1Id: gem1Id || null,
         gem2Id: gem2Id || null,
@@ -68,7 +93,7 @@ export async function PUT(
         itemId: itemId || null,
         wowheadId: wowheadId || null,
         itemName: itemName || null,
-        icon: icon || null,
+        icon: finalIcon,
         enchantId: enchantId || null,
         gem1Id: gem1Id || null,
         gem2Id: gem2Id || null,

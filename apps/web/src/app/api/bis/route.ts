@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma, GearSlot, Phase } from '@hooligans/database';
+import { fetchWowheadIcon } from '@/lib/wowhead';
 
 // GET - Retrieve BiS configuration for a spec and phase
 export async function GET(request: Request) {
@@ -22,7 +23,7 @@ export async function GET(request: Request) {
       },
     });
 
-    // Also fetch the actual item data for each BiS config
+    // Also fetch the actual item data for each BiS config and backfill missing icons
     const bisWithItems = await Promise.all(
       bisConfig.map(async (config) => {
         let item = null;
@@ -31,9 +32,24 @@ export async function GET(request: Request) {
             where: { wowheadId: config.wowheadId },
           });
         }
+
+        // Backfill icon if missing
+        let icon = config.icon || item?.icon;
+        if (!icon && config.wowheadId) {
+          icon = await fetchWowheadIcon(config.wowheadId);
+          // Save for next time
+          if (icon) {
+            await prisma.bisConfiguration.update({
+              where: { id: config.id },
+              data: { icon },
+            });
+          }
+        }
+
         return {
           ...config,
-          item,
+          icon,
+          item: item ? { ...item, icon: item.icon || icon } : null,
         };
       })
     );
@@ -71,6 +87,12 @@ export async function POST(request: Request) {
     const finalItemName = item?.name || itemName || '';
     const finalSource = item ? `${item.raid} - ${item.boss}` : 'TBC Item Database';
 
+    // Get icon - from item first, then fetch from Wowhead if needed
+    let finalIcon = item?.icon || null;
+    if (!finalIcon && finalWowheadId) {
+      finalIcon = await fetchWowheadIcon(finalWowheadId);
+    }
+
     // Upsert the BiS configuration
     const bisConfig = await prisma.bisConfiguration.upsert({
       where: {
@@ -84,6 +106,7 @@ export async function POST(request: Request) {
         itemName: finalItemName,
         wowheadId: finalWowheadId,
         source: finalSource,
+        icon: finalIcon,
       },
       create: {
         spec,
@@ -92,6 +115,7 @@ export async function POST(request: Request) {
         itemName: finalItemName,
         wowheadId: finalWowheadId,
         source: finalSource,
+        icon: finalIcon,
       },
     });
 

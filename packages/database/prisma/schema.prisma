@@ -360,6 +360,7 @@ model BisConfiguration {
   itemName      String
   source        String?   // Boss/location
   wowheadId     Int?
+  icon          String?   // Icon name for display
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

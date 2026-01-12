@@ -124,6 +124,7 @@ type BisConfig = {
   itemName: string;
   wowheadId: number | null;
   source: string | null;
+  icon: string | null;
   item: Item | null;
 };
 
@@ -749,8 +750,11 @@ export default function BisListsPage() {
     const slotIcon = SLOT_ICONS[slot] || 'inv_misc_questionmark';
     const hasItem = !!wowheadId || !!itemName;
 
-    // Get the icon URL - use item icon if available, otherwise slot icon
-    const itemIcon = item?.icon;
+    // Get the icon URL - check config/gear icon first, then item icon, then slot icon
+    const configIcon = context === 'current'
+      ? (gearItem as PlayerGear | null)?.icon
+      : (gearItem as BisConfig | null)?.icon;
+    const itemIcon = configIcon || item?.icon;
     const iconUrl = getItemIcon(itemIcon, slot, 'medium');
 
     const iconElement = hasItem ? (
@@ -1100,7 +1104,7 @@ export default function BisListsPage() {
                           const quality = item?.quality || 4; // Default to epic
                           const zone = item?.raid || bis.source || '-';
                           const boss = item?.boss || '-';
-                          const iconUrl = getItemIcon(item?.icon, bis.slot, 'small');
+                          const iconUrl = getItemIcon(bis.icon || item?.icon, bis.slot, 'small');
 
                           return (
                             <tr key={bis.slot} className="border-b border-border/50 hover:bg-muted/30">
