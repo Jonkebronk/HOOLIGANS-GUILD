@@ -2,228 +2,115 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Loader2, Target, Search, X, ExternalLink, Download, Upload, Copy, Check, Database } from 'lucide-react';
-import { CLASS_COLORS, TbcItem, TbcEnchant, TbcGem } from '@hooligans/shared';
-import { getSpecIconUrl, getItemIconUrl, getItemIcon, refreshWowheadTooltips, SLOT_ICONS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Target, ExternalLink, Lock, Plus } from 'lucide-react';
+import { CLASS_COLORS, TbcItem } from '@hooligans/shared';
+import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { GearPickerModal } from '@/components/gear-picker-modal';
 import { useTeam } from '@/components/providers/team-provider';
-
-const WOW_CLASSES = ['Druid', 'Hunter', 'Mage', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
+import { SpecSidebar } from '@/components/bis/spec-sidebar';
+import { BisListView } from '@/components/bis/bis-list-view';
+import { CLASS_SPECS, getSpecById, getClassColor } from '@/lib/specs';
 
 // WoWSims class background images
 const SPEC_BACKGROUNDS: Record<string, string> = {
-  // Druid
   DruidBalance: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/balance_druid_background.jpg',
   DruidFeral: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/feral_druid_background.jpg',
   DruidGuardian: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/feral_druid_tank_background.jpg',
   DruidRestoration: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/balance_druid_background.jpg',
-  // Hunter
   HunterBeastMastery: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/hunter_background.jpg',
   HunterMarksmanship: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/hunter_background.jpg',
   HunterSurvival: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/hunter_background.jpg',
-  // Mage
   MageArcane: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/mage_background.jpg',
   MageFire: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/mage_background.jpg',
   MageFrost: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/mage_background.jpg',
-  // Paladin
   PaladinHoly: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/retribution_paladin.jpg',
   PaladinProtection: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/retribution_paladin.jpg',
   PaladinRetribution: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/retribution_paladin.jpg',
-  // Priest
   PriestDiscipline: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/smite_priest_background.jpg',
   PriestHoly: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/smite_priest_background.jpg',
   PriestShadow: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/shadow_priest_background.jpg',
-  // Rogue
   RogueAssassination: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/rogue_background.jpg',
   RogueCombat: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/rogue_background.jpg',
   RogueSubtlety: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/rogue_background.jpg',
-  // Shaman
   ShamanElemental: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/elemental_shaman_background.jpg',
   ShamanEnhancement: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/enhancement_shaman_background.jpg',
   ShamanRestoration: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/elemental_shaman_background.jpg',
-  // Warlock
   WarlockAffliction: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warlock_background.jpg',
   WarlockDemonology: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warlock_background.jpg',
   WarlockDestruction: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warlock_background.jpg',
-  // Warrior
   WarriorArms: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warrior_background.jpg',
   WarriorFury: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/warrior_background.jpg',
   WarriorProtection: 'https://raw.githubusercontent.com/wowsims/tbc/master/assets/protection_warrior_background.jpg',
 };
-
-// Left side slots (icon | text)
-const LEFT_SLOTS = [
-  { slot: 'Head', label: 'Head' },
-  { slot: 'Neck', label: 'Neck' },
-  { slot: 'Shoulder', label: 'Shoulders' },
-  { slot: 'Back', label: 'Back' },
-  { slot: 'Chest', label: 'Chest' },
-  { slot: 'Wrist', label: 'Wrists' },
-  { slot: 'MainHand', label: 'Main Hand' },
-  { slot: 'OffHand', label: 'Off Hand' },
-];
-
-// Right side slots (text | icon)
-const RIGHT_SLOTS = [
-  { slot: 'Hands', label: 'Hands' },
-  { slot: 'Waist', label: 'Waist' },
-  { slot: 'Legs', label: 'Legs' },
-  { slot: 'Feet', label: 'Feet' },
-  { slot: 'Finger1', label: 'Ring 1' },
-  { slot: 'Finger2', label: 'Ring 2' },
-  { slot: 'Trinket1', label: 'Trinket 1' },
-  { slot: 'Trinket2', label: 'Trinket 2' },
-  { slot: 'Ranged', label: 'Ranged' },
-];
 
 type Player = {
   id: string;
   name: string;
   class: string;
   mainSpec: string;
-  role: string;
-  roleSubtype: string;
 };
 
-type Item = {
-  id: string;
-  name: string;
-  wowheadId: number | null;
-  icon: string | null;
-  quality: number;
-  raid: string;
-  boss: string;
-  slot: string;
-};
-
-type BisConfig = {
+type BisItem = {
   slot: string;
   itemName: string;
   wowheadId: number | null;
   source: string | null;
   icon: string | null;
-  item: Item | null;
+  item?: {
+    id: string;
+    name: string;
+    quality: number;
+    raid: string;
+    boss: string;
+  } | null;
 };
-
-type PlayerGear = {
-  id: string;
-  slot: string;
-  itemId: string | null;
-  item: Item | null;
-  wowheadId: number | null;
-  itemName: string | null;
-  icon: string | null;
-};
-
-type DialogContext = 'current' | 'bis';
 
 export default function BisListsPage() {
   const { selectedTeam } = useTeam();
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [activeTab, setActiveTab] = useState<'presets' | 'player'>('presets');
   const [loading, setLoading] = useState(true);
-  const [selectedPlayer, setSelectedPlayer] = useState<string>('');
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string>('');
-  const [classFilter, setClassFilter] = useState<string>('all');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [bisConfig, setBisConfig] = useState<BisConfig[]>([]);
-  const [currentGear, setCurrentGear] = useState<PlayerGear[]>([]);
+  const [isOfficer, setIsOfficer] = useState(false);
+
+  // Spec Presets state
+  const [selectedSpec, setSelectedSpec] = useState<string>('DruidBalance');
+  const [specBisItems, setSpecBisItems] = useState<BisItem[]>([]);
   const [selectedPhase, setSelectedPhase] = useState<string>('P1');
 
-  // Item selection dialog state
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogContext, setDialogContext] = useState<DialogContext>('bis');
-  const [selectedSlot, setSelectedSlot] = useState<{ slot: string; label: string } | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Item[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  // Player Lists state
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [playerBisItems, setPlayerBisItems] = useState<BisItem[]>([]);
+  const [playerPhase, setPlayerPhase] = useState<string>('P1');
 
-  // Import/Export dialog state
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [importTarget, setImportTarget] = useState<'current' | 'bis'>('current');
-  const [importJson, setImportJson] = useState('');
-  const [importLoading, setImportLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  // Item picker state
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<string>('');
+  const [pickerContext, setPickerContext] = useState<'spec' | 'player'>('spec');
 
-  // TBC Gear Picker Modal state
-  const [tbcPickerOpen, setTbcPickerOpen] = useState(false);
-  const [useTbcPicker, setUseTbcPicker] = useState(true); // Toggle between DB search and TBC picker
+  // Check if user is officer
+  useEffect(() => {
+    const checkOfficerRole = async () => {
+      try {
+        const res = await fetch('/api/discord/user-role');
+        if (res.ok) {
+          const data = await res.json();
+          setIsOfficer(data.isOfficer || data.isAdmin || data.isGM);
+        }
+      } catch (error) {
+        console.error('Failed to check officer role:', error);
+      }
+    };
+    checkOfficerRole();
+  }, []);
 
+  // Fetch players for Player Lists tab
   useEffect(() => {
     if (selectedTeam) {
       fetchPlayers();
     }
   }, [selectedTeam]);
-
-  const selectedPlayerData = players.find(p => p.name === selectedPlayer);
-
-  // Update selectedPlayerId when player changes
-  useEffect(() => {
-    if (selectedPlayerData) {
-      setSelectedPlayerId(selectedPlayerData.id);
-    }
-  }, [selectedPlayerData]);
-
-  // Fetch BiS config when player or phase changes
-  const fetchBisConfig = useCallback(async (spec: string) => {
-    try {
-      const res = await fetch(`/api/bis?spec=${encodeURIComponent(spec)}&phase=${selectedPhase}`);
-      if (res.ok) {
-        const data = await res.json();
-        setBisConfig(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch BiS config:', error);
-    }
-  }, [selectedPhase]);
-
-  // Fetch current gear when player changes
-  const fetchCurrentGear = useCallback(async (playerId: string) => {
-    try {
-      const res = await fetch(`/api/players/${playerId}/gear`);
-      if (res.ok) {
-        const data = await res.json();
-        setCurrentGear(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch current gear:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (selectedPlayerData?.mainSpec) {
-      fetchBisConfig(selectedPlayerData.mainSpec);
-    }
-    if (selectedPlayerId) {
-      fetchCurrentGear(selectedPlayerId);
-    }
-  }, [selectedPlayerData?.mainSpec, selectedPlayerId, selectedPhase, fetchBisConfig, fetchCurrentGear]);
-
-  useEffect(() => {
-    refreshWowheadTooltips();
-  }, [selectedPlayer, bisConfig, currentGear]);
 
   const fetchPlayers = async () => {
     if (!selectedTeam) return;
@@ -232,9 +119,6 @@ export default function BisListsPage() {
       if (res.ok) {
         const data = await res.json();
         setPlayers(data);
-        if (data.length > 0) {
-          setSelectedPlayer(data[0].name);
-        }
       }
     } catch (error) {
       console.error('Failed to fetch players:', error);
@@ -243,463 +127,162 @@ export default function BisListsPage() {
     }
   };
 
-  const filteredPlayers = players.filter((player) => {
-    const matchesClass = classFilter === 'all' || player.class === classFilter;
-    let matchesRole = roleFilter === 'all';
-    if (roleFilter === 'Tank') matchesRole = player.roleSubtype === 'Tank';
-    if (roleFilter === 'Heal') matchesRole = player.roleSubtype === 'Heal';
-    if (roleFilter === 'Melee') matchesRole = player.roleSubtype === 'DPS_Melee';
-    if (roleFilter === 'Ranged') matchesRole = player.roleSubtype === 'DPS_Ranged' || player.roleSubtype === 'DPS_Caster';
-    return matchesClass && matchesRole;
-  });
+  // Fetch spec BiS config
+  const fetchSpecBis = useCallback(async (spec: string, phase: string) => {
+    try {
+      const res = await fetch(`/api/bis?spec=${encodeURIComponent(spec)}&phase=${phase}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSpecBisItems(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch spec BiS:', error);
+    }
+  }, []);
 
-  // Search items when query changes
+  // Fetch player BiS config
+  const fetchPlayerBis = useCallback(async (playerId: string, phase: string) => {
+    try {
+      const res = await fetch(`/api/bis/player?playerId=${playerId}&phase=${phase}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPlayerBisItems(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch player BiS:', error);
+    }
+  }, []);
+
+  // Load spec BiS when spec or phase changes
   useEffect(() => {
-    const searchItems = async () => {
-      if (!selectedSlot) return;
-
-      setSearchLoading(true);
-      try {
-        const params = new URLSearchParams();
-        params.set('slot', selectedSlot.slot);
-        if (searchQuery) {
-          params.set('q', searchQuery);
-        }
-        params.set('limit', '30');
-
-        const res = await fetch(`/api/items/search?${params}`);
-        if (res.ok) {
-          const data = await res.json();
-          setSearchResults(data);
-        }
-      } catch (error) {
-        console.error('Failed to search items:', error);
-      } finally {
-        setSearchLoading(false);
-      }
-    };
-
-    const debounce = setTimeout(searchItems, 300);
-    return () => clearTimeout(debounce);
-  }, [searchQuery, selectedSlot]);
-
-  // Get BiS item for a slot
-  const getBisItem = (slot: string): BisConfig | null => {
-    return bisConfig.find(b => b.slot === slot) || null;
-  };
-
-  // Get current gear for a slot
-  const getCurrentGearItem = (slot: string): PlayerGear | null => {
-    return currentGear.find(g => g.slot === slot) || null;
-  };
-
-  // Handle slot click - opens dialog with context
-  const handleSlotClick = (slot: string, label: string, context: DialogContext) => {
-    setSelectedSlot({ slot, label });
-    setDialogContext(context);
-    setSearchQuery('');
-    setSearchResults([]);
-    if (useTbcPicker) {
-      setTbcPickerOpen(true);
-    } else {
-      setDialogOpen(true);
+    if (selectedSpec) {
+      fetchSpecBis(selectedSpec, selectedPhase);
     }
-  };
+  }, [selectedSpec, selectedPhase, fetchSpecBis]);
 
-  // Handle TBC item selection from the gear picker modal
-  const handleTbcItemSelect = async (item: TbcItem) => {
-    if (!selectedSlot) return;
-
-    try {
-      if (dialogContext === 'bis') {
-        if (!selectedPlayerData?.mainSpec) return;
-
-        // For BiS, we just store the item reference
-        const res = await fetch('/api/bis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            spec: selectedPlayerData.mainSpec,
-            phase: selectedPhase,
-            slot: selectedSlot.slot,
-            wowheadId: item.id,
-            itemName: item.name,
-          }),
-        });
-
-        if (res.ok) {
-          await fetchBisConfig(selectedPlayerData.mainSpec);
-        }
-      } else {
-        // Update current gear
-        const res = await fetch(`/api/players/${selectedPlayerId}/gear`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            slot: selectedSlot.slot,
-            wowheadId: item.id,
-            itemName: item.name,
-          }),
-        });
-
-        if (res.ok) {
-          await fetchCurrentGear(selectedPlayerId);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to save TBC item selection:', error);
+  // Load player BiS when player or phase changes
+  useEffect(() => {
+    if (selectedPlayer) {
+      fetchPlayerBis(selectedPlayer.id, playerPhase);
     }
+  }, [selectedPlayer, playerPhase, fetchPlayerBis]);
+
+  // Refresh Wowhead tooltips
+  useEffect(() => {
+    refreshWowheadTooltips();
+  }, [specBisItems, playerBisItems]);
+
+  // Handle slot click for spec presets
+  const handleSpecSlotClick = (slot: string) => {
+    if (!isOfficer) return;
+    setSelectedSlot(slot);
+    setPickerContext('spec');
+    setPickerOpen(true);
   };
 
-  // Handle TBC enchant selection
-  const handleTbcEnchantSelect = async (enchant: TbcEnchant) => {
-    if (!selectedSlot || !selectedPlayerId) return;
+  // Handle slot click for player lists
+  const handlePlayerSlotClick = (slot: string) => {
+    setSelectedSlot(slot);
+    setPickerContext('player');
+    setPickerOpen(true);
+  };
 
-    try {
-      // Update current gear with enchant
-      const currentSlotGear = getCurrentGearItem(selectedSlot.slot);
-      if (currentSlotGear) {
-        const res = await fetch(`/api/players/${selectedPlayerId}/gear`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            slot: selectedSlot.slot,
-            wowheadId: currentSlotGear.wowheadId || currentSlotGear.item?.wowheadId,
-            itemName: currentSlotGear.itemName || currentSlotGear.item?.name,
-            enchantId: enchant.id,
-          }),
-        });
-
-        if (res.ok) {
-          await fetchCurrentGear(selectedPlayerId);
-        }
+  // Handle item selection from picker
+  const handleItemSelect = async (item: TbcItem) => {
+    if (pickerContext === 'spec') {
+      // Save to spec preset
+      const res = await fetch('/api/bis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          spec: selectedSpec,
+          phase: selectedPhase,
+          slot: selectedSlot,
+          wowheadId: item.id,
+          itemName: item.name,
+        }),
+      });
+      if (res.ok) {
+        fetchSpecBis(selectedSpec, selectedPhase);
       }
-    } catch (error) {
-      console.error('Failed to save TBC enchant selection:', error);
-    }
-  };
-
-  // Handle TBC gem selection
-  const handleTbcGemSelect = async (gem: TbcGem, socketIndex: number) => {
-    if (!selectedSlot || !selectedPlayerId) return;
-
-    try {
-      const currentSlotGear = getCurrentGearItem(selectedSlot.slot);
-      if (currentSlotGear) {
-        const gemUpdates: Record<string, number | null> = {};
-        if (socketIndex === 0) gemUpdates.gem1Id = gem.id;
-        else if (socketIndex === 1) gemUpdates.gem2Id = gem.id;
-        else if (socketIndex === 2) gemUpdates.gem3Id = gem.id;
-
-        const res = await fetch(`/api/players/${selectedPlayerId}/gear`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            slot: selectedSlot.slot,
-            wowheadId: currentSlotGear.wowheadId || currentSlotGear.item?.wowheadId,
-            itemName: currentSlotGear.itemName || currentSlotGear.item?.name,
-            ...gemUpdates,
-          }),
-        });
-
-        if (res.ok) {
-          await fetchCurrentGear(selectedPlayerId);
-        }
+    } else if (selectedPlayer) {
+      // Save to player custom BiS
+      const res = await fetch('/api/bis/player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId: selectedPlayer.id,
+          phase: playerPhase,
+          slot: selectedSlot,
+          wowheadId: item.id,
+          itemName: item.name,
+        }),
+      });
+      if (res.ok) {
+        fetchPlayerBis(selectedPlayer.id, playerPhase);
       }
-    } catch (error) {
-      console.error('Failed to save TBC gem selection:', error);
-    }
-  };
-
-  // Handle clear from TBC picker
-  const handleTbcClear = async () => {
-    if (!selectedSlot) return;
-    await handleClearSlot();
-    setTbcPickerOpen(false);
-  };
-
-  // Handle item selection
-  const handleSelectItem = async (item: Item) => {
-    if (!selectedSlot) return;
-
-    try {
-      if (dialogContext === 'bis') {
-        if (!selectedPlayerData?.mainSpec) return;
-
-        const res = await fetch('/api/bis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            spec: selectedPlayerData.mainSpec,
-            phase: selectedPhase,
-            slot: selectedSlot.slot,
-            itemId: item.id,
-          }),
-        });
-
-        if (res.ok) {
-          await fetchBisConfig(selectedPlayerData.mainSpec);
-        }
-      } else {
-        // Update current gear
-        const res = await fetch(`/api/players/${selectedPlayerId}/gear`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            slot: selectedSlot.slot,
-            itemId: item.id,
-            wowheadId: item.wowheadId,
-            itemName: item.name,
-            icon: item.icon,
-          }),
-        });
-
-        if (res.ok) {
-          await fetchCurrentGear(selectedPlayerId);
-        }
-      }
-      setDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to save selection:', error);
     }
   };
 
   // Handle clear slot
   const handleClearSlot = async () => {
-    if (!selectedSlot) return;
+    if (pickerContext === 'spec') {
+      const params = new URLSearchParams({
+        spec: selectedSpec,
+        phase: selectedPhase,
+        slot: selectedSlot,
+      });
+      const res = await fetch(`/api/bis?${params}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchSpecBis(selectedSpec, selectedPhase);
+      }
+    } else if (selectedPlayer) {
+      const params = new URLSearchParams({
+        playerId: selectedPlayer.id,
+        phase: playerPhase,
+        slot: selectedSlot,
+      });
+      const res = await fetch(`/api/bis/player?${params}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchPlayerBis(selectedPlayer.id, playerPhase);
+      }
+    }
+    setPickerOpen(false);
+  };
 
-    try {
-      if (dialogContext === 'bis') {
-        if (!selectedPlayerData?.mainSpec) return;
+  // Copy spec preset to player list
+  const handleCopyFromPreset = async () => {
+    if (!selectedPlayer) return;
 
-        const params = new URLSearchParams();
-        params.set('spec', selectedPlayerData.mainSpec);
-        params.set('phase', selectedPhase);
-        params.set('slot', selectedSlot.slot);
+    // Fetch the spec preset for the player's spec
+    const spec = selectedPlayer.mainSpec;
+    const res = await fetch(`/api/bis?spec=${encodeURIComponent(spec)}&phase=${playerPhase}`);
+    if (!res.ok) return;
 
-        const res = await fetch(`/api/bis?${params}`, { method: 'DELETE' });
-        if (res.ok) {
-          await fetchBisConfig(selectedPlayerData.mainSpec);
-        }
-      } else {
-        const res = await fetch(`/api/players/${selectedPlayerId}/gear?slot=${selectedSlot.slot}`, {
-          method: 'DELETE',
+    const presetItems: BisItem[] = await res.json();
+
+    // Copy each item to the player's custom list
+    for (const item of presetItems) {
+      if (item.wowheadId) {
+        await fetch('/api/bis/player', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playerId: selectedPlayer.id,
+            phase: playerPhase,
+            slot: item.slot,
+            wowheadId: item.wowheadId,
+            itemName: item.itemName,
+          }),
         });
-        if (res.ok) {
-          await fetchCurrentGear(selectedPlayerId);
-        }
-      }
-      setDialogOpen(false);
-    } catch (error) {
-      console.error('Failed to clear slot:', error);
-    }
-  };
-
-  // Export to WoWSims - maps specs to wowsims.com URL paths
-  const handleExportToWowSims = (gearType: 'current' | 'bis') => {
-    if (!selectedPlayerData) return;
-
-    const specMap: Record<string, string> = {
-      // Druid
-      'DruidBalance': 'balance_druid',
-      'DruidFeral': 'feral_druid',
-      'DruidGuardian': 'feral_tank_druid',
-      'DruidRestoration': 'balance_druid', // No resto sim, use balance
-      // Hunter (all specs use same sim)
-      'HunterBeastMastery': 'hunter',
-      'HunterMarksmanship': 'hunter',
-      'HunterSurvival': 'hunter',
-      // Mage (all specs use same sim)
-      'MageArcane': 'mage',
-      'MageFire': 'mage',
-      'MageFrost': 'mage',
-      // Paladin
-      'PaladinRetribution': 'retribution_paladin',
-      'PaladinProtection': 'protection_paladin',
-      'PaladinHoly': 'retribution_paladin', // No holy sim
-      // Priest
-      'PriestShadow': 'shadow_priest',
-      'PriestDiscipline': 'smite_priest',
-      'PriestHoly': 'smite_priest',
-      // Rogue (all specs use same sim)
-      'RogueCombat': 'rogue',
-      'RogueAssassination': 'rogue',
-      'RogueSubtlety': 'rogue',
-      // Shaman
-      'ShamanElemental': 'elemental_shaman',
-      'ShamanEnhancement': 'enhancement_shaman',
-      'ShamanRestoration': 'elemental_shaman', // No resto sim
-      // Warlock (all specs use same sim)
-      'WarlockAffliction': 'warlock',
-      'WarlockDemonology': 'warlock',
-      'WarlockDestruction': 'warlock',
-      // Warrior
-      'WarriorArms': 'warrior',
-      'WarriorFury': 'warrior',
-      'WarriorProtection': 'protection_warrior',
-    };
-
-    const specPath = specMap[selectedPlayerData.mainSpec] || 'hunter';
-    const wowsimsUrl = `https://wowsims.com/tbc/${specPath}/`;
-
-    window.open(wowsimsUrl, '_blank');
-  };
-
-  // Export gear as JSON
-  const handleExportJson = (gearType: 'current' | 'bis') => {
-    if (!selectedPlayerData) return;
-
-    const gear = gearType === 'current' ? currentGear : bisConfig;
-    const allSlots = [...LEFT_SLOTS, ...RIGHT_SLOTS];
-
-    const exportData = {
-      player: selectedPlayerData.name,
-      class: selectedPlayerData.class,
-      spec: selectedPlayerData.mainSpec,
-      gearType,
-      gear: allSlots.map(({ slot }) => {
-        if (gearType === 'current') {
-          const item = currentGear.find(g => g.slot === slot);
-          return {
-            slot,
-            wowheadId: item?.wowheadId || item?.item?.wowheadId || null,
-            name: item?.itemName || item?.item?.name || null,
-            icon: item?.icon || item?.item?.icon || null,
-          };
-        } else {
-          const item = bisConfig.find(b => b.slot === slot);
-          return {
-            slot,
-            wowheadId: item?.wowheadId || item?.item?.wowheadId || null,
-            name: item?.itemName || item?.item?.name || null,
-            icon: item?.item?.icon || null,
-          };
-        }
-      }).filter(g => g.wowheadId),
-    };
-
-    const json = JSON.stringify(exportData, null, 2);
-    navigator.clipboard.writeText(json);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  // Open import dialog
-  const handleOpenImport = (target: 'current' | 'bis') => {
-    setImportTarget(target);
-    setImportJson('');
-    setImportDialogOpen(true);
-  };
-
-  // Map WoWSims slot names to our slot names
-  const mapWowSimsSlot = (slot: string): string | null => {
-    const slotMap: Record<string, string> = {
-      'head': 'Head',
-      'neck': 'Neck',
-      'shoulder': 'Shoulder',
-      'back': 'Back',
-      'chest': 'Chest',
-      'wrist': 'Wrist',
-      'hands': 'Hands',
-      'waist': 'Waist',
-      'legs': 'Legs',
-      'feet': 'Feet',
-      'finger1': 'Finger1',
-      'finger2': 'Finger2',
-      'trinket1': 'Trinket1',
-      'trinket2': 'Trinket2',
-      'mainHand': 'MainHand',
-      'offHand': 'OffHand',
-      'ranged': 'Ranged',
-    };
-    return slotMap[slot] || slot;
-  };
-
-  // Import gear from JSON (supports our format and WoWSims addon format)
-  const handleImportJson = async () => {
-    if (!selectedPlayerId || !importJson) return;
-
-    setImportLoading(true);
-    try {
-      const data = JSON.parse(importJson);
-      let gearItems: Array<{ slot: string; wowheadId: number; name?: string; icon?: string }> = [];
-
-      // Check for WoWSims addon format (has "equipment" object with slot keys)
-      if (data.equipment && typeof data.equipment === 'object') {
-        // WoWSims addon format: { equipment: { head: { id: 123 }, neck: { id: 456 }, ... } }
-        for (const [slotKey, itemData] of Object.entries(data.equipment)) {
-          const item = itemData as { id?: number; enchant?: number; gems?: number[] };
-          if (item && item.id) {
-            const mappedSlot = mapWowSimsSlot(slotKey);
-            if (mappedSlot) {
-              gearItems.push({
-                slot: mappedSlot,
-                wowheadId: item.id,
-              });
-            }
-          }
-        }
-      } else if (data.gear && Array.isArray(data.gear)) {
-        // Our format: { gear: [{ slot: "Head", wowheadId: 123, name: "Item" }, ...] }
-        gearItems = data.gear;
-      } else if (Array.isArray(data)) {
-        // Simple array format
-        gearItems = data;
-      }
-
-      let importedCount = 0;
-      for (const item of gearItems) {
-        if (!item.wowheadId) continue;
-
-        const slot = item.slot;
-        if (!slot) continue;
-
-        if (importTarget === 'current') {
-          await fetch(`/api/players/${selectedPlayerId}/gear`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              slot,
-              wowheadId: item.wowheadId,
-              itemName: item.name || `Item ${item.wowheadId}`,
-              icon: item.icon,
-            }),
-          });
-          importedCount++;
-        }
-      }
-
-      // Refresh data
-      if (importTarget === 'current') {
-        await fetchCurrentGear(selectedPlayerId);
-      }
-
-      setImportDialogOpen(false);
-      setImportJson('');
-      alert(`Imported ${importedCount} items successfully!`);
-    } catch (error) {
-      console.error('Failed to import:', error);
-      alert('Failed to import. Please check the JSON format.');
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
-  // Calculate BiS completion percentage
-  const calculateBisCompletion = () => {
-    if (bisConfig.length === 0) return 0;
-
-    let matches = 0;
-    for (const bis of bisConfig) {
-      if (!bis.item) continue;
-      const current = getCurrentGearItem(bis.slot);
-      if (current?.item?.id === bis.item.id || current?.wowheadId === bis.item.wowheadId) {
-        matches++;
       }
     }
 
-    return Math.round((matches / bisConfig.length) * 100);
+    fetchPlayerBis(selectedPlayer.id, playerPhase);
   };
+
+  const specData = getSpecById(selectedSpec);
+  const backgroundUrl = selectedSpec ? SPEC_BACKGROUNDS[selectedSpec] : null;
 
   if (loading) {
     return (
@@ -709,602 +292,282 @@ export default function BisListsPage() {
     );
   }
 
-  if (players.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Gear Comparison</h1>
-            <p className="text-muted-foreground">Compare current gear vs BiS</p>
-          </div>
-        </div>
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Players Yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Add players to your roster first to track their gear progress.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const renderGearSlot = (slot: string, label: string, context: DialogContext, align: 'left' | 'right') => {
-    const gearItem = context === 'current' ? getCurrentGearItem(slot) : getBisItem(slot);
-    const item = context === 'current'
-      ? (gearItem as PlayerGear | null)?.item
-      : (gearItem as BisConfig | null)?.item;
-    // Get wowheadId and itemName from item first, then fall back to the config object itself
-    const wowheadId = item?.wowheadId
-      || (context === 'current'
-        ? (gearItem as PlayerGear | null)?.wowheadId
-        : (gearItem as BisConfig | null)?.wowheadId);
-    const itemName = item?.name
-      || (context === 'current'
-        ? (gearItem as PlayerGear | null)?.itemName
-        : (gearItem as BisConfig | null)?.itemName);
-    const slotIcon = SLOT_ICONS[slot] || 'inv_misc_questionmark';
-    const hasItem = !!wowheadId || !!itemName;
-
-    // Get the icon URL - check config/gear icon first, then item icon, then slot icon
-    const configIcon = context === 'current'
-      ? (gearItem as PlayerGear | null)?.icon
-      : (gearItem as BisConfig | null)?.icon;
-    const itemIcon = configIcon || item?.icon;
-    const iconUrl = getItemIcon(itemIcon, slot, 'medium');
-
-    const iconElement = hasItem ? (
-      <a
-        href={wowheadId ? `https://www.wowhead.com/tbc/item=${wowheadId}` : '#'}
-        onClick={(e) => e.preventDefault()}
-        data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
-        className="flex-shrink-0"
-      >
-        <img
-          src={iconUrl}
-          alt={itemName || label}
-          className="w-9 h-9 rounded"
-          style={{
-            borderWidth: 2,
-            borderStyle: 'solid',
-            borderColor: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee',
-          }}
-        />
-      </a>
-    ) : (
-      <div className="relative flex-shrink-0">
-        <img
-          src={getItemIconUrl(slotIcon, 'medium')}
-          alt={label}
-          className="w-9 h-9 rounded"
-          style={{
-            borderWidth: 2,
-            borderStyle: 'solid',
-            borderColor: '#333',
-            opacity: 0.4,
-          }}
-        />
-      </div>
-    );
-
-    const textElement = (
-      <div className={`flex-1 min-w-0 ${align === 'right' ? 'text-right' : ''}`}>
-        {hasItem ? (
-          <span
-            className="text-xs font-medium block truncate"
-            style={{ color: item ? (ITEM_QUALITY_COLORS[item.quality] || '#a335ee') : '#a335ee' }}
-          >
-            {itemName}
-          </span>
-        ) : (
-          <span className="text-xs text-muted-foreground">{label}</span>
-        )}
-      </div>
-    );
-
-    return (
-      <div
-        key={`${context}-${slot}`}
-        onClick={() => handleSlotClick(slot, label, context)}
-        className="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-      >
-        {align === 'left' ? (
-          <>
-            {iconElement}
-            {textElement}
-          </>
-        ) : (
-          <>
-            {textElement}
-            {iconElement}
-          </>
-        )}
-      </div>
-    );
-  };
-
-  const bisCompletion = calculateBisCompletion();
-  const backgroundUrl = selectedPlayerData?.mainSpec ? SPEC_BACKGROUNDS[selectedPlayerData.mainSpec] : null;
-
   return (
     <div
-      className="space-y-6 min-h-screen -m-6 p-6 transition-all duration-500"
+      className="min-h-screen -m-6 p-6 transition-all duration-500"
       style={{
-        backgroundImage: backgroundUrl ? `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url(${backgroundUrl})` : undefined,
+        backgroundImage: backgroundUrl
+          ? `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url(${backgroundUrl})`
+          : undefined,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Gear Comparison</h1>
-          <p className="text-muted-foreground">Compare current gear vs BiS</p>
+          <h1 className="text-2xl font-bold text-foreground">BiS Lists</h1>
+          <p className="text-muted-foreground">Best in Slot gear by spec and phase</p>
         </div>
-        {selectedPlayerData && (
-          <div className="flex gap-2">
-            <Button
-              variant={useTbcPicker ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setUseTbcPicker(!useTbcPicker)}
-              title={useTbcPicker ? 'Using TBC Item Database (4500+ items)' : 'Using Boss Loot Tables'}
-            >
-              <Database className="h-4 w-4 mr-2" />
-              {useTbcPicker ? 'TBC DB' : 'Loot Tables'}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExportToWowSims('current')}>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <a href="https://tbc.wowhead.com/" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              TBC DB
+            </a>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href="https://www.wowsims.com/tbc/" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4 mr-2" />
               WoWSims
-            </Button>
-          </div>
-        )}
+            </a>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        {/* Player List Sidebar */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Characters</CardTitle>
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-full mt-2">
-                <SelectValue placeholder="Filter by class" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {WOW_CLASSES.map((cls) => (
-                  <SelectItem key={cls} value={cls}>
-                    <span style={{ color: CLASS_COLORS[cls] }}>{cls}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* Role Filter */}
-            <div className="flex gap-1 mt-2">
-              {[
-                { value: 'all', icon: null, label: 'All' },
-                { value: 'Tank', icon: '/icons/roles/tank.png', label: 'Tank' },
-                { value: 'Heal', icon: '/icons/roles/healer.png', label: 'Heal' },
-                { value: 'Melee', icon: '/icons/roles/melee.png', label: 'Melee' },
-                { value: 'Ranged', icon: '/icons/roles/ranged.png', label: 'Ranged' },
-              ].map((role) => (
-                <button
-                  key={role.value}
-                  onClick={() => setRoleFilter(role.value)}
-                  className={`flex-1 p-1.5 rounded transition-colors flex flex-col items-center gap-1 ${
-                    roleFilter === role.value
-                      ? 'bg-primary/20 border border-primary'
-                      : 'hover:bg-muted/50 border border-transparent'
-                  }`}
-                  title={role.label}
-                >
-                  {role.icon ? (
-                    <img src={role.icon} alt={role.label} className="w-6 h-6" />
-                  ) : (
-                    <span className="w-6 h-6 flex items-center justify-center text-xs font-bold">All</span>
-                  )}
-                  <span className="text-[10px] text-muted-foreground">{role.label}</span>
-                </button>
-              ))}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-1 max-h-[700px] overflow-y-auto">
-            {filteredPlayers.map((player) => (
-              <button
-                key={player.id}
-                onClick={() => setSelectedPlayer(player.name)}
-                className={`w-full p-2 rounded-lg text-left transition-colors flex items-center gap-3 ${
-                  selectedPlayer === player.name
-                    ? 'bg-primary/20 border border-primary'
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <img
-                  src={getSpecIconUrl(player.mainSpec)}
-                  alt={player.mainSpec}
-                  className="w-8 h-8 rounded"
-                  style={{ borderColor: CLASS_COLORS[player.class], borderWidth: 2 }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span style={{ color: CLASS_COLORS[player.class] }} className="font-medium truncate">
-                      {player.name}
-                    </span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {player.mainSpec?.replace(player.class, '')}
-                  </div>
-                </div>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'presets' | 'player')}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="presets">Spec Presets</TabsTrigger>
+          <TabsTrigger value="player">Player Lists</TabsTrigger>
+        </TabsList>
 
-        {/* Main Content */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Character Header */}
-          {selectedPlayerData && (
-            <Card>
-              <CardContent className="py-4">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={getSpecIconUrl(selectedPlayerData.mainSpec)}
-                    alt={selectedPlayerData.mainSpec}
-                    className="w-14 h-14 rounded-lg"
-                    style={{ borderColor: CLASS_COLORS[selectedPlayerData.class], borderWidth: 3 }}
-                  />
-                  <div>
-                    <h2 className="text-xl font-bold" style={{ color: CLASS_COLORS[selectedPlayerData.class] }}>
-                      {selectedPlayer}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedPlayerData.mainSpec?.replace(selectedPlayerData.class, '')} {selectedPlayerData.class}
-                    </p>
-                  </div>
-                  <div className="ml-auto text-right">
-                    <div className="text-2xl font-bold" style={{ color: bisCompletion === 100 ? '#1eff00' : bisCompletion > 50 ? '#ffcc00' : '#ff6b6b' }}>
-                      {bisCompletion}%
-                    </div>
-                    <p className="text-xs text-muted-foreground">BiS Complete</p>
-                  </div>
-                </div>
+        {/* Spec Presets Tab */}
+        <TabsContent value="presets">
+          <div className="grid gap-6 lg:grid-cols-4">
+            {/* Spec Sidebar */}
+            <Card className="lg:col-span-1">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Specs</CardTitle>
+              </CardHeader>
+              <CardContent className="max-h-[700px] overflow-y-auto">
+                <SpecSidebar
+                  selectedSpec={selectedSpec}
+                  onSelectSpec={setSelectedSpec}
+                />
               </CardContent>
             </Card>
-          )}
 
-          {/* Side-by-Side Gear Comparison */}
-          {selectedPlayerData && (
-            <div className="grid grid-cols-2 gap-4">
-              {/* BiS List Panel */}
+            {/* BiS List */}
+            <div className="lg:col-span-3 space-y-4">
+              {/* Spec Header */}
+              {specData && (
+                <Card>
+                  <CardContent className="py-4">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={getSpecIconUrl(selectedSpec, specData.class)}
+                        alt={specData.name}
+                        className="w-14 h-14 rounded-lg"
+                        style={{ borderColor: getClassColor(specData.class), borderWidth: 3 }}
+                      />
+                      <div>
+                        <h2
+                          className="text-xl font-bold"
+                          style={{ color: getClassColor(specData.class) }}
+                        >
+                          {specData.name} {specData.class}
+                        </h2>
+                        <p className="text-sm text-muted-foreground">{specData.role}</p>
+                      </div>
+                      {!isOfficer && (
+                        <div className="ml-auto flex items-center gap-2 text-muted-foreground">
+                          <Lock className="h-4 w-4" />
+                          <span className="text-sm">Officers only</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Phase Tabs & BiS List */}
               <Card>
-                <CardHeader className="py-3 space-y-3">
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
                       BiS List
                     </CardTitle>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-7 px-2">
-                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    <div className="flex gap-2">
+                      {['P1', 'P2', 'P3', 'P4', 'P5'].map((phase) => (
+                        <Button
+                          key={phase}
+                          variant={selectedPhase === phase ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 px-3"
+                          onClick={() => setSelectedPhase(phase)}
+                        >
+                          {phase}
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleExportJson('bis')}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Export JSON
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenImport('bis')}>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Import JSON
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  {/* Phase Tabs */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {['P1', 'P2', 'P3', 'P4', 'P5'].map((phase) => (
-                      <Button
-                        key={phase}
-                        variant={selectedPhase === phase ? 'default' : 'outline'}
-                        size="sm"
-                        className="h-7 px-3"
-                        onClick={() => setSelectedPhase(phase)}
-                      >
-                        {phase}
-                      </Button>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Left side slots */}
-                    <div className="space-y-0.5">
-                      {LEFT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'bis', 'left'))}
-                    </div>
-                    {/* Right side slots */}
-                    <div className="space-y-0.5">
-                      {RIGHT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'bis', 'right'))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Current Gear Panel */}
-              <Card>
-                <CardHeader className="py-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      Current Gear
-                    </CardTitle>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-7 px-2">
-                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleExportJson('current')}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Export JSON
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenImport('current')}>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Import JSON
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Left side slots */}
-                    <div className="space-y-0.5">
-                      {LEFT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'current', 'left'))}
-                    </div>
-                    {/* Right side slots */}
-                    <div className="space-y-0.5">
-                      {RIGHT_SLOTS.map(({ slot, label }) => renderGearSlot(slot, label, 'current', 'right'))}
-                    </div>
-                  </div>
+                <CardContent>
+                  <BisListView
+                    items={specBisItems}
+                    onSlotClick={handleSpecSlotClick}
+                    editable={isOfficer}
+                    emptyMessage={
+                      isOfficer
+                        ? 'Click on a slot to set the BiS item for this spec.'
+                        : 'No BiS items configured for this spec yet.'
+                    }
+                  />
                 </CardContent>
               </Card>
             </div>
-          )}
+          </div>
+        </TabsContent>
 
-          {/* BiS Items Table */}
-          {selectedPlayerData && bisConfig.filter(b => b.item || b.wowheadId).length > 0 && (
-            <Card className="mt-6">
-              <CardHeader className="py-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  BiS Items - {selectedPhase}
-                </CardTitle>
+        {/* Player Lists Tab */}
+        <TabsContent value="player">
+          <div className="grid gap-6 lg:grid-cols-4">
+            {/* Player Sidebar */}
+            <Card className="lg:col-span-1">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">My Characters</CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border text-left">
-                        <th className="pb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Item</th>
-                        <th className="pb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Zone</th>
-                        <th className="pb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Boss</th>
-                        <th className="pb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Drop Chance</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bisConfig
-                        .filter(b => b.item || b.wowheadId)
-                        .map((bis) => {
-                          const item = bis.item;
-                          const wowheadId = item?.wowheadId || bis.wowheadId;
-                          const itemName = item?.name || bis.itemName;
-                          const quality = item?.quality || 4; // Default to epic
-                          const zone = item?.raid || bis.source || '-';
-                          const boss = item?.boss || '-';
-                          const iconUrl = getItemIcon(bis.icon || item?.icon, bis.slot, 'small');
-
-                          return (
-                            <tr key={bis.slot} className="border-b border-border/50 hover:bg-muted/30">
-                              <td className="py-2">
-                                <div className="flex items-center gap-3">
-                                  <a
-                                    href={wowheadId ? `https://www.wowhead.com/tbc/item=${wowheadId}` : '#'}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
-                                    data-wh-icon-size="small"
-                                    className="flex-shrink-0"
-                                  >
-                                    <img
-                                      src={iconUrl}
-                                      alt={itemName || 'Item'}
-                                      className="w-8 h-8 rounded"
-                                      style={{
-                                        borderWidth: 2,
-                                        borderStyle: 'solid',
-                                        borderColor: ITEM_QUALITY_COLORS[quality] || '#a335ee'
-                                      }}
-                                    />
-                                  </a>
-                                  <div>
-                                    <a
-                                      href={wowheadId ? `https://www.wowhead.com/tbc/item=${wowheadId}` : '#'}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      data-wowhead={wowheadId ? `item=${wowheadId}&domain=tbc` : undefined}
-                                      data-wh-icon-size="false"
-                                      className="font-medium hover:underline"
-                                      style={{ color: ITEM_QUALITY_COLORS[quality] || '#a335ee' }}
-                                    >
-                                      {itemName}
-                                    </a>
-                                    <div className="text-xs text-muted-foreground">
-                                      {bis.slot.replace(/([A-Z])/g, ' $1').trim()}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-2 text-sm text-muted-foreground">{zone}</td>
-                              <td className="py-2 text-sm text-muted-foreground">{boss}</td>
-                              <td className="py-2 text-sm text-muted-foreground">-</td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
-                </div>
+              <CardContent className="space-y-1 max-h-[700px] overflow-y-auto">
+                {players.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No characters found</p>
+                  </div>
+                ) : (
+                  players.map((player) => (
+                    <button
+                      key={player.id}
+                      onClick={() => setSelectedPlayer(player)}
+                      className={`w-full p-2 rounded-lg text-left transition-colors flex items-center gap-3 ${
+                        selectedPlayer?.id === player.id
+                          ? 'bg-primary/20 border border-primary'
+                          : 'hover:bg-muted/50'
+                      }`}
+                    >
+                      <img
+                        src={getSpecIconUrl(player.mainSpec, player.class)}
+                        alt={player.mainSpec}
+                        className="w-8 h-8 rounded"
+                        style={{ borderColor: CLASS_COLORS[player.class], borderWidth: 2 }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span
+                          style={{ color: CLASS_COLORS[player.class] }}
+                          className="font-medium truncate block"
+                        >
+                          {player.name}
+                        </span>
+                        <div className="text-xs text-muted-foreground">
+                          {player.mainSpec?.replace(player.class, '')}
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                )}
               </CardContent>
             </Card>
-          )}
-        </div>
-      </div>
 
-      {/* Item Selection Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>
-              Select {dialogContext === 'current' ? 'Current' : 'BiS'}: {selectedSlot?.label}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search items..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            {((dialogContext === 'bis' && getBisItem(selectedSlot?.slot || '')) ||
-              (dialogContext === 'current' && getCurrentGearItem(selectedSlot?.slot || ''))) && (
-              <Button variant="outline" size="sm" onClick={handleClearSlot}>
-                <X className="h-4 w-4 mr-1" />
-                Clear
-              </Button>
-            )}
-          </div>
-
-          <div className="flex-1 overflow-y-auto min-h-[300px]">
-            {searchLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : searchResults.length > 0 ? (
-              <div className="space-y-1">
-                {searchResults.map((item) => (
-                  <div
-                    key={item.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleSelectItem(item);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleSelectItem(item);
-                      }
-                    }}
-                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left cursor-pointer"
-                  >
-                    <img
-                      src={getItemIcon(item.icon, selectedSlot?.slot, 'medium')}
-                      alt={item.name}
-                      className="w-9 h-9 rounded pointer-events-none"
-                      style={{
-                        borderWidth: 2,
-                        borderStyle: 'solid',
-                        borderColor: ITEM_QUALITY_COLORS[item.quality] || '#a335ee'
-                      }}
-                    />
-                    <div className="flex-1 min-w-0 pointer-events-none">
-                      <div
-                        className="font-medium truncate"
-                        style={{ color: ITEM_QUALITY_COLORS[item.quality] || '#a335ee' }}
-                      >
-                        {item.name}
+            {/* Player BiS List */}
+            <div className="lg:col-span-3 space-y-4">
+              {selectedPlayer ? (
+                <>
+                  {/* Player Header */}
+                  <Card>
+                    <CardContent className="py-4">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={getSpecIconUrl(selectedPlayer.mainSpec, selectedPlayer.class)}
+                          alt={selectedPlayer.mainSpec}
+                          className="w-14 h-14 rounded-lg"
+                          style={{ borderColor: CLASS_COLORS[selectedPlayer.class], borderWidth: 3 }}
+                        />
+                        <div>
+                          <h2
+                            className="text-xl font-bold"
+                            style={{ color: CLASS_COLORS[selectedPlayer.class] }}
+                          >
+                            {selectedPlayer.name}
+                          </h2>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedPlayer.mainSpec?.replace(selectedPlayer.class, '')} {selectedPlayer.class}
+                          </p>
+                        </div>
+                        <div className="ml-auto">
+                          <Button variant="outline" size="sm" onClick={handleCopyFromPreset}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Copy from Spec Preset
+                          </Button>
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {item.raid} - {item.boss}
+                    </CardContent>
+                  </Card>
+
+                  {/* Phase Tabs & BiS List */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                          Custom BiS List
+                        </CardTitle>
+                        <div className="flex gap-2">
+                          {['P1', 'P2', 'P3', 'P4', 'P5'].map((phase) => (
+                            <Button
+                              key={phase}
+                              variant={playerPhase === phase ? 'default' : 'outline'}
+                              size="sm"
+                              className="h-7 px-3"
+                              onClick={() => setPlayerPhase(phase)}
+                            >
+                              {phase}
+                            </Button>
+                          ))}
+                        </div>
                       </div>
+                    </CardHeader>
+                    <CardContent>
+                      <BisListView
+                        items={playerBisItems}
+                        onSlotClick={handlePlayerSlotClick}
+                        editable={true}
+                        emptyMessage="Click on a slot to set your custom BiS item, or copy from the spec preset."
+                      />
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="py-12">
+                    <div className="text-center">
+                      <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">Select a Character</h3>
+                      <p className="text-muted-foreground">
+                        Choose a character from the sidebar to view or edit their custom BiS list.
+                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p className="text-sm">
-                  {searchQuery ? 'No items found' : 'Type to search for items or browse available items'}
-                </p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Import Dialog */}
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Import {importTarget === 'current' ? 'Current Gear' : 'BiS List'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Paste JSON</Label>
-              <Textarea
-                placeholder='{"gear": [{"slot": "Head", "wowheadId": 12345, "name": "Item Name"}, ...]}'
-                value={importJson}
-                onChange={(e) => setImportJson(e.target.value)}
-                rows={8}
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Supports: This app export, WoWSims Exporter addon JSON
-              </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleImportJson} disabled={!importJson || importLoading}>
-              {importLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-              Import
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+      </Tabs>
 
-      {/* TBC Gear Picker Modal */}
+      {/* Gear Picker Modal */}
       <GearPickerModal
-        open={tbcPickerOpen}
-        onOpenChange={setTbcPickerOpen}
-        slot={selectedSlot?.slot || ''}
-        slotLabel={selectedSlot?.label || ''}
-        onSelectItem={handleTbcItemSelect}
-        onSelectEnchant={handleTbcEnchantSelect}
-        onSelectGem={handleTbcGemSelect}
-        onClear={handleTbcClear}
-        currentItem={
-          dialogContext === 'current'
-            ? getCurrentGearItem(selectedSlot?.slot || '')
-              ? { id: getCurrentGearItem(selectedSlot?.slot || '')?.wowheadId || 0, name: getCurrentGearItem(selectedSlot?.slot || '')?.itemName || '' }
-              : null
-            : getBisItem(selectedSlot?.slot || '')
-              ? { id: getBisItem(selectedSlot?.slot || '')?.wowheadId || 0, name: getBisItem(selectedSlot?.slot || '')?.itemName || '' }
-              : null
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        slot={selectedSlot}
+        slotLabel={selectedSlot.replace(/([A-Z])/g, ' $1').trim()}
+        onSelectItem={handleItemSelect}
+        onClear={handleClearSlot}
+        currentItem={null}
+        playerClass={
+          pickerContext === 'spec'
+            ? specData?.class
+            : selectedPlayer?.class
         }
-        playerClass={selectedPlayerData?.class}
       />
     </div>
   );

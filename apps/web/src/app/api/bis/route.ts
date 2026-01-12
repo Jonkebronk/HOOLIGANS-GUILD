@@ -1,6 +1,75 @@
 import { NextResponse } from 'next/server';
 import { prisma, GearSlot, Phase } from '@hooligans/database';
 import { fetchWowheadIcon } from '@/lib/wowhead';
+import { auth } from '@/lib/auth';
+
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
+
+// Helper to check if user has officer permissions
+async function checkOfficerPermission(): Promise<{ hasPermission: boolean; error?: string }> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { hasPermission: false, error: 'Not authenticated' };
+  }
+
+  if (!DISCORD_BOT_TOKEN || !DISCORD_GUILD_ID) {
+    return { hasPermission: false, error: 'Discord bot not configured' };
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { discordId: true },
+    });
+
+    if (!user?.discordId) {
+      return { hasPermission: false, error: 'No Discord account linked' };
+    }
+
+    const memberRes = await fetch(
+      `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/members/${user.discordId}`,
+      {
+        headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` },
+      }
+    );
+
+    if (!memberRes.ok) {
+      return { hasPermission: false, error: 'Could not fetch Discord member' };
+    }
+
+    const member = await memberRes.json();
+    const memberRoleIds: string[] = member.roles || [];
+
+    const rolesRes = await fetch(
+      `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/roles`,
+      {
+        headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` },
+      }
+    );
+
+    if (!rolesRes.ok) {
+      return { hasPermission: false, error: 'Could not fetch Discord roles' };
+    }
+
+    const allRoles = await rolesRes.json();
+    const userRoles = allRoles
+      .filter((role: { id: string; name: string }) =>
+        memberRoleIds.includes(role.id) && role.name !== '@everyone'
+      );
+
+    const roleNames = userRoles.map((r: { name: string }) => r.name.toLowerCase());
+    const isGM = roleNames.some((name: string) => name.includes('gm') || name.includes('guild master'));
+    const isAdmin = roleNames.some((name: string) => name.includes('admin'));
+    const isOfficer = roleNames.some((name: string) => name.includes('officer') || name.includes('raid lead'));
+
+    return { hasPermission: isGM || isAdmin || isOfficer };
+  } catch (error) {
+    console.error('Officer permission check error:', error);
+    return { hasPermission: false, error: 'Permission check failed' };
+  }
+}
 
 // GET - Retrieve BiS configuration for a spec and phase
 export async function GET(request: Request) {
@@ -66,8 +135,18 @@ export async function GET(request: Request) {
 
 // POST - Save BiS configuration for a spec/phase/slot
 // Accepts either itemId (from our DB) or wowheadId + itemName (from TBC picker)
+// Officers only
 export async function POST(request: Request) {
   try {
+    // Check officer permission
+    const { hasPermission, error } = await checkOfficerPermission();
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: error || 'Only officers can edit spec presets' },
+        { status: 403 }
+      );
+    }
+
     const { spec, phase, slot, itemId, wowheadId, itemName } = await request.json();
 
     if (!spec || !phase || !slot) {
@@ -130,8 +209,18 @@ export async function POST(request: Request) {
 }
 
 // DELETE - Remove BiS configuration for a spec/phase/slot
+// Officers only
 export async function DELETE(request: Request) {
   try {
+    // Check officer permission
+    const { hasPermission, error } = await checkOfficerPermission();
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: error || 'Only officers can edit spec presets' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const spec = searchParams.get('spec');
     const phase = searchParams.get('phase');

@@ -69,9 +69,18 @@ export async function GET() {
 
     const topRole = userRoles[0];
 
+    // Check for officer/admin/GM roles by name
+    const roleNames = userRoles.map((r: { name: string }) => r.name.toLowerCase());
+    const isGM = roleNames.some((name: string) => name.includes('gm') || name.includes('guild master'));
+    const isAdmin = roleNames.some((name: string) => name.includes('admin'));
+    const isOfficer = roleNames.some((name: string) => name.includes('officer') || name.includes('raid lead'));
+
     return NextResponse.json({
       role: topRole ? topRole.name : null,
       color: topRole?.color ? `#${topRole.color.toString(16).padStart(6, '0')}` : null,
+      isGM,
+      isAdmin,
+      isOfficer,
     });
   } catch (error) {
     console.error('Failed to fetch user Discord role:', error);

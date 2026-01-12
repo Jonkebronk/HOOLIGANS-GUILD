@@ -240,6 +240,7 @@ model Player {
   lootRecords   LootRecord[]
   attendance    AttendanceRecord[]
   bisStatus     PlayerBisStatus[]
+  customBis     PlayerBisConfiguration[]
   raidQuests    RaidQuest[]
   raidSplits    RaidSplitMember[]
   currentGear   PlayerGear[]
@@ -366,6 +367,25 @@ model BisConfiguration {
 
   @@unique([spec, phase, slot])
   @@index([spec])
+  @@index([phase])
+}
+
+// Player-specific custom BiS lists (separate from spec presets)
+model PlayerBisConfiguration {
+  id            String    @id @default(cuid())
+  playerId      String
+  player        Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  phase         Phase
+  slot          GearSlot
+  itemName      String
+  source        String?   // Boss/location
+  wowheadId     Int?
+  icon          String?   // Icon name for display
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([playerId, phase, slot])
+  @@index([playerId])
   @@index([phase])
 }
 
