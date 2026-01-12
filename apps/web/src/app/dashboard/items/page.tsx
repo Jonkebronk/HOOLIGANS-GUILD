@@ -75,6 +75,10 @@ export default function ItemsPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importZone, setImportZone] = useState('');
   const [importUrl, setImportUrl] = useState('');
+  const [isCsvImportDialogOpen, setIsCsvImportDialogOpen] = useState(false);
+  const [csvData, setCsvData] = useState('');
+  const [csvImportResult, setCsvImportResult] = useState<{ imported: number; skipped: number; errors: string[] } | null>(null);
+  const [isImportingCsv, setIsImportingCsv] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -266,6 +270,39 @@ export default function ItemsPage() {
       alert('Failed to import boss data. Please try again.');
     } finally {
       setIsImportingBosses(false);
+    }
+  };
+
+  const handleImportCsv = async () => {
+    if (!csvData.trim()) {
+      return;
+    }
+
+    setIsImportingCsv(true);
+    setCsvImportResult(null);
+
+    try {
+      const res = await fetch('/api/items/import-csv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csvData }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setCsvImportResult(data);
+        if (data.imported > 0) {
+          await fetchItems();
+        }
+      } else {
+        setCsvImportResult({ imported: 0, skipped: 0, errors: [data.error || 'Failed to import CSV'] });
+      }
+    } catch (error) {
+      console.error('Failed to import CSV:', error);
+      setCsvImportResult({ imported: 0, skipped: 0, errors: ['Failed to import CSV. Please try again.'] });
+    } finally {
+      setIsImportingCsv(false);
     }
   };
 
@@ -540,6 +577,78 @@ export default function ItemsPage() {
                   )}
                   {isImporting ? 'Importing...' : 'Import Items'}
                 </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isCsvImportDialogOpen} onOpenChange={(open) => {
+            setIsCsvImportDialogOpen(open);
+            if (!open) {
+              setCsvData('');
+              setCsvImportResult(null);
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button variant="outline"><Upload className="h-4 w-4 mr-2" />Import CSV</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Import Items from CSV</DialogTitle>
+                <DialogDescription>
+                  Paste CSV data with columns: Item Name, Slot, Location/Raid, Boss, Phase
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>CSV Data</Label>
+                  <Textarea
+                    placeholder={`Item Name,Slot,Location,Boss,Phase
+Cursed Vision of Sargeras,Head,Black Temple,Illidan Stormrage,P3
+Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
+                    value={csvData}
+                    onChange={(e) => setCsvData(e.target.value)}
+                    rows={10}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Supported columns: Item Name/Name, Slot, Location/Raid, Boss/Source, Phase. First row should be headers.
+                  </p>
+                </div>
+                {csvImportResult && (
+                  <div className="bg-muted/50 rounded-md p-3 text-sm space-y-2">
+                    <p className="text-green-500">Imported {csvImportResult.imported} items</p>
+                    {csvImportResult.skipped > 0 && (
+                      <p className="text-muted-foreground">{csvImportResult.skipped} items skipped (already exist)</p>
+                    )}
+                    {csvImportResult.errors.length > 0 && (
+                      <div className="text-red-400 mt-2">
+                        <p className="font-medium">Errors:</p>
+                        <ul className="list-disc list-inside max-h-32 overflow-y-auto">
+                          {csvImportResult.errors.slice(0, 10).map((err, idx) => (
+                            <li key={idx} className="text-xs">{err}</li>
+                          ))}
+                          {csvImportResult.errors.length > 10 && (
+                            <li className="text-xs">...and {csvImportResult.errors.length - 10} more</li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCsvImportDialogOpen(false)} disabled={isImportingCsv}>
+                  {csvImportResult ? 'Close' : 'Cancel'}
+                </Button>
+                {!csvImportResult && (
+                  <Button onClick={handleImportCsv} disabled={!csvData.trim() || isImportingCsv}>
+                    {isImportingCsv ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    {isImportingCsv ? 'Importing...' : 'Import CSV'}
+                  </Button>
+                )}
               </DialogFooter>
             </DialogContent>
           </Dialog>
