@@ -1553,7 +1553,7 @@ export default function RaidSplitsPage() {
       </div>
 
       {/* Main Layout: Raids on left, Role Columns on right */}
-      <div className="flex items-stretch gap-8">
+      <div className="flex items-start gap-8">
         {/* Left Side: All Raids */}
         <div className="flex-shrink-0" ref={allRaidsSectionRef}>
           {/* 25-Man Raid */}
@@ -1607,12 +1607,6 @@ export default function RaidSplitsPage() {
             </div>
           </div>
 
-          {/* Karazhan Loot Overview */}
-          {selectedTeam && (
-            <div className="mt-6">
-              <KarazhanOverview teamId={selectedTeam.id} />
-            </div>
-          )}
         </div>
 
         {/* Role Columns Section - Side by Side */}
@@ -1690,6 +1684,13 @@ export default function RaidSplitsPage() {
           </div>
         </div>
       </div>
+
+      {/* Karazhan Loot Overview - Full Width */}
+      {selectedTeam && (
+        <div className="mt-6">
+          <KarazhanOverview teamId={selectedTeam.id} />
+        </div>
+      )}
 
       {/* Import Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
