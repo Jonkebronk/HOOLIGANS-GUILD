@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       imported: 0,
       skipped: 0,
       errors: [] as string[],
+      importedIds: [] as string[],
     };
 
     // Process each data row
@@ -127,7 +128,7 @@ export async function POST(request: Request) {
         }
 
         // Create the item
-        await prisma.item.create({
+        const newItem = await prisma.item.create({
           data: {
             name,
             slot: slot as any,
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
         });
 
         results.imported++;
+        results.importedIds.push(newItem.id);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         results.errors.push(`Row ${i + 1} (${name}): ${errorMsg}`);

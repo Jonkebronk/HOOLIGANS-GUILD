@@ -2,9 +2,55 @@ import { NextResponse } from 'next/server';
 import { prisma, GearSlot, Phase } from '@hooligans/database';
 import { fetchWowheadIcon } from '@/lib/wowhead';
 import { auth } from '@/lib/auth';
+import { SPEC_SHORT_NAMES } from '@/lib/specs';
 
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
+
+// Current phase configuration
+const CURRENT_PHASE: Phase = 'P1';
+const NEXT_PHASE: Phase = 'P2';
+
+// Get short name for a spec
+function getShortName(specId: string): string {
+  return SPEC_SHORT_NAMES[specId] || specId;
+}
+
+// Helper to update item's bisFor/bisNextPhase based on all BiS configs for that wowheadId
+async function updateItemBisFields(wowheadId: number | null): Promise<void> {
+  if (!wowheadId) return;
+
+  // Get all BiS configs for this wowheadId (current and next phase)
+  const bisConfigs = await prisma.bisConfiguration.findMany({
+    where: {
+      wowheadId,
+      phase: { in: [CURRENT_PHASE, NEXT_PHASE] },
+    },
+    select: { spec: true, phase: true },
+  });
+
+  // Group specs by phase
+  const currentPhaseSpecs = new Set<string>();
+  const nextPhaseSpecs = new Set<string>();
+
+  for (const config of bisConfigs) {
+    const shortName = getShortName(config.spec);
+    if (config.phase === CURRENT_PHASE) {
+      currentPhaseSpecs.add(shortName);
+    } else if (config.phase === NEXT_PHASE) {
+      nextPhaseSpecs.add(shortName);
+    }
+  }
+
+  const bisFor = currentPhaseSpecs.size > 0 ? Array.from(currentPhaseSpecs).sort().join(', ') : null;
+  const bisNextPhase = nextPhaseSpecs.size > 0 ? Array.from(nextPhaseSpecs).sort().join(', ') : null;
+
+  // Update all items with this wowheadId
+  await prisma.item.updateMany({
+    where: { wowheadId },
+    data: { bisFor, bisNextPhase },
+  });
+}
 
 // Helper to check if user has officer permissions
 async function checkOfficerPermission(): Promise<{ hasPermission: boolean; error?: string }> {
@@ -198,6 +244,11 @@ export async function POST(request: Request) {
       },
     });
 
+    // Sync item's bisFor/bisNextPhase fields
+    if (finalWowheadId) {
+      await updateItemBisFields(finalWowheadId);
+    }
+
     return NextResponse.json(bisConfig);
   } catch (error) {
     console.error('BiS config save error:', error);
@@ -233,6 +284,18 @@ export async function DELETE(request: Request) {
       );
     }
 
+    // First, get the wowheadId before deleting
+    const existingConfig = await prisma.bisConfiguration.findUnique({
+      where: {
+        spec_phase_slot: {
+          spec,
+          phase: phase as Phase,
+          slot: slot as GearSlot,
+        },
+      },
+      select: { wowheadId: true },
+    });
+
     await prisma.bisConfiguration.delete({
       where: {
         spec_phase_slot: {
@@ -242,6 +305,11 @@ export async function DELETE(request: Request) {
         },
       },
     });
+
+    // Sync item's bisFor/bisNextPhase fields after delete
+    if (existingConfig?.wowheadId) {
+      await updateItemBisFields(existingConfig.wowheadId);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -137,3 +137,40 @@ export function getSpecDisplayName(specId: string): string {
   if (!spec) return specId;
   return `${spec.name} ${spec.class}`;
 }
+
+// Short names for loot council display (compact)
+export const SPEC_SHORT_NAMES: Record<string, string> = {
+  'DruidBalance': 'Balance',
+  'DruidFeral': 'Feral',
+  'DruidGuardian': 'Guardian',
+  'DruidRestoration': 'Resto Druid',
+  'HunterBeastMastery': 'BM',
+  'HunterMarksmanship': 'MM',
+  'HunterSurvival': 'Surv',
+  'MageArcane': 'Arcane',
+  'MageFire': 'Fire',
+  'MageFrost': 'Frost',
+  'PaladinHoly': 'Holy Pala',
+  'PaladinProtection': 'Prot Pala',
+  'PaladinRetribution': 'Retri',
+  'PriestDiscipline': 'Disc',
+  'PriestHoly': 'Holy Priest',
+  'PriestShadow': 'Shadow',
+  'RogueAssassination': 'Assassin',
+  'RogueCombat': 'Combat',
+  'RogueSubtlety': 'Sub',
+  'ShamanElemental': 'Ele',
+  'ShamanEnhancement': 'Enh',
+  'ShamanRestoration': 'Resto Sham',
+  'WarlockAffliction': 'Affli',
+  'WarlockDemonology': 'Demo',
+  'WarlockDestruction': 'Destro',
+  'WarriorArms': 'Arms',
+  'WarriorFury': 'Fury',
+  'WarriorProtection': 'Prot War',
+};
+
+// Get short name for a spec (for loot council display)
+export function getSpecShortName(specId: string): string {
+  return SPEC_SHORT_NAMES[specId] || getSpecById(specId)?.name || specId;
+}

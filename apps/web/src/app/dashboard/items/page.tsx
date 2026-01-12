@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check, Users } from 'lucide-react';
+import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check, Users, RefreshCw } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RAIDS, GEAR_SLOTS, CLASS_COLORS } from '@hooligans/shared';
@@ -87,6 +87,7 @@ export default function ItemsPage() {
   const [isImportingBosses, setIsImportingBosses] = useState(false);
   const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number; mappingsLoaded?: number; itemToBossSize?: number; debug?: { sampleDbItems: number[]; sampleTmbItems: number[]; matchingIds?: number[]; uniqueBosses?: string[]; rawSample?: string } } | null>(null);
   const [isFixingPhases, setIsFixingPhases] = useState(false);
+  const [isSyncingBis, setIsSyncingBis] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [editForm, setEditForm] = useState({ boss: '', raid: '', lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
@@ -327,6 +328,30 @@ export default function ItemsPage() {
       alert('Failed to fix phases. Please try again.');
     } finally {
       setIsFixingPhases(false);
+    }
+  };
+
+  const handleSyncBis = async () => {
+    if (!confirm('This will sync all items\' BiS information from BiS presets. Continue?')) {
+      return;
+    }
+
+    setIsSyncingBis(true);
+    try {
+      const res = await fetch('/api/items/sync-bis', { method: 'POST' });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(`Synced BiS data for ${data.updatedCount} items from ${data.configCount} BiS configurations!`);
+        await fetchItems();
+      } else {
+        alert(data.error || 'Failed to sync BiS');
+      }
+    } catch (error) {
+      console.error('Failed to sync BiS:', error);
+      alert('Failed to sync BiS. Please try again.');
+    } finally {
+      setIsSyncingBis(false);
     }
   };
 
@@ -724,6 +749,14 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
             )}
             {isFixingPhases ? 'Fixing...' : 'Fix Phases'}
           </Button>
+          <Button variant="outline" onClick={handleSyncBis} disabled={isSyncingBis}>
+            {isSyncingBis ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
+            {isSyncingBis ? 'Syncing...' : 'Sync BiS'}
+          </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" />Add Item</Button>
@@ -1029,15 +1062,27 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
                           </div>
                         )}
                         {item.bisFor && (
-                          <div>
+                          <div className="flex items-center gap-1">
                             <span className="text-muted-foreground">BiS: </span>
-                            <span className="text-purple-400">{item.bisFor}</span>
+                            <div className="flex flex-wrap gap-1">
+                              {item.bisFor.split(', ').map((spec) => (
+                                <span key={spec} className="px-1.5 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400">
+                                  {spec}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
                         {item.bisNextPhase && (
-                          <div>
-                            <span className="text-muted-foreground">BiS Next Phase: </span>
-                            <span className="text-blue-400">{item.bisNextPhase}</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">BiS Next: </span>
+                            <div className="flex flex-wrap gap-1">
+                              {item.bisNextPhase.split(', ').map((spec) => (
+                                <span key={spec} className="px-1.5 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">
+                                  {spec}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
                         {item.lootRecords && item.lootRecords.length > 0 && (
