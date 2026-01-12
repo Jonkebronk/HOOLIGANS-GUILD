@@ -561,7 +561,12 @@ export default function RosterPage() {
     // Save assignments to database
     console.log('handleDrop: Assignments to save:', assignmentsToSave);
     console.log('handleDrop: Assignments to delete:', assignmentsToDelete);
-    assignmentsToSave.forEach(a => saveAssignment(a.raidId, a.groupIndex, a.slotIndex, a.playerId));
+    console.log('handleDrop: selectedTeam:', selectedTeam);
+    console.log('handleDrop: About to call saveAssignment for', assignmentsToSave.length, 'assignments');
+    assignmentsToSave.forEach((a, i) => {
+      console.log('handleDrop: Calling saveAssignment #', i, a);
+      saveAssignment(a.raidId, a.groupIndex, a.slotIndex, a.playerId);
+    });
     assignmentsToDelete.forEach(a => deleteAssignment(a.raidId, a.groupIndex, a.slotIndex));
 
     setDraggedPlayer(null);
