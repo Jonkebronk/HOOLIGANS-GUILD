@@ -174,3 +174,41 @@ export const SPEC_SHORT_NAMES: Record<string, string> = {
 export function getSpecShortName(specId: string): string {
   return SPEC_SHORT_NAMES[specId] || getSpecById(specId)?.name || specId;
 }
+
+// Map spec short names to their class (for coloring)
+export const SPEC_SHORT_NAME_TO_CLASS: Record<string, WowClass> = {
+  'Balance': 'Druid',
+  'Feral': 'Druid',
+  'Guardian': 'Druid',
+  'Resto Druid': 'Druid',
+  'BM': 'Hunter',
+  'MM': 'Hunter',
+  'Surv': 'Hunter',
+  'Arcane': 'Mage',
+  'Fire': 'Mage',
+  'Frost': 'Mage',
+  'Holy Pala': 'Paladin',
+  'Prot Pala': 'Paladin',
+  'Retri': 'Paladin',
+  'Disc': 'Priest',
+  'Holy Priest': 'Priest',
+  'Shadow': 'Priest',
+  'Assassin': 'Rogue',
+  'Combat': 'Rogue',
+  'Sub': 'Rogue',
+  'Ele': 'Shaman',
+  'Enh': 'Shaman',
+  'Resto Sham': 'Shaman',
+  'Affli': 'Warlock',
+  'Demo': 'Warlock',
+  'Destro': 'Warlock',
+  'Arms': 'Warrior',
+  'Fury': 'Warrior',
+  'Prot War': 'Warrior',
+};
+
+// Get class color for a spec short name
+export function getSpecShortNameColor(shortName: string): string {
+  const wowClass = SPEC_SHORT_NAME_TO_CLASS[shortName];
+  return wowClass ? getClassColor(wowClass) : '#888888';
+}

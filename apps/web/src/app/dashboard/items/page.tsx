@@ -27,6 +27,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RAIDS, GEAR_SLOTS, CLASS_COLORS } from '@hooligans/shared';
 import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { useTeam } from '@/components/providers/team-provider';
+import { getSpecShortNameColor } from '@/lib/specs';
 
 type LootRecord = {
   id: string;
@@ -1111,11 +1112,18 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
                           <div className="flex items-center gap-1">
                             <span className="text-muted-foreground">BiS: </span>
                             <div className="flex flex-wrap gap-1">
-                              {item.bisFor.split(', ').map((spec) => (
-                                <span key={spec} className="px-1.5 py-0.5 rounded text-xs bg-purple-500/20 text-purple-400">
-                                  {spec}
-                                </span>
-                              ))}
+                              {item.bisFor.split(', ').map((spec) => {
+                                const color = getSpecShortNameColor(spec);
+                                return (
+                                  <span
+                                    key={spec}
+                                    className="px-1.5 py-0.5 rounded text-xs"
+                                    style={{ backgroundColor: `${color}20`, color }}
+                                  >
+                                    {spec}
+                                  </span>
+                                );
+                              })}
                             </div>
                           </div>
                         )}
@@ -1123,11 +1131,18 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
                           <div className="flex items-center gap-1">
                             <span className="text-muted-foreground">BiS Next: </span>
                             <div className="flex flex-wrap gap-1">
-                              {item.bisNextPhase.split(', ').map((spec) => (
-                                <span key={spec} className="px-1.5 py-0.5 rounded text-xs bg-blue-500/20 text-blue-400">
-                                  {spec}
-                                </span>
-                              ))}
+                              {item.bisNextPhase.split(', ').map((spec) => {
+                                const color = getSpecShortNameColor(spec);
+                                return (
+                                  <span
+                                    key={spec}
+                                    className="px-1.5 py-0.5 rounded text-xs"
+                                    style={{ backgroundColor: `${color}20`, color }}
+                                  >
+                                    {spec}
+                                  </span>
+                                );
+                              })}
                             </div>
                           </div>
                         )}
