@@ -67,7 +67,8 @@
       "Bash(git update-index:*)",
       "WebFetch(domain:rclootcouncil.com)",
       "Bash(git reset:*)",
-      "WebFetch(domain:thatsmybis.com)"
+      "WebFetch(domain:thatsmybis.com)",
+      "Bash(git checkout:*)"
     ]
   }
 }

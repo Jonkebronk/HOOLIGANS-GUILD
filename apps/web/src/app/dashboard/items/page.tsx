@@ -81,7 +81,7 @@ export default function ItemsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isImportBossDialogOpen, setIsImportBossDialogOpen] = useState(false);
   const [isImportingBosses, setIsImportingBosses] = useState(false);
-  const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number; sourcesLoaded?: number; mappingsLoaded?: number; itemToBossSize?: number; debug?: { sampleDbItems: number[]; sampleTmbItems: number[] } } | null>(null);
+  const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number; sourcesLoaded?: number; mappingsLoaded?: number; itemToBossSize?: number; debug?: { sampleDbItems: number[]; sampleTmbItems: number[]; matchingIds?: number[]; rawSourcesSample?: string; rawMappingsSample?: string } } | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [editForm, setEditForm] = useState({ lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
@@ -515,6 +515,14 @@ export default function ItemsPage() {
                             <p className="font-mono">{bossImportResult.debug.sampleDbItems?.join(', ') || 'none'}</p>
                             <p className="font-medium mt-1">Sample TMB Item IDs:</p>
                             <p className="font-mono">{bossImportResult.debug.sampleTmbItems?.join(', ') || 'none'}</p>
+                            <p className="font-medium mt-1">Matching IDs found:</p>
+                            <p className="font-mono">{bossImportResult.debug.matchingIds?.length || 0} - {bossImportResult.debug.matchingIds?.join(', ') || 'none'}</p>
+                            {bossImportResult.debug.rawSourcesSample && (
+                              <>
+                                <p className="font-medium mt-2">Raw Sources SQL (first 200 chars):</p>
+                                <pre className="font-mono text-[10px] bg-black/20 p-1 rounded overflow-x-auto whitespace-pre-wrap break-all max-h-16 overflow-y-auto">{bossImportResult.debug.rawSourcesSample.substring(0, 200)}</pre>
+                              </>
+                            )}
                           </>
                         )}
                       </div>

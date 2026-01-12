@@ -148,6 +148,11 @@ export async function POST() {
     // Get sample item IDs from TMB for debugging
     const sampleTmbItems = Array.from(itemToBoss.keys()).slice(0, 5);
 
+    // Find any overlapping IDs between DB and TMB
+    const dbIdSet = new Set(items.map(i => i.wowheadId).filter(Boolean));
+    const tmbIdSet = new Set(itemToBoss.keys());
+    const matchingIds = [...dbIdSet].filter(id => tmbIdSet.has(id as number)).slice(0, 10);
+
     return NextResponse.json({
       success: true,
       totalItems: items.length,
@@ -162,6 +167,9 @@ export async function POST() {
         sampleTmbItems,
         sampleMappings: mappings.slice(0, 5),
         sampleSources: sources.slice(0, 5),
+        matchingIds,
+        rawSourcesSample: sourcesSql.substring(0, 500),
+        rawMappingsSample: mappingsSql.substring(0, 500),
       }
     });
   } catch (error) {
