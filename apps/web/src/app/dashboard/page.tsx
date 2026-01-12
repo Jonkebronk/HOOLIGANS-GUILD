@@ -405,6 +405,23 @@ export default function DashboardPage() {
                 <p className="text-xs text-muted-foreground">Combat logs & rankings</p>
               </div>
             </a>
+            <a
+              href="https://sixtyupgrades.com/tbc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+            >
+              <div className="w-8 h-8 rounded bg-amber-600 flex items-center justify-center">
+                <span className="text-white text-sm font-bold">60</span>
+              </div>
+              <div>
+                <p className="font-medium text-sm flex items-center gap-1">
+                  Sixty Upgrades
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </p>
+                <p className="text-xs text-muted-foreground">Gear planner & upgrades</p>
+              </div>
+            </a>
           </div>
         </CardContent>
       </Card>
