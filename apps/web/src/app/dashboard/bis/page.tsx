@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Target, ExternalLink, Lock, Plus } from 'lucide-react';
+import { Loader2, Target, Lock, Plus } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { ItemPickerModal } from '@/components/bis/item-picker-modal';
@@ -307,25 +307,9 @@ export default function BisListsPage() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">BiS Lists</h1>
-          <p className="text-muted-foreground">Best in Slot gear by spec and phase</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <a href="https://tbc.wowhead.com/" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              TBC DB
-            </a>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <a href="https://www.wowsims.com/tbc/" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              WoWSims
-            </a>
-          </Button>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-foreground">BiS Lists</h1>
+        <p className="text-muted-foreground">Best in Slot gear by spec and phase</p>
       </div>
 
       {/* Tabs */}
