@@ -74,6 +74,7 @@ export default function PerformancePage() {
   const [performances, setPerformances] = useState<RaidPerformance[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedPerformance, setSelectedPerformance] = useState<RaidPerformance | null>(null);
+  const [allFeedbackChannels, setAllFeedbackChannels] = useState<FeedbackChannel[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [creatingChannel, setCreatingChannel] = useState<string | null>(null);
   const [archivingChannel, setArchivingChannel] = useState<string | null>(null);
@@ -93,9 +94,10 @@ export default function PerformancePage() {
 
     setLoading(true);
     try {
-      const [performancesRes, playersRes] = await Promise.all([
+      const [performancesRes, playersRes, channelsRes] = await Promise.all([
         fetch(`/api/performance?teamId=${selectedTeam.id}`),
         fetch(`/api/players?teamId=${selectedTeam.id}`),
+        fetch(`/api/discord/feedback-channels?teamId=${selectedTeam.id}`),
       ]);
 
       if (performancesRes.ok) {
@@ -106,6 +108,11 @@ export default function PerformancePage() {
       if (playersRes.ok) {
         const data = await playersRes.json();
         setPlayers(data.filter((p: Player & { active?: boolean }) => p.active !== false));
+      }
+
+      if (channelsRes.ok) {
+        const data = await channelsRes.json();
+        setAllFeedbackChannels(data);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -171,8 +178,6 @@ export default function PerformancePage() {
   };
 
   const handleCreateFeedbackChannel = async (playerId: string) => {
-    if (!selectedPerformance) return;
-
     setCreatingChannel(playerId);
     try {
       const res = await fetch('/api/discord/create-feedback-channel', {
@@ -180,19 +185,26 @@ export default function PerformancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           playerId,
-          raidPerformanceId: selectedPerformance.id,
+          raidPerformanceId: selectedPerformance?.id || null,
         }),
       });
 
       if (res.ok) {
-        // Refresh the selected performance to get updated channels
-        const performanceRes = await fetch(`/api/performance/${selectedPerformance.id}`);
-        if (performanceRes.ok) {
-          const updated = await performanceRes.json();
-          setSelectedPerformance(updated);
-          setPerformances((prev) =>
-            prev.map((p) => (p.id === updated.id ? updated : p))
-          );
+        const newChannel = await res.json();
+        // Add to all feedback channels
+        if (newChannel.channel) {
+          setAllFeedbackChannels((prev) => [...prev, newChannel.channel]);
+        }
+        // Also refresh if a performance is selected
+        if (selectedPerformance) {
+          const performanceRes = await fetch(`/api/performance/${selectedPerformance.id}`);
+          if (performanceRes.ok) {
+            const updated = await performanceRes.json();
+            setSelectedPerformance(updated);
+            setPerformances((prev) =>
+              prev.map((p) => (p.id === updated.id ? updated : p))
+            );
+          }
         }
       } else {
         const error = await res.json();
@@ -209,24 +221,33 @@ export default function PerformancePage() {
   };
 
   const handleArchiveChannel = async (channelId: string, archive: boolean) => {
-    if (!selectedPerformance) return;
-
     setArchivingChannel(channelId);
 
     // Optimistic update - immediately update UI
     const updateChannelStatus = (isArchived: boolean) => {
-      const updatedPerformance = {
-        ...selectedPerformance,
-        feedbackChannels: selectedPerformance.feedbackChannels.map((c) =>
+      // Update allFeedbackChannels
+      setAllFeedbackChannels((prev) =>
+        prev.map((c) =>
           c.discordChannelId === channelId
             ? { ...c, isArchived, archivedAt: isArchived ? new Date().toISOString() : undefined }
             : c
-        ),
-      };
-      setSelectedPerformance(updatedPerformance);
-      setPerformances((prev) =>
-        prev.map((p) => (p.id === updatedPerformance.id ? updatedPerformance : p))
+        )
       );
+      // Also update selected performance if exists
+      if (selectedPerformance) {
+        const updatedPerformance = {
+          ...selectedPerformance,
+          feedbackChannels: selectedPerformance.feedbackChannels.map((c) =>
+            c.discordChannelId === channelId
+              ? { ...c, isArchived, archivedAt: isArchived ? new Date().toISOString() : undefined }
+              : c
+          ),
+        };
+        setSelectedPerformance(updatedPerformance);
+        setPerformances((prev) =>
+          prev.map((p) => (p.id === updatedPerformance.id ? updatedPerformance : p))
+        );
+      }
     };
 
     // Apply optimistic update
@@ -254,7 +275,8 @@ export default function PerformancePage() {
   };
 
   const getPlayerChannelStatus = (playerId: string): FeedbackChannel | undefined => {
-    return selectedPerformance?.feedbackChannels.find((c) => c.playerId === playerId);
+    // Find active (non-archived) channel for this player
+    return allFeedbackChannels.find((c) => c.playerId === playerId && !c.isArchived);
   };
 
   if (loading) {
@@ -560,28 +582,13 @@ export default function PerformancePage() {
             <CardTitle className="text-base flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
               Feedback Channels
-              {selectedPerformance && (
-                <span className="text-muted-foreground font-normal text-sm ml-2">
-                  ({(() => {
-                    try {
-                      const names = JSON.parse(selectedPerformance.raidNames);
-                      return Array.isArray(names) ? names.join(', ') : selectedPerformance.raidNames;
-                    } catch {
-                      return selectedPerformance.raidNames;
-                    }
-                  })()} - {new Date(selectedPerformance.raidDate).toLocaleDateString()})
-                </span>
-              )}
+              <span className="text-muted-foreground font-normal text-sm ml-2">
+                ({allFeedbackChannels.filter(c => !c.isArchived).length} active)
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {!selectedPerformance ? (
-              <div className="py-8 text-center text-muted-foreground">
-                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                Select a performance record to manage feedback channels
-              </div>
-            ) : (
-              <div className="overflow-auto max-h-[400px]">
+            <div className="overflow-auto max-h-[400px]">
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-card z-10">
                     <tr className="border-b border-border">
@@ -702,7 +709,6 @@ export default function PerformancePage() {
                   </tbody>
                 </table>
               </div>
-            )}
           </CardContent>
         </Card>
       </div>
