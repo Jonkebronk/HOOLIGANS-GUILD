@@ -99,12 +99,12 @@ export const TOKEN_TYPES: Record<string, string[]> = {
   'Fallen Champion': ['Paladin', 'Rogue', 'Shaman'],
 };
 
-// Gear Slots
+// Gear Slots - must match Prisma GearSlot enum
 export const GEAR_SLOTS = [
   'Head', 'Neck', 'Shoulder', 'Back', 'Chest',
   'Wrist', 'Hands', 'Waist', 'Legs', 'Feet',
   'Finger1', 'Finger2', 'Trinket1', 'Trinket2',
-  'Weapon1', 'Weapon2', 'Ranged'
+  'MainHand', 'OffHand', 'Ranged'
 ] as const;
 
 // Format spec name for display
