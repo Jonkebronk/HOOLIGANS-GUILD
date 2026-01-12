@@ -707,7 +707,7 @@ export default function ItemsPage() {
                           style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                         />
                       </a>
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 w-64 lg:w-72">
                         <a
                           href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                           target="_blank"
@@ -720,22 +720,22 @@ export default function ItemsPage() {
                           {item.name}
                         </a>
                       </div>
-                      <div className="hidden sm:block w-24 text-sm text-muted-foreground">
+                      <div className="hidden sm:block w-20 text-sm text-muted-foreground">
                         {item.slot}
                       </div>
-                      <div className="hidden md:block w-32 text-sm text-muted-foreground truncate">
+                      <div className="hidden md:block w-28 text-sm text-muted-foreground truncate">
                         {item.raid}
                       </div>
-                      <div className="hidden lg:block w-24 text-sm text-muted-foreground">
+                      <div className="hidden lg:block w-20 text-sm text-muted-foreground truncate">
                         {item.boss || '-'}
                       </div>
-                      <div className="w-12 text-center">
+                      <div className="w-10 text-center">
                         <span className="inline-block px-1.5 py-0.5 text-xs rounded bg-muted">{item.phase}</span>
                       </div>
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         onClick={(e) => { e.stopPropagation(); handleOpenEditDialog(item); }}
                       >
                         <Pencil className="h-4 w-4" />
