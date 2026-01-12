@@ -59,10 +59,10 @@ type RaidPerformance = {
   id: string;
   teamId: string;
   raidDate: string;
-  raidName: string;
+  raidNames: string; // JSON array
   wclUrl?: string;
-  raidHelperId?: string;
-  googleSheetUrl?: string;
+  rpbUrl?: string;
+  claUrl?: string;
   notes?: string;
   createdAt: string;
   feedbackChannels: FeedbackChannel[];
@@ -81,10 +81,10 @@ export default function PerformancePage() {
   // Form state
   const [formData, setFormData] = useState({
     raidDate: new Date().toISOString().split('T')[0],
-    raidName: '',
+    raidNames: [] as string[],
     wclUrl: '',
-    raidHelperId: '',
-    googleSheetUrl: '',
+    rpbUrl: '',
+    claUrl: '',
     notes: '',
   });
 
@@ -119,7 +119,7 @@ export default function PerformancePage() {
   }, [fetchData]);
 
   const handleCreatePerformance = async () => {
-    if (!selectedTeam || !formData.raidDate || !formData.raidName) return;
+    if (!selectedTeam || !formData.raidDate || formData.raidNames.length === 0) return;
 
     try {
       const res = await fetch('/api/performance', {
@@ -127,7 +127,12 @@ export default function PerformancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           teamId: selectedTeam.id,
-          ...formData,
+          raidDate: formData.raidDate,
+          raidNames: JSON.stringify(formData.raidNames),
+          wclUrl: formData.wclUrl,
+          rpbUrl: formData.rpbUrl,
+          claUrl: formData.claUrl,
+          notes: formData.notes,
         }),
       });
 
@@ -137,10 +142,10 @@ export default function PerformancePage() {
         setIsCreateDialogOpen(false);
         setFormData({
           raidDate: new Date().toISOString().split('T')[0],
-          raidName: '',
+          raidNames: [],
           wclUrl: '',
-          raidHelperId: '',
-          googleSheetUrl: '',
+          rpbUrl: '',
+          claUrl: '',
           notes: '',
         });
       }
@@ -290,36 +295,59 @@ export default function PerformancePage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Raid Date</label>
-                    <Input
-                      type="date"
-                      value={formData.raidDate}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, raidDate: e.target.value }))
-                      }
-                    />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Raid Date</label>
+                  <Input
+                    type="date"
+                    value={formData.raidDate}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, raidDate: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Raids</label>
+                  <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-background min-h-[42px]">
+                    {formData.raidNames.map((raid) => (
+                      <span
+                        key={raid}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-primary/20 text-primary rounded text-sm"
+                      >
+                        {raid}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              raidNames: prev.raidNames.filter((r) => r !== raid),
+                            }))
+                          }
+                          className="hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                    {formData.raidNames.length === 0 && (
+                      <span className="text-muted-foreground text-sm">Select raids below...</span>
+                    )}
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Raid</label>
-                    <Select
-                      value={formData.raidName}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({ ...prev, raidName: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select raid..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {RAIDS.map((raid) => (
-                          <SelectItem key={raid.name} value={raid.name}>
-                            {raid.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {RAIDS.filter((raid) => !formData.raidNames.includes(raid.name)).map((raid) => (
+                      <button
+                        key={raid.name}
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            raidNames: [...prev.raidNames, raid.name],
+                          }))
+                        }
+                        className="px-2 py-1 text-xs border rounded hover:bg-muted transition-colors"
+                      >
+                        + {raid.name}
+                      </button>
+                    ))}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -332,25 +360,27 @@ export default function PerformancePage() {
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Google Sheet URL (RPB/CLA)</label>
-                  <Input
-                    placeholder="https://docs.google.com/spreadsheets/d/..."
-                    value={formData.googleSheetUrl}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, googleSheetUrl: e.target.value }))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">RaidHelper Event ID</label>
-                  <Input
-                    placeholder="Event ID from RaidHelper"
-                    value={formData.raidHelperId}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, raidHelperId: e.target.value }))
-                    }
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">RPB URL</label>
+                    <Input
+                      placeholder="RPB sheet URL..."
+                      value={formData.rpbUrl}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, rpbUrl: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">CLA URL</label>
+                    <Input
+                      placeholder="CLA sheet URL..."
+                      value={formData.claUrl}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, claUrl: e.target.value }))
+                      }
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Notes</label>
@@ -467,7 +497,16 @@ export default function PerformancePage() {
                       <td className="py-2 px-3">
                         {new Date(perf.raidDate).toLocaleDateString()}
                       </td>
-                      <td className="py-2 px-3 font-medium">{perf.raidName}</td>
+                      <td className="py-2 px-3 font-medium">
+                        {(() => {
+                          try {
+                            const names = JSON.parse(perf.raidNames);
+                            return Array.isArray(names) ? names.join(', ') : perf.raidNames;
+                          } catch {
+                            return perf.raidNames;
+                          }
+                        })()}
+                      </td>
                       <td className="py-2 px-3">
                         {perf.wclUrl ? (
                           <a
@@ -523,8 +562,14 @@ export default function PerformancePage() {
               Feedback Channels
               {selectedPerformance && (
                 <span className="text-muted-foreground font-normal text-sm ml-2">
-                  ({selectedPerformance.raidName} -{' '}
-                  {new Date(selectedPerformance.raidDate).toLocaleDateString()})
+                  ({(() => {
+                    try {
+                      const names = JSON.parse(selectedPerformance.raidNames);
+                      return Array.isArray(names) ? names.join(', ') : selectedPerformance.raidNames;
+                    } catch {
+                      return selectedPerformance.raidNames;
+                    }
+                  })()} - {new Date(selectedPerformance.raidDate).toLocaleDateString()})
                 </span>
               )}
             </CardTitle>

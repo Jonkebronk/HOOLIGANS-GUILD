@@ -34,11 +34,11 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { teamId, raidDate, raidName, wclUrl, raidHelperId, googleSheetUrl, notes } = body;
+    const { teamId, raidDate, raidNames, wclUrl, rpbUrl, claUrl, notes } = body;
 
-    if (!teamId || !raidDate || !raidName) {
+    if (!teamId || !raidDate || !raidNames) {
       return NextResponse.json(
-        { error: 'teamId, raidDate, and raidName are required' },
+        { error: 'teamId, raidDate, and raidNames are required' },
         { status: 400 }
       );
     }
@@ -47,10 +47,10 @@ export async function POST(request: Request) {
       data: {
         teamId,
         raidDate: new Date(raidDate),
-        raidName,
+        raidNames,
         wclUrl,
-        raidHelperId,
-        googleSheetUrl,
+        rpbUrl,
+        claUrl,
         notes,
       },
       include: {
