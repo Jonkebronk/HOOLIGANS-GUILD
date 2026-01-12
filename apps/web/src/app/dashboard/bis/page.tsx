@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Target, ExternalLink, Lock, Plus } from 'lucide-react';
-import { CLASS_COLORS, TbcItem } from '@hooligans/shared';
+import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
-import { GearPickerModal } from '@/components/gear-picker-modal';
+import { ItemPickerModal } from '@/components/bis/item-picker-modal';
 import { useTeam } from '@/components/providers/team-provider';
 import { SpecSidebar } from '@/components/bis/spec-sidebar';
 import { BisListView } from '@/components/bis/bis-list-view';
@@ -187,8 +187,8 @@ export default function BisListsPage() {
     setPickerOpen(true);
   };
 
-  // Handle item selection from picker
-  const handleItemSelect = async (item: TbcItem) => {
+  // Handle item selection from picker (uses database item)
+  const handleItemSelect = async (item: { id: string; name: string; wowheadId: number }) => {
     if (pickerContext === 'spec') {
       // Save to spec preset
       const res = await fetch('/api/bis', {
@@ -198,7 +198,8 @@ export default function BisListsPage() {
           spec: selectedSpec,
           phase: selectedPhase,
           slot: selectedSlot,
-          wowheadId: item.id,
+          itemId: item.id, // Use database item ID for better data
+          wowheadId: item.wowheadId,
           itemName: item.name,
         }),
       });
@@ -214,7 +215,8 @@ export default function BisListsPage() {
           playerId: selectedPlayer.id,
           phase: playerPhase,
           slot: selectedSlot,
-          wowheadId: item.id,
+          itemId: item.id,
+          wowheadId: item.wowheadId,
           itemName: item.name,
         }),
       });
@@ -554,20 +556,14 @@ export default function BisListsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Gear Picker Modal */}
-      <GearPickerModal
+      {/* Item Picker Modal - uses local items database */}
+      <ItemPickerModal
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         slot={selectedSlot}
         slotLabel={selectedSlot.replace(/([A-Z])/g, ' $1').trim()}
         onSelectItem={handleItemSelect}
         onClear={handleClearSlot}
-        currentItem={null}
-        playerClass={
-          pickerContext === 'spec'
-            ? specData?.class
-            : selectedPlayer?.class
-        }
       />
     </div>
   );

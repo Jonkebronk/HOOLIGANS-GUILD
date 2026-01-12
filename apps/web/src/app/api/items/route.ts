@@ -68,17 +68,34 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, wowheadId, icon, quality, slot, raid, boss, phase, lootPriority, bisSpecs } = body;
 
+    // Validate required fields
+    if (!name || !wowheadId) {
+      return NextResponse.json({ error: 'Name and Wowhead ID are required' }, { status: 400 });
+    }
+
+    if (!slot) {
+      return NextResponse.json({ error: 'Slot is required' }, { status: 400 });
+    }
+
+    if (!raid) {
+      return NextResponse.json({ error: 'Raid is required' }, { status: 400 });
+    }
+
+    if (!phase) {
+      return NextResponse.json({ error: 'Phase is required' }, { status: 400 });
+    }
+
     const item = await prisma.item.create({
       data: {
         name,
-        wowheadId,
-        icon,
+        wowheadId: typeof wowheadId === 'string' ? parseInt(wowheadId) : wowheadId,
+        icon: icon || null,
         quality: quality ?? 4, // Default to epic
         slot,
         raid,
-        boss,
+        boss: boss || null,
         phase,
-        lootPriority,
+        lootPriority: lootPriority || null,
         bisSpecs: bisSpecs ? {
           create: bisSpecs.map((spec: string) => ({ spec })),
         } : undefined,

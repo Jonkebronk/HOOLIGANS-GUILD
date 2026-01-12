@@ -294,7 +294,22 @@ export default function ItemsPage() {
   };
 
   const handleAddItem = async () => {
-    if (!newItem.wowheadId || !newItem.name) return;
+    if (!newItem.wowheadId || !newItem.name) {
+      alert('Item Name and Wowhead ID are required');
+      return;
+    }
+    if (!newItem.slot) {
+      alert('Please select a slot');
+      return;
+    }
+    if (!newItem.raid) {
+      alert('Please select a raid');
+      return;
+    }
+    if (!newItem.phase) {
+      alert('Please select a phase');
+      return;
+    }
 
     setSaving(true);
     try {
@@ -312,14 +327,18 @@ export default function ItemsPage() {
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const item = await res.json();
-        setItems([...items, item]);
+        setItems([...items, data]);
         setNewItem({ name: '', slot: '', raid: '', boss: '', phase: '', wowheadId: '', quality: '4' });
         setIsAddDialogOpen(false);
+      } else {
+        alert(data.error || 'Failed to add item');
       }
     } catch (error) {
       console.error('Failed to add item:', error);
+      alert('Failed to add item. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -663,7 +682,10 @@ export default function ItemsPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddItem} disabled={!newItem.wowheadId || !newItem.name || saving}>
+                <Button
+                  onClick={handleAddItem}
+                  disabled={!newItem.wowheadId || !newItem.name || !newItem.slot || !newItem.raid || !newItem.phase || saving}
+                >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Add Item
                 </Button>
