@@ -386,6 +386,25 @@ export default function DashboardPage() {
                 <p className="text-xs text-muted-foreground">Database, guides & news</p>
               </div>
             </a>
+            <a
+              href="https://fresh.warcraftlogs.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+            >
+              <img
+                src="https://assets.rpglogs.com/img/warcraft/favicon.png"
+                alt="Warcraft Logs"
+                className="w-8 h-8"
+              />
+              <div>
+                <p className="font-medium text-sm flex items-center gap-1">
+                  Warcraft Logs
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </p>
+                <p className="text-xs text-muted-foreground">Combat logs & rankings</p>
+              </div>
+            </a>
           </div>
         </CardContent>
       </Card>
