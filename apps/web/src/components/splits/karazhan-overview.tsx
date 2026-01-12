@@ -167,14 +167,14 @@ export function KarazhanOverview({ teamId }: KarazhanOverviewProps) {
             </Select>
           </div>
 
-          {/* Items grouped by boss - horizontal layout */}
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          {/* Items grouped by boss */}
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
             {Object.entries(itemsByBoss).map(([boss, bossItems]) => (
-              <div key={boss} className="flex-shrink-0 min-w-[280px] max-w-[320px]">
-                <h4 className="text-sm font-semibold text-muted-foreground mb-2 bg-card py-1 text-center border-b border-border">
+              <div key={boss}>
+                <h4 className="text-sm font-semibold text-muted-foreground mb-2 sticky top-0 bg-card py-1">
                   {boss}
                 </h4>
-                <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1">
+                <div className="space-y-2">
                   {bossItems.map((item) => (
                     <ItemRow key={item.id} item={item} />
                   ))}
@@ -183,7 +183,7 @@ export function KarazhanOverview({ teamId }: KarazhanOverviewProps) {
             ))}
 
             {filteredItems.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground w-full">
+              <div className="text-center py-8 text-muted-foreground">
                 {items.length === 0
                   ? 'No Karazhan items with BiS assignments found. Set "BiS For" on items in the Items page.'
                   : 'No items match your filters.'}

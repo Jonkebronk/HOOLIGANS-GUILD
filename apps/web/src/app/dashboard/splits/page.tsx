@@ -1607,6 +1607,12 @@ export default function RaidSplitsPage() {
             </div>
           </div>
 
+          {/* Karazhan Loot Overview */}
+          {selectedTeam && (
+            <div className="mt-6">
+              <KarazhanOverview teamId={selectedTeam.id} />
+            </div>
+          )}
         </div>
 
         {/* Role Columns Section - Side by Side */}
@@ -1684,13 +1690,6 @@ export default function RaidSplitsPage() {
           </div>
         </div>
       </div>
-
-      {/* Karazhan Loot Overview - Full Width */}
-      {selectedTeam && (
-        <div className="mt-6">
-          <KarazhanOverview teamId={selectedTeam.id} />
-        </div>
-      )}
 
       {/* Import Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>

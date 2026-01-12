@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { SPEC_SHORT_NAME_TO_CLASS } from '@/lib/specs';
 
 type Needer = {
   playerId: string | null;
@@ -103,10 +104,13 @@ export async function GET(request: Request) {
           const playerData = playerByName.get(name.toLowerCase());
           const hasReceived = receivedByPlayerName.has(name.toLowerCase());
 
+          // Check if this is a spec short name (from BiS sync) or a player name
+          const specClass = SPEC_SHORT_NAME_TO_CLASS[name];
+
           return {
             playerId: playerData?.id || null,
             name: playerData?.name || name, // Use actual player name if found
-            class: playerData?.class || 'Unknown',
+            class: specClass || playerData?.class || 'Unknown',
             hasReceived,
             receivedDate: hasReceived ? receivedDates.get(name.toLowerCase()) : undefined,
           };
