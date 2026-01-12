@@ -447,6 +447,7 @@ export default function RosterPage() {
     player: Player,
     source: { raidId: string; groupIndex: number; slotIndex: number } | 'available'
   ) => {
+    console.log('handleDragStart:', player.name, 'from', source);
     setDraggedPlayer(player);
     setDragSource(source);
     e.dataTransfer.effectAllowed = 'move';
@@ -471,6 +472,7 @@ export default function RosterPage() {
     groupIndex: number,
     slotIndex: number
   ) => {
+    console.log('handleDrop CALLED:', { raidId, groupIndex, slotIndex });
     e.preventDefault();
     setDragOverSlot(null);
 
