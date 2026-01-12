@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check } from 'lucide-react';
+import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check, Users } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RAIDS, GEAR_SLOTS, CLASS_COLORS } from '@hooligans/shared';
@@ -79,6 +79,9 @@ export default function ItemsPage() {
   const [importError, setImportError] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isImportBossDialogOpen, setIsImportBossDialogOpen] = useState(false);
+  const [isImportingBosses, setIsImportingBosses] = useState(false);
+  const [bossImportResult, setBossImportResult] = useState<{ updated: number; notFound: number } | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [editForm, setEditForm] = useState({ lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
@@ -232,6 +235,28 @@ export default function ItemsPage() {
       alert('Failed to delete items. Please try again.');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleImportBosses = async () => {
+    setIsImportingBosses(true);
+    setBossImportResult(null);
+    try {
+      const res = await fetch('/api/items/import-bosses', { method: 'POST' });
+      const data = await res.json();
+
+      if (res.ok) {
+        setBossImportResult({ updated: data.updated, notFound: data.notFound });
+        // Refresh items list
+        await fetchItems();
+      } else {
+        alert(data.error || 'Failed to import boss data');
+      }
+    } catch (error) {
+      console.error('Failed to import boss data:', error);
+      alert('Failed to import boss data. Please try again.');
+    } finally {
+      setIsImportingBosses(false);
     }
   };
 
@@ -445,6 +470,45 @@ export default function ItemsPage() {
                     <Upload className="h-4 w-4 mr-2" />
                   )}
                   {isImporting ? 'Importing...' : 'Import Items'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isImportBossDialogOpen} onOpenChange={setIsImportBossDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline"><Users className="h-4 w-4 mr-2" />Import Bosses</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Import Boss Data from TMB</DialogTitle>
+                <DialogDescription>
+                  Fetch boss drop information from That&apos;s My BiS database and update items with missing boss names.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  This will update all items that currently have &quot;Unknown&quot; boss with the correct boss name from the TMB TBC database.
+                </p>
+                {bossImportResult && (
+                  <div className="bg-muted/50 rounded-md p-3 text-sm">
+                    <p className="text-green-500">Updated {bossImportResult.updated} items with boss data</p>
+                    {bossImportResult.notFound > 0 && (
+                      <p className="text-muted-foreground">{bossImportResult.notFound} items not found in TMB database</p>
+                    )}
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsImportBossDialogOpen(false)} disabled={isImportingBosses}>
+                  Close
+                </Button>
+                <Button onClick={handleImportBosses} disabled={isImportingBosses}>
+                  {isImportingBosses ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  {isImportingBosses ? 'Importing...' : 'Import Boss Data'}
                 </Button>
               </DialogFooter>
             </DialogContent>
