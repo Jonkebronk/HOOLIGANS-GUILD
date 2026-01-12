@@ -2,9 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Sword, Calendar, TrendingUp, Loader2 } from 'lucide-react';
+import { Users, Sword, Calendar, TrendingUp, Loader2, ExternalLink } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
-import { getItemIconUrl, ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
+import { getItemIconUrl, getClassIconUrl, ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
+
+// Class Discord server links
+const CLASS_DISCORDS: { name: string; url: string }[] = [
+  { name: 'Druid', url: 'https://discord.com/invite/SMwmrBV' },
+  { name: 'Hunter', url: 'https://discord.gg/ZRxGpQuY9y' },
+  { name: 'Mage', url: 'https://discord.com/invite/tEdQhsH' },
+  { name: 'Paladin', url: 'https://discord.gg/lightclubclassic' },
+  { name: 'Priest', url: 'https://discord.com/invite/MXPeww3' },
+  { name: 'Rogue', url: 'https://discord.com/invite/mkfKCBB' },
+  { name: 'Shaman', url: 'https://discord.com/invite/VvBwBu2' },
+  { name: 'Warlock', url: 'https://discord.com/invite/D6TrRkq' },
+  { name: 'Warrior', url: 'https://discord.com/invite/RbCZJtw' },
+];
 import { useTeam } from '@/components/providers/team-provider';
 
 type LootRecord = {
@@ -251,6 +264,44 @@ export default function DashboardPage() {
             <LeadershipBadge name="Johnnypapa" role="Guildmaster" />
             <LeadershipBadge name="Quest" role="Officer" />
             <LeadershipBadge name="Shredd" role="Officer" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Class Discords</CardTitle>
+          <CardDescription>Join your class community for guides, theorycrafting, and more</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
+            {CLASS_DISCORDS.map((cls) => (
+              <a
+                key={cls.name}
+                href={cls.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group"
+              >
+                <img
+                  src={getClassIconUrl(cls.name)}
+                  alt={cls.name}
+                  className="w-10 h-10 rounded"
+                  style={{
+                    borderWidth: 2,
+                    borderStyle: 'solid',
+                    borderColor: CLASS_COLORS[cls.name] || '#888',
+                  }}
+                />
+                <span
+                  className="text-xs font-medium flex items-center gap-1"
+                  style={{ color: CLASS_COLORS[cls.name] }}
+                >
+                  {cls.name}
+                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </span>
+              </a>
+            ))}
           </div>
         </CardContent>
       </Card>
