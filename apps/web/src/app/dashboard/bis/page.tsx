@@ -4,7 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Target, Lock, Plus } from 'lucide-react';
+import { Loader2, Target, Lock, Plus, Settings } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { ItemPickerModal } from '@/components/bis/item-picker-modal';
@@ -73,6 +81,9 @@ export default function BisListsPage() {
   const [loading, setLoading] = useState(true);
   const [isOfficer, setIsOfficer] = useState(false);
 
+  // Current phase configuration (stored in localStorage)
+  const [currentPhase, setCurrentPhase] = useState<string>('P1');
+
   // Spec Presets state
   const [selectedSpec, setSelectedSpec] = useState<string>('DruidBalance');
   const [specBisItems, setSpecBisItems] = useState<BisItem[]>([]);
@@ -88,6 +99,31 @@ export default function BisListsPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [pickerContext, setPickerContext] = useState<'spec' | 'player'>('spec');
+
+  // Load current phase from localStorage
+  useEffect(() => {
+    const savedPhase = localStorage.getItem('bis-current-phase');
+    if (savedPhase && ['P1', 'P2', 'P3', 'P4', 'P5'].includes(savedPhase)) {
+      setCurrentPhase(savedPhase);
+      setSelectedPhase(savedPhase);
+      setPlayerPhase(savedPhase);
+    }
+  }, []);
+
+  // Save current phase to localStorage when changed
+  const handleCurrentPhaseChange = (phase: string) => {
+    setCurrentPhase(phase);
+    localStorage.setItem('bis-current-phase', phase);
+  };
+
+  // Helper to get next phase
+  const getNextPhase = (phase: string): string | null => {
+    const phases = ['P1', 'P2', 'P3', 'P4', 'P5'];
+    const idx = phases.indexOf(phase);
+    return idx < phases.length - 1 ? phases[idx + 1] : null;
+  };
+
+  const nextPhase = getNextPhase(currentPhase);
 
   // Check if user is officer
   useEffect(() => {
@@ -307,9 +343,32 @@ export default function BisListsPage() {
       }}
     >
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">BiS Lists</h1>
-        <p className="text-muted-foreground">Best in Slot gear by spec and phase</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">BiS Lists</h1>
+          <p className="text-muted-foreground">Best in Slot gear by spec and phase</p>
+        </div>
+        <div className="flex items-center gap-4 bg-card/80 backdrop-blur-sm rounded-lg p-3 border">
+          <div className="flex items-center gap-2">
+            <Settings className="h-4 w-4 text-muted-foreground" />
+            <Label className="text-sm font-medium">Current Phase:</Label>
+            <Select value={currentPhase} onValueChange={handleCurrentPhaseChange}>
+              <SelectTrigger className="w-20 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {['P1', 'P2', 'P3', 'P4', 'P5'].map((phase) => (
+                  <SelectItem key={phase} value={phase}>{phase}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {nextPhase && (
+            <div className="text-sm text-muted-foreground">
+              Next Phase: <span className="font-medium text-blue-400">{nextPhase}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -381,10 +440,16 @@ export default function BisListsPage() {
                           key={phase}
                           variant={selectedPhase === phase ? 'default' : 'outline'}
                           size="sm"
-                          className="h-7 px-3"
+                          className={`h-7 px-3 relative ${phase === currentPhase ? 'ring-2 ring-green-500 ring-offset-1 ring-offset-background' : ''} ${phase === nextPhase ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-background' : ''}`}
                           onClick={() => setSelectedPhase(phase)}
                         >
                           {phase}
+                          {phase === currentPhase && (
+                            <span className="absolute -top-2 -right-1 text-[10px] bg-green-500 text-white px-1 rounded">Now</span>
+                          )}
+                          {phase === nextPhase && (
+                            <span className="absolute -top-2 -right-1 text-[10px] bg-blue-500 text-white px-1 rounded">Next</span>
+                          )}
                         </Button>
                       ))}
                     </div>
@@ -503,10 +568,16 @@ export default function BisListsPage() {
                               key={phase}
                               variant={playerPhase === phase ? 'default' : 'outline'}
                               size="sm"
-                              className="h-7 px-3"
+                              className={`h-7 px-3 relative ${phase === currentPhase ? 'ring-2 ring-green-500 ring-offset-1 ring-offset-background' : ''} ${phase === nextPhase ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-background' : ''}`}
                               onClick={() => setPlayerPhase(phase)}
                             >
                               {phase}
+                              {phase === currentPhase && (
+                                <span className="absolute -top-2 -right-1 text-[10px] bg-green-500 text-white px-1 rounded">Now</span>
+                              )}
+                              {phase === nextPhase && (
+                                <span className="absolute -top-2 -right-1 text-[10px] bg-blue-500 text-white px-1 rounded">Next</span>
+                              )}
                             </Button>
                           ))}
                         </div>
