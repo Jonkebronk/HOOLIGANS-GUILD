@@ -454,7 +454,6 @@ export default function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>Leadership</CardTitle>
-          <CardDescription>Your loot council team</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-4">
