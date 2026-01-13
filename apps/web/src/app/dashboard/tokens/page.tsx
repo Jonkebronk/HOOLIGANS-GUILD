@@ -11,7 +11,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Package, Sparkles, RefreshCw, ArrowDown, Sun } from 'lucide-react';
+import { Loader2, Package, Sparkles, RefreshCw, ArrowDown, Sun, Upload, Link, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { CLASS_COLORS, TOKEN_TYPES } from '@hooligans/shared';
 import { getItemIconUrl, refreshWowheadTooltips, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 
@@ -85,6 +94,11 @@ export default function TokensPage() {
   const [selectedUpgrade, setSelectedUpgrade] = useState<SunmoteUpgrade | null>(null);
   const [slotFilter, setSlotFilter] = useState<string>('all');
   const [armorFilter, setArmorFilter] = useState<string>('all');
+
+  // Import dialog state
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importUrls, setImportUrls] = useState<Record<string, string>>({});
+  const [isImporting, setIsImporting] = useState(false);
 
   // Fetch tier tokens
   const fetchTokens = async () => {
@@ -177,6 +191,91 @@ export default function TokensPage() {
       alert('Failed to seed sunmote upgrades');
     } finally {
       setSeedingSunmotes(false);
+    }
+  };
+
+  // Open import dialog with pre-filled piece IDs
+  const openImportDialog = () => {
+    if (!selectedToken) return;
+    // Initialize import URLs with empty strings for each piece
+    const urls: Record<string, string> = {};
+    selectedToken.linkedPieces.forEach((piece) => {
+      urls[piece.id] = '';
+    });
+    setImportUrls(urls);
+    setIsImportDialogOpen(true);
+  };
+
+  // Handle bulk import
+  const handleImportPieces = async () => {
+    if (!selectedToken) return;
+
+    // Filter out empty URLs
+    const items = Object.entries(importUrls)
+      .filter(([_, url]) => url.trim())
+      .map(([pieceId, wowheadUrl]) => ({ pieceId, wowheadUrl }));
+
+    if (items.length === 0) {
+      alert('Please enter at least one Wowhead URL');
+      return;
+    }
+
+    setIsImporting(true);
+    try {
+      const res = await fetch('/api/tokens/pieces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenId: selectedToken.id, items }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(`Imported ${data.imported} items. ${data.failed} failed.`);
+        setIsImportDialogOpen(false);
+        // Refresh tokens to get updated piece data
+        await fetchTokens();
+        // Update selected token with new data
+        const updatedTokens = await fetch(`/api/tokens?${tierFilter !== 'all' ? `tier=${tierFilter}` : ''}${typeFilter !== 'all' ? `&tokenType=${typeFilter}` : ''}`);
+        if (updatedTokens.ok) {
+          const tokensData = await updatedTokens.json();
+          const updated = tokensData.find((t: TierToken) => t.id === selectedToken.id);
+          if (updated) setSelectedToken(updated);
+        }
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to import items');
+      }
+    } catch (error) {
+      console.error('Failed to import pieces:', error);
+      alert('Failed to import items');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Handle single piece import
+  const handleSingleImport = async (pieceId: string, wowheadUrl: string) => {
+    if (!wowheadUrl.trim()) return;
+
+    try {
+      const res = await fetch('/api/tokens/pieces', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pieceId, wowheadUrl }),
+      });
+
+      if (res.ok) {
+        // Refresh tokens
+        await fetchTokens();
+        const updatedTokens = await fetch(`/api/tokens?${tierFilter !== 'all' ? `tier=${tierFilter}` : ''}${typeFilter !== 'all' ? `&tokenType=${typeFilter}` : ''}`);
+        if (updatedTokens.ok) {
+          const tokensData = await updatedTokens.json();
+          const updated = tokensData.find((t: TierToken) => t.id === selectedToken?.id);
+          if (updated) setSelectedToken(updated);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to import piece:', error);
     }
   };
 
@@ -387,8 +486,12 @@ export default function TokensPage() {
                     </Card>
 
                     <Card>
-                      <CardHeader>
+                      <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle className="text-lg">Linked Gear Pieces</CardTitle>
+                        <Button variant="outline" size="sm" onClick={openImportDialog}>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Import Items
+                        </Button>
                       </CardHeader>
                       <CardContent>
                         <div className="grid gap-3 sm:grid-cols-3">
@@ -404,9 +507,32 @@ export default function TokensPage() {
                               >
                                 {piece.className}
                               </div>
-                              <div className="text-sm text-foreground mt-1">
-                                {piece.pieceName}
-                              </div>
+                              {piece.pieceItem ? (
+                                <a
+                                  href={`https://www.wowhead.com/tbc/item=${piece.pieceItem.wowheadId}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  data-wowhead={`item=${piece.pieceItem.wowheadId}&domain=tbc`}
+                                  className="flex items-center gap-2 mt-2 hover:opacity-80"
+                                >
+                                  <img
+                                    src={getItemIconUrl(piece.pieceItem.icon || 'inv_misc_questionmark', 'small')}
+                                    alt={piece.pieceItem.name}
+                                    className="w-6 h-6 rounded"
+                                    style={{ borderColor: ITEM_QUALITY_COLORS[piece.pieceItem.quality], borderWidth: 1, borderStyle: 'solid' }}
+                                  />
+                                  <span
+                                    className="text-sm hover:underline"
+                                    style={{ color: ITEM_QUALITY_COLORS[piece.pieceItem.quality] }}
+                                  >
+                                    {piece.pieceItem.name}
+                                  </span>
+                                </a>
+                              ) : (
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {piece.pieceName}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -636,6 +762,52 @@ export default function TokensPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Import Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Import Tier Pieces from Wowhead</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4 max-h-[400px] overflow-y-auto">
+            <p className="text-sm text-muted-foreground">
+              Paste Wowhead URLs for each class's tier piece. Leave blank to skip.
+            </p>
+            {selectedToken?.linkedPieces.map((piece) => (
+              <div key={piece.id} className="space-y-2">
+                <Label
+                  className="text-sm font-medium"
+                  style={{ color: CLASS_COLORS[piece.className] || '#888' }}
+                >
+                  {piece.className} - {piece.pieceName}
+                  {piece.pieceItem && (
+                    <span className="ml-2 text-green-500 text-xs">(Already linked)</span>
+                  )}
+                </Label>
+                <Input
+                  placeholder="https://www.wowhead.com/tbc/item=..."
+                  value={importUrls[piece.id] || ''}
+                  onChange={(e) => setImportUrls({ ...importUrls, [piece.id]: e.target.value })}
+                  className="text-sm"
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)} disabled={isImporting}>
+              Cancel
+            </Button>
+            <Button onClick={handleImportPieces} disabled={isImporting}>
+              {isImporting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4 mr-2" />
+              )}
+              {isImporting ? 'Importing...' : 'Import'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
