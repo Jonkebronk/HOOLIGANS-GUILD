@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@hooligans/database';
+import { prisma, GearSlot } from '@hooligans/database';
 
 // Fetch item details from Wowhead tooltip API
 async function fetchItemDetails(itemId: number): Promise<{
@@ -36,6 +36,15 @@ function parseWowheadUrl(url: string): number | null {
   return match ? parseInt(match[1]) : null;
 }
 
+// Map tier token slot names to GearSlot enum values
+const SLOT_MAP: Record<string, GearSlot> = {
+  Head: 'Head',
+  Shoulder: 'Shoulder',
+  Chest: 'Chest',
+  Hands: 'Hands',
+  Legs: 'Legs',
+};
+
 // POST - Add new piece(s) to a token for a class
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +54,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'tokenId, className, and wowheadUrls array are required' },
         { status: 400 }
+      );
+    }
+
+    // Fetch the token to get slot, raid, boss, phase info
+    const token = await prisma.tierToken.findUnique({
+      where: { id: tokenId },
+    });
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token not found' },
+        { status: 404 }
       );
     }
 
@@ -70,6 +91,9 @@ export async function POST(request: NextRequest) {
           where: { wowheadId },
         });
 
+        // Determine slot from token
+        const itemSlot: GearSlot = SLOT_MAP[token.slot] || 'Misc';
+
         if (!item) {
           // Fetch item details from Wowhead
           const details = await fetchItemDetails(wowheadId);
@@ -79,19 +103,32 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
-          // Create item
+          // Create item with correct slot, raid, boss, phase from token
           item = await prisma.item.create({
             data: {
               name: details.name,
               wowheadId,
               icon: details.icon,
               quality: details.quality,
-              slot: 'Misc',
-              raid: 'Unknown',
-              boss: 'Unknown',
-              phase: 'P1',
+              slot: itemSlot,
+              raid: token.raid || 'Tier Token',
+              boss: token.boss || 'Token Vendor',
+              phase: token.phase as 'P1' | 'P2' | 'P3' | 'P4' | 'P5',
             },
           });
+        } else {
+          // Update existing item with correct slot/raid/phase if it was previously set to Misc/Unknown
+          if (item.slot === 'Misc' || item.raid === 'Unknown') {
+            item = await prisma.item.update({
+              where: { id: item.id },
+              data: {
+                slot: itemSlot,
+                raid: token.raid || item.raid,
+                boss: token.boss || item.boss,
+                phase: token.phase as 'P1' | 'P2' | 'P3' | 'P4' | 'P5',
+              },
+            });
+          }
         }
 
         // Check if this exact piece already exists for this token/class/item
