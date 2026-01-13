@@ -301,56 +301,77 @@ export default function RosterPage() {
     if (!selectedTeam) return;
 
     try {
-      // Fetch players and assignments in parallel
-      const [playersRes, assignmentsRes] = await Promise.all([
+      // Fetch players, assignments, and saved raid names in parallel
+      const [playersRes, assignmentsRes, raidNamesRes] = await Promise.all([
         fetch(`/api/players?teamId=${selectedTeam.id}`),
         fetch(`/api/roster-assignments?teamId=${selectedTeam.id}`),
+        fetch(`/api/splits?teamId=${selectedTeam.id}`),
       ]);
+
+      // Parse saved raid names
+      let savedRaidsData: { raidNumber: number; name: string }[] = [];
+      if (raidNamesRes.ok) {
+        const savedRaids = await raidNamesRes.json();
+        if (Array.isArray(savedRaids)) {
+          savedRaidsData = savedRaids;
+        }
+      }
 
       if (playersRes.ok) {
         const playersData = await playersRes.json();
         setPlayers(playersData);
 
-        // Clear raids first, then apply saved assignments
-        if (assignmentsRes.ok) {
-          const assignmentsData = await assignmentsRes.json();
-          setRaids(prevRaids => {
-            // Reset all raids to empty first
-            const newRaids = prevRaids.map(raid => ({
+        // Clear raids, apply saved names, then apply saved assignments - all in one update
+        const assignmentsData = assignmentsRes.ok ? await assignmentsRes.json() : [];
+
+        setRaids(prevRaids => {
+          const raidNumberMap: Record<string, number> = {
+            'main-25': 0,
+            'split-10-1': 1,
+            'split-10-2': 2,
+            'split-10-3': 3,
+          };
+
+          // Reset all raids to empty and apply saved names
+          const newRaids = prevRaids.map(raid => {
+            const raidNum = raidNumberMap[raid.id];
+            const savedRaid = savedRaidsData.find((sr) => sr.raidNumber === raidNum);
+            return {
               ...raid,
+              name: savedRaid ? savedRaid.name : raid.name,
               groups: raid.groups.map(() => Array(SLOTS_PER_GROUP).fill(null)),
-            }));
-
-            // Apply each assignment from the new team
-            console.log('Loading assignments:', assignmentsData?.length, 'assignments for', playersData?.length, 'players');
-            if (Array.isArray(assignmentsData)) {
-              for (const assignment of assignmentsData) {
-                const raid = newRaids.find(r => r.id === assignment.raidId);
-                if (!raid) {
-                  console.warn('Assignment skipped - raid not found:', assignment.raidId, assignment);
-                  continue;
-                }
-                if (!assignment.player) {
-                  console.warn('Assignment skipped - no player in assignment:', assignment);
-                  continue;
-                }
-                const player = playersData.find((p: Player) => p.id === assignment.playerId);
-                if (!player) {
-                  console.warn('Assignment skipped - player not in playersData:', assignment.playerId, assignment.player?.name);
-                  continue;
-                }
-                if (!raid.groups[assignment.groupIndex]) {
-                  console.warn('Assignment skipped - invalid groupIndex:', assignment.groupIndex, 'for raid', raid.id);
-                  continue;
-                }
-                raid.groups[assignment.groupIndex][assignment.slotIndex] = player;
-                console.log('Assignment loaded:', player.name, 'to', raid.id, `group ${assignment.groupIndex}, slot ${assignment.slotIndex}`);
-              }
-            }
-
-            return newRaids;
+            };
           });
-        }
+
+          // Apply each assignment from the new team
+          console.log('Loading assignments:', assignmentsData?.length, 'assignments for', playersData?.length, 'players');
+          if (Array.isArray(assignmentsData)) {
+            for (const assignment of assignmentsData) {
+              const raid = newRaids.find(r => r.id === assignment.raidId);
+              if (!raid) {
+                console.warn('Assignment skipped - raid not found:', assignment.raidId, assignment);
+                continue;
+              }
+              if (!assignment.player) {
+                console.warn('Assignment skipped - no player in assignment:', assignment);
+                continue;
+              }
+              const player = playersData.find((p: Player) => p.id === assignment.playerId);
+              if (!player) {
+                console.warn('Assignment skipped - player not in playersData:', assignment.playerId, assignment.player?.name);
+                continue;
+              }
+              if (!raid.groups[assignment.groupIndex]) {
+                console.warn('Assignment skipped - invalid groupIndex:', assignment.groupIndex, 'for raid', raid.id);
+                continue;
+              }
+              raid.groups[assignment.groupIndex][assignment.slotIndex] = player;
+              console.log('Assignment loaded:', player.name, 'to', raid.id, `group ${assignment.groupIndex}, slot ${assignment.slotIndex}`);
+            }
+          }
+
+          return newRaids;
+        });
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
