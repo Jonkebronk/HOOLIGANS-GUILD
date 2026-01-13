@@ -671,13 +671,13 @@ model TierTokenPiece {
   token       TierToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
 
   className   String    // "Druid", "Priest", "Warrior"
-  pieceName   String    // "Nordrassil Headguard" (actual tier piece name)
+  pieceName   String    // "Nordrassil Headguard" or item name from Wowhead
   pieceItemId String?   // Link to Item if exists in database
   pieceItem   Item?     @relation(fields: [pieceItemId], references: [id])
 
-  @@unique([tokenId, className])
   @@index([tokenId])
   @@index([className])
+  @@index([tokenId, className])
 }
 
 // ============================================

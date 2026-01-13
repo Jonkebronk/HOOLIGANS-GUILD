@@ -36,92 +36,14 @@ function parseWowheadUrl(url: string): number | null {
   return match ? parseInt(match[1]) : null;
 }
 
-// PATCH - Link item to tier token piece
-export async function PATCH(request: NextRequest) {
-  try {
-    const { pieceId, wowheadUrl } = await request.json();
-
-    if (!pieceId || !wowheadUrl) {
-      return NextResponse.json(
-        { error: 'pieceId and wowheadUrl are required' },
-        { status: 400 }
-      );
-    }
-
-    // Parse Wowhead URL
-    const wowheadId = parseWowheadUrl(wowheadUrl);
-    if (!wowheadId) {
-      return NextResponse.json(
-        { error: 'Invalid Wowhead URL' },
-        { status: 400 }
-      );
-    }
-
-    // Check if item already exists in database
-    let item = await prisma.item.findFirst({
-      where: { wowheadId },
-    });
-
-    if (!item) {
-      // Fetch item details from Wowhead
-      const details = await fetchItemDetails(wowheadId);
-      if (!details) {
-        return NextResponse.json(
-          { error: 'Failed to fetch item details from Wowhead' },
-          { status: 500 }
-        );
-      }
-
-      // Create item in database
-      item = await prisma.item.create({
-        data: {
-          name: details.name,
-          wowheadId,
-          icon: details.icon,
-          quality: details.quality,
-          slot: 'Misc', // Will be determined by the tier piece slot
-          raid: 'Unknown',
-          boss: 'Unknown',
-          phase: 'P1',
-        },
-      });
-    }
-
-    // Update the tier token piece with the item link
-    const updatedPiece = await prisma.tierTokenPiece.update({
-      where: { id: pieceId },
-      data: { pieceItemId: item.id },
-      include: {
-        pieceItem: {
-          select: {
-            id: true,
-            name: true,
-            wowheadId: true,
-            icon: true,
-            quality: true,
-          },
-        },
-      },
-    });
-
-    return NextResponse.json(updatedPiece);
-  } catch (error) {
-    console.error('Failed to link item to piece:', error);
-    return NextResponse.json(
-      { error: 'Failed to link item to piece' },
-      { status: 500 }
-    );
-  }
-}
-
-// POST - Bulk import items to tier token pieces
+// POST - Add new piece(s) to a token for a class
 export async function POST(request: NextRequest) {
   try {
-    const { tokenId, items } = await request.json();
+    const { tokenId, className, wowheadUrls } = await request.json();
 
-    if (!tokenId || !items || !Array.isArray(items)) {
+    if (!tokenId || !className || !wowheadUrls || !Array.isArray(wowheadUrls)) {
       return NextResponse.json(
-        { error: 'tokenId and items array are required' },
+        { error: 'tokenId, className, and wowheadUrls array are required' },
         { status: 400 }
       );
     }
@@ -132,12 +54,14 @@ export async function POST(request: NextRequest) {
       errors: [] as string[],
     };
 
-    for (const { pieceId, wowheadUrl } of items) {
+    for (const wowheadUrl of wowheadUrls) {
+      if (!wowheadUrl.trim()) continue;
+
       try {
         const wowheadId = parseWowheadUrl(wowheadUrl);
         if (!wowheadId) {
           results.failed++;
-          results.errors.push(`Invalid URL for piece ${pieceId}`);
+          results.errors.push(`Invalid URL: ${wowheadUrl}`);
           continue;
         }
 
@@ -170,24 +94,70 @@ export async function POST(request: NextRequest) {
           });
         }
 
-        // Link to piece
-        await prisma.tierTokenPiece.update({
-          where: { id: pieceId },
-          data: { pieceItemId: item.id },
+        // Check if this exact piece already exists for this token/class/item
+        const existingPiece = await prisma.tierTokenPiece.findFirst({
+          where: {
+            tokenId,
+            className,
+            pieceItemId: item.id,
+          },
+        });
+
+        if (existingPiece) {
+          results.failed++;
+          results.errors.push(`${item.name} already linked to ${className}`);
+          continue;
+        }
+
+        // Create new piece
+        await prisma.tierTokenPiece.create({
+          data: {
+            tokenId,
+            className,
+            pieceName: item.name,
+            pieceItemId: item.id,
+          },
         });
 
         results.imported++;
       } catch (error) {
         results.failed++;
-        results.errors.push(`Error processing piece ${pieceId}: ${error}`);
+        results.errors.push(`Error: ${error}`);
       }
     }
 
     return NextResponse.json(results);
   } catch (error) {
-    console.error('Failed to bulk import:', error);
+    console.error('Failed to add pieces:', error);
     return NextResponse.json(
-      { error: 'Failed to bulk import' },
+      { error: 'Failed to add pieces' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Remove a piece
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const pieceId = searchParams.get('pieceId');
+
+    if (!pieceId) {
+      return NextResponse.json(
+        { error: 'pieceId is required' },
+        { status: 400 }
+      );
+    }
+
+    await prisma.tierTokenPiece.delete({
+      where: { id: pieceId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete piece:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete piece' },
       { status: 500 }
     );
   }

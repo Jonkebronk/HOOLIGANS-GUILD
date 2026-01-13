@@ -97,7 +97,8 @@ export default function TokensPage() {
 
   // Import dialog state
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [importUrls, setImportUrls] = useState<Record<string, string>>({});
+  const [importClassName, setImportClassName] = useState<string>('');
+  const [importUrls, setImportUrls] = useState<string[]>(['', '', '']);
   const [isImporting, setIsImporting] = useState(false);
 
   // Fetch tier tokens
@@ -194,28 +195,21 @@ export default function TokensPage() {
     }
   };
 
-  // Open import dialog with pre-filled piece IDs
-  const openImportDialog = () => {
-    if (!selectedToken) return;
-    // Initialize import URLs with empty strings for each piece
-    const urls: Record<string, string> = {};
-    selectedToken.linkedPieces.forEach((piece) => {
-      urls[piece.id] = '';
-    });
-    setImportUrls(urls);
+  // Open import dialog for a specific class
+  const openImportDialog = (className: string) => {
+    setImportClassName(className);
+    setImportUrls(['', '', '']);
     setIsImportDialogOpen(true);
   };
 
-  // Handle bulk import
+  // Handle import for a class
   const handleImportPieces = async () => {
-    if (!selectedToken) return;
+    if (!selectedToken || !importClassName) return;
 
     // Filter out empty URLs
-    const items = Object.entries(importUrls)
-      .filter(([_, url]) => url.trim())
-      .map(([pieceId, wowheadUrl]) => ({ pieceId, wowheadUrl }));
+    const urls = importUrls.filter(url => url.trim());
 
-    if (items.length === 0) {
+    if (urls.length === 0) {
       alert('Please enter at least one Wowhead URL');
       return;
     }
@@ -225,22 +219,23 @@ export default function TokensPage() {
       const res = await fetch('/api/tokens/pieces', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tokenId: selectedToken.id, items }),
+        body: JSON.stringify({
+          tokenId: selectedToken.id,
+          className: importClassName,
+          wowheadUrls: urls,
+        }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        alert(`Imported ${data.imported} items. ${data.failed} failed.`);
+        if (data.imported > 0) {
+          alert(`Imported ${data.imported} items.${data.failed > 0 ? ` ${data.failed} failed.` : ''}`);
+        } else if (data.errors?.length > 0) {
+          alert(`Import failed: ${data.errors.join(', ')}`);
+        }
         setIsImportDialogOpen(false);
         // Refresh tokens to get updated piece data
-        await fetchTokens();
-        // Update selected token with new data
-        const updatedTokens = await fetch(`/api/tokens?${tierFilter !== 'all' ? `tier=${tierFilter}` : ''}${typeFilter !== 'all' ? `&tokenType=${typeFilter}` : ''}`);
-        if (updatedTokens.ok) {
-          const tokensData = await updatedTokens.json();
-          const updated = tokensData.find((t: TierToken) => t.id === selectedToken.id);
-          if (updated) setSelectedToken(updated);
-        }
+        await refreshSelectedToken();
       } else {
         const error = await res.json();
         alert(error.error || 'Failed to import items');
@@ -253,30 +248,42 @@ export default function TokensPage() {
     }
   };
 
-  // Handle single piece import
-  const handleSingleImport = async (pieceId: string, wowheadUrl: string) => {
-    if (!wowheadUrl.trim()) return;
+  // Refresh selected token data
+  const refreshSelectedToken = async () => {
+    await fetchTokens();
+    const params = new URLSearchParams();
+    if (tierFilter !== 'all') params.set('tier', tierFilter);
+    if (typeFilter !== 'all') params.set('tokenType', typeFilter);
+    const updatedTokens = await fetch(`/api/tokens?${params}`);
+    if (updatedTokens.ok) {
+      const tokensData = await updatedTokens.json();
+      const updated = tokensData.find((t: TierToken) => t.id === selectedToken?.id);
+      if (updated) setSelectedToken(updated);
+    }
+  };
+
+  // Handle delete piece
+  const handleDeletePiece = async (pieceId: string) => {
+    if (!confirm('Remove this item from the token?')) return;
 
     try {
-      const res = await fetch('/api/tokens/pieces', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pieceId, wowheadUrl }),
+      const res = await fetch(`/api/tokens/pieces?pieceId=${pieceId}`, {
+        method: 'DELETE',
       });
 
       if (res.ok) {
-        // Refresh tokens
-        await fetchTokens();
-        const updatedTokens = await fetch(`/api/tokens?${tierFilter !== 'all' ? `tier=${tierFilter}` : ''}${typeFilter !== 'all' ? `&tokenType=${typeFilter}` : ''}`);
-        if (updatedTokens.ok) {
-          const tokensData = await updatedTokens.json();
-          const updated = tokensData.find((t: TierToken) => t.id === selectedToken?.id);
-          if (updated) setSelectedToken(updated);
-        }
+        await refreshSelectedToken();
       }
     } catch (error) {
-      console.error('Failed to import piece:', error);
+      console.error('Failed to delete piece:', error);
     }
+  };
+
+  // Get unique classes for this token type
+  const getClassesForToken = () => {
+    if (!selectedToken) return [];
+    const tokenType = selectedToken.tokenType;
+    return TOKEN_TYPES[tokenType as keyof typeof TOKEN_TYPES] || [];
   };
 
   // Group tokens by slot for sidebar
@@ -486,55 +493,81 @@ export default function TokensPage() {
                     </Card>
 
                     <Card>
-                      <CardHeader className="flex flex-row items-center justify-between">
+                      <CardHeader>
                         <CardTitle className="text-lg">Linked Gear Pieces</CardTitle>
-                        <Button variant="outline" size="sm" onClick={openImportDialog}>
-                          <Upload className="h-4 w-4 mr-2" />
-                          Import Items
-                        </Button>
                       </CardHeader>
                       <CardContent>
-                        <div className="grid gap-3 sm:grid-cols-3">
-                          {selectedToken.linkedPieces.map((piece) => (
-                            <div
-                              key={piece.id}
-                              className="p-3 rounded-lg bg-muted/50 border"
-                              style={{ borderColor: CLASS_COLORS[piece.className] || '#888' }}
-                            >
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          {getClassesForToken().map((className) => {
+                            const classPieces = selectedToken.linkedPieces.filter(p => p.className === className);
+                            return (
                               <div
-                                className="font-medium text-sm"
-                                style={{ color: CLASS_COLORS[piece.className] || '#888' }}
+                                key={className}
+                                className="p-3 rounded-lg bg-muted/50 border"
+                                style={{ borderColor: CLASS_COLORS[className] || '#888' }}
                               >
-                                {piece.className}
-                              </div>
-                              {piece.pieceItem ? (
-                                <a
-                                  href={`https://www.wowhead.com/tbc/item=${piece.pieceItem.wowheadId}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  data-wowhead={`item=${piece.pieceItem.wowheadId}&domain=tbc`}
-                                  className="flex items-center gap-2 mt-2 hover:opacity-80"
-                                >
-                                  <img
-                                    src={getItemIconUrl(piece.pieceItem.icon || 'inv_misc_questionmark', 'small')}
-                                    alt={piece.pieceItem.name}
-                                    className="w-6 h-6 rounded"
-                                    style={{ borderColor: ITEM_QUALITY_COLORS[piece.pieceItem.quality], borderWidth: 1, borderStyle: 'solid' }}
-                                  />
-                                  <span
-                                    className="text-sm hover:underline"
-                                    style={{ color: ITEM_QUALITY_COLORS[piece.pieceItem.quality] }}
+                                <div className="flex items-center justify-between mb-2">
+                                  <div
+                                    className="font-medium text-sm"
+                                    style={{ color: CLASS_COLORS[className] || '#888' }}
                                   >
-                                    {piece.pieceItem.name}
-                                  </span>
-                                </a>
-                              ) : (
-                                <div className="text-sm text-muted-foreground mt-1">
-                                  {piece.pieceName}
+                                    {className}
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => openImportDialog(className)}
+                                    title="Add items"
+                                  >
+                                    <Upload className="h-3 w-3" />
+                                  </Button>
                                 </div>
-                              )}
-                            </div>
-                          ))}
+                                <div className="space-y-1">
+                                  {classPieces.length === 0 ? (
+                                    <div className="text-xs text-muted-foreground italic">No items added</div>
+                                  ) : (
+                                    classPieces.map((piece) => (
+                                      <div key={piece.id} className="flex items-center gap-1 group">
+                                        {piece.pieceItem ? (
+                                          <a
+                                            href={`https://www.wowhead.com/tbc/item=${piece.pieceItem.wowheadId}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            data-wowhead={`item=${piece.pieceItem.wowheadId}&domain=tbc`}
+                                            className="flex items-center gap-1.5 hover:opacity-80 flex-1 min-w-0"
+                                          >
+                                            <img
+                                              src={getItemIconUrl(piece.pieceItem.icon || 'inv_misc_questionmark', 'small')}
+                                              alt={piece.pieceItem.name}
+                                              className="w-5 h-5 rounded flex-shrink-0"
+                                              style={{ borderColor: ITEM_QUALITY_COLORS[piece.pieceItem.quality], borderWidth: 1, borderStyle: 'solid' }}
+                                            />
+                                            <span
+                                              className="text-xs hover:underline truncate"
+                                              style={{ color: ITEM_QUALITY_COLORS[piece.pieceItem.quality] }}
+                                            >
+                                              {piece.pieceItem.name}
+                                            </span>
+                                          </a>
+                                        ) : (
+                                          <span className="text-xs text-muted-foreground flex-1">{piece.pieceName}</span>
+                                        )}
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive"
+                                          onClick={() => handleDeletePiece(piece.id)}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </CardContent>
                     </Card>
@@ -767,27 +800,26 @@ export default function TokensPage() {
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Import Tier Pieces from Wowhead</DialogTitle>
+            <DialogTitle>
+              Add Items for{' '}
+              <span style={{ color: CLASS_COLORS[importClassName] || '#888' }}>{importClassName}</span>
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4 max-h-[400px] overflow-y-auto">
+          <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
-              Paste Wowhead URLs for each class's tier piece. Leave blank to skip.
+              Paste Wowhead URLs for tier pieces. You can add up to 3 items (e.g., one per spec).
             </p>
-            {selectedToken?.linkedPieces.map((piece) => (
-              <div key={piece.id} className="space-y-2">
-                <Label
-                  className="text-sm font-medium"
-                  style={{ color: CLASS_COLORS[piece.className] || '#888' }}
-                >
-                  {piece.className} - {piece.pieceName}
-                  {piece.pieceItem && (
-                    <span className="ml-2 text-green-500 text-xs">(Already linked)</span>
-                  )}
-                </Label>
+            {[0, 1, 2].map((index) => (
+              <div key={index} className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Item {index + 1}</Label>
                 <Input
                   placeholder="https://www.wowhead.com/tbc/item=..."
-                  value={importUrls[piece.id] || ''}
-                  onChange={(e) => setImportUrls({ ...importUrls, [piece.id]: e.target.value })}
+                  value={importUrls[index] || ''}
+                  onChange={(e) => {
+                    const newUrls = [...importUrls];
+                    newUrls[index] = e.target.value;
+                    setImportUrls(newUrls);
+                  }}
                   className="text-sm"
                 />
               </div>
