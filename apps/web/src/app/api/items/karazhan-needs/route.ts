@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
-import { SPEC_SHORT_NAME_TO_CLASS } from '@/lib/specs';
 
 type Needer = {
-  playerId: string | null;
+  playerId: string;
   name: string;
   class: string;
   hasReceived: boolean;
@@ -60,59 +59,64 @@ export async function GET(request: Request) {
       ],
     });
 
-    // Fetch all players for the team to match names
-    const players = await prisma.player.findMany({
-      where: { teamId },
-      select: {
-        id: true,
-        name: true,
-        class: true,
+    // Get all player BiS configurations for P1 filtered by team
+    const bisConfigs = await prisma.playerBisConfiguration.findMany({
+      where: {
+        phase: 'P1',
+        player: {
+          teamId: teamId,
+        },
+      },
+      include: {
+        player: {
+          select: {
+            id: true,
+            name: true,
+            class: true,
+          },
+        },
       },
     });
 
-    // Create a map of player names to player data (case-insensitive)
-    const playerByName = new Map<string, { id: string; name: string; class: string }>();
-    for (const player of players) {
-      playerByName.set(player.name.toLowerCase(), player);
+    // Create a map of wowheadId -> players who have it as BiS
+    const bisPlayersByWowheadId = new Map<number, { id: string; name: string; class: string }[]>();
+    for (const config of bisConfigs) {
+      if (config.wowheadId && config.player) {
+        const existing = bisPlayersByWowheadId.get(config.wowheadId) || [];
+        if (!existing.find(p => p.id === config.player.id)) {
+          existing.push(config.player);
+        }
+        bisPlayersByWowheadId.set(config.wowheadId, existing);
+      }
     }
 
     // Process items to add needer information
     const itemsWithNeeders: KarazhanItemWithNeeders[] = items
-      .filter(item => item.bisFor && item.bisFor.trim() !== '') // Only items with needers
       .map((item) => {
-        // Parse bisFor field (comma-separated player names)
-        const neederNames = item.bisFor
-          ? item.bisFor.split(',').map(n => n.trim()).filter(Boolean)
-          : [];
+        // Get players who have this item as BiS from their lists
+        const bisPlayers = item.wowheadId ? bisPlayersByWowheadId.get(item.wowheadId) || [] : [];
 
         // Build set of players who have received this item
-        const receivedByPlayerName = new Set<string>();
+        const receivedByPlayerId = new Set<string>();
         const receivedDates = new Map<string, string>();
 
         for (const record of item.lootRecords) {
           if (record.player) {
-            receivedByPlayerName.add(record.player.name.toLowerCase());
-            receivedDates.set(
-              record.player.name.toLowerCase(),
-              record.lootDate.toISOString()
-            );
+            receivedByPlayerId.add(record.player.id);
+            receivedDates.set(record.player.id, record.lootDate.toISOString());
           }
         }
 
         // Build needers array with received status
-        const needers: Needer[] = neederNames.map((name) => {
-          const playerData = playerByName.get(name.toLowerCase());
-          const hasReceived = receivedByPlayerName.has(name.toLowerCase());
-
-          // Check if this is a spec short name (from BiS sync) or a player name
-          const specClass = SPEC_SHORT_NAME_TO_CLASS[name];
+        const needers: Needer[] = bisPlayers.map((player) => {
+          const hasReceived = receivedByPlayerId.has(player.id);
 
           return {
-            playerId: playerData?.id || null,
-            name: playerData?.name || name, // Use actual player name if found
-            class: specClass || playerData?.class || 'Unknown',
+            playerId: player.id,
+            name: player.name,
+            class: player.class,
             hasReceived,
-            receivedDate: hasReceived ? receivedDates.get(name.toLowerCase()) : undefined,
+            receivedDate: hasReceived ? receivedDates.get(player.id) : undefined,
           };
         });
 
@@ -126,7 +130,8 @@ export async function GET(request: Request) {
           slot: item.slot,
           needers,
         };
-      });
+      })
+      .filter(item => item.needers.length > 0); // Only items with needers
 
     // Get unique bosses for filtering
     const bosses = [...new Set(items.map(i => i.boss))].sort();
