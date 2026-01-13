@@ -687,8 +687,10 @@ model SunmoteUpgrade {
   id                String   @id @default(cuid())
   baseItemName      String   // "Leggings of Channeled Elements"
   baseWowheadId     Int?
+  baseIcon          String?  // Icon name for base item
   upgradedName      String   // "Sunfire Leggings"
   upgradedWowheadId Int?
+  upgradedIcon      String?  // Icon name for upgraded item
   sunmotesRequired  Int      @default(1)
   slot              String   // "Legs", "Chest", etc.
   armorType         String?  // "Cloth", "Leather", "Mail", "Plate"

@@ -46,8 +46,10 @@ type SunmoteUpgrade = {
   id: string;
   baseItemName: string;
   baseWowheadId: number | null;
+  baseIcon: string | null;
   upgradedName: string;
   upgradedWowheadId: number | null;
+  upgradedIcon: string | null;
   sunmotesRequired: number;
   slot: string;
   armorType: string | null;
@@ -516,15 +518,23 @@ export default function TokensPage() {
                             <button
                               key={upgrade.id}
                               onClick={() => setSelectedUpgrade(upgrade)}
-                              className={`w-full p-2 rounded-lg text-left transition-colors ${
+                              className={`w-full p-2 rounded-lg text-left transition-colors flex items-center gap-2 ${
                                 selectedUpgrade?.id === upgrade.id
                                   ? 'bg-primary/20 border border-primary'
                                   : 'hover:bg-muted/50'
                               }`}
                             >
-                              <div className="text-sm font-medium truncate">{upgrade.baseItemName}</div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {upgrade.slot}
+                              <img
+                                src={getItemIconUrl(upgrade.baseIcon || 'inv_misc_questionmark', 'small')}
+                                alt=""
+                                className="w-6 h-6 rounded flex-shrink-0"
+                                style={{ borderColor: ITEM_QUALITY_COLORS[4], borderWidth: 1, borderStyle: 'solid' }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium truncate">{upgrade.baseItemName}</div>
+                                <div className="text-xs text-muted-foreground truncate">
+                                  {upgrade.slot}
+                                </div>
                               </div>
                             </button>
                           ))}
@@ -542,8 +552,21 @@ export default function TokensPage() {
                     <CardContent className="py-6">
                       <div className="flex flex-col items-center text-center space-y-4">
                         {/* Base Item */}
-                        <div>
+                        <div className="flex flex-col items-center">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Base Item</p>
+                          <a
+                            href={selectedUpgrade.baseWowheadId ? `https://www.wowhead.com/tbc/item=${selectedUpgrade.baseWowheadId}` : '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-wh-icon-size="0"
+                          >
+                            <img
+                              src={getItemIconUrl(selectedUpgrade.baseIcon || 'inv_misc_questionmark', 'large')}
+                              alt={selectedUpgrade.baseItemName}
+                              className="w-14 h-14 rounded-lg mb-2"
+                              style={{ borderColor: ITEM_QUALITY_COLORS[4], borderWidth: 3, borderStyle: 'solid' }}
+                            />
+                          </a>
                           <a
                             href={selectedUpgrade.baseWowheadId ? `https://www.wowhead.com/tbc/item=${selectedUpgrade.baseWowheadId}` : '#'}
                             target="_blank"
@@ -566,8 +589,21 @@ export default function TokensPage() {
                         </div>
 
                         {/* Upgraded Item */}
-                        <div>
+                        <div className="flex flex-col items-center">
                           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Upgraded Item</p>
+                          <a
+                            href={selectedUpgrade.upgradedWowheadId ? `https://www.wowhead.com/tbc/item=${selectedUpgrade.upgradedWowheadId}` : '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-wh-icon-size="0"
+                          >
+                            <img
+                              src={getItemIconUrl(selectedUpgrade.upgradedIcon || 'inv_misc_questionmark', 'large')}
+                              alt={selectedUpgrade.upgradedName}
+                              className="w-14 h-14 rounded-lg mb-2"
+                              style={{ borderColor: ITEM_QUALITY_COLORS[5], borderWidth: 3, borderStyle: 'solid' }}
+                            />
+                          </a>
                           <a
                             href={selectedUpgrade.upgradedWowheadId ? `https://www.wowhead.com/tbc/item=${selectedUpgrade.upgradedWowheadId}` : '#'}
                             target="_blank"

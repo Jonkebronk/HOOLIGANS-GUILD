@@ -1,6 +1,41 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
 
+// Icon names for Sunwell items (from wowhead)
+const SUNMOTE_ICONS: Record<number, string> = {
+  // Cloth
+  34916: 'inv_pants_cloth_14', 34917: 'inv_pants_cloth_14',
+  34918: 'inv_chest_cloth_43', 34919: 'inv_chest_cloth_43',
+  34920: 'inv_bracer_02', 34921: 'inv_bracer_02',
+  34937: 'inv_pants_cloth_05', 34938: 'inv_pants_cloth_05',
+  34923: 'inv_chest_cloth_43', 34924: 'inv_chest_cloth_43',
+  34925: 'inv_bracer_07', 34926: 'inv_bracer_07',
+  // Leather
+  34939: 'inv_pants_leather_22', 34940: 'inv_pants_leather_22',
+  34927: 'inv_chest_leather_03', 34928: 'inv_chest_leather_03',
+  34929: 'inv_bracer_13', 34930: 'inv_bracer_13',
+  34941: 'inv_pants_leather_22', 34942: 'inv_pants_leather_22',
+  34931: 'inv_chest_leather_01', 34932: 'inv_chest_leather_01',
+  34933: 'inv_belt_29', 34934: 'inv_belt_29',
+  // Mail
+  34935: 'inv_pants_mail_15', 34936: 'inv_pants_mail_15',
+  34943: 'inv_chest_chain_15', 34944: 'inv_chest_chain_15',
+  34945: 'inv_bracer_17', 34946: 'inv_bracer_17',
+  34947: 'inv_pants_mail_15', 34948: 'inv_pants_mail_15',
+  34949: 'inv_chest_chain_15', 34950: 'inv_chest_chain_15',
+  34951: 'inv_bracer_19', 34952: 'inv_bracer_19',
+  // Plate
+  34953: 'inv_pants_plate_17', 34954: 'inv_pants_plate_17',
+  34955: 'inv_chest_plate04', 34956: 'inv_chest_plate04',
+  34957: 'inv_bracer_17', 34958: 'inv_bracer_17',
+  34959: 'inv_pants_plate_17', 34960: 'inv_pants_plate_17',
+  34961: 'inv_chest_plate04', 34962: 'inv_chest_plate04',
+  34963: 'inv_bracer_19', 34964: 'inv_bracer_19',
+  34965: 'inv_pants_plate_17', 34966: 'inv_pants_plate_17',
+  34967: 'inv_chest_plate04', 34968: 'inv_chest_plate04',
+  34969: 'inv_bracer_17', 34970: 'inv_bracer_17',
+};
+
 // All Sunwell Plateau Sunmote upgrade paths
 const SUNMOTE_UPGRADES = [
   // Cloth - Caster DPS
@@ -61,6 +96,16 @@ export async function POST() {
       });
 
       if (existing) {
+        // Update existing with icons if missing
+        if (!existing.baseIcon || !existing.upgradedIcon) {
+          await prisma.sunmoteUpgrade.update({
+            where: { id: existing.id },
+            data: {
+              baseIcon: SUNMOTE_ICONS[upgrade.baseId] || null,
+              upgradedIcon: SUNMOTE_ICONS[upgrade.upgradedId] || null,
+            },
+          });
+        }
         skipped++;
         continue;
       }
@@ -69,8 +114,10 @@ export async function POST() {
         data: {
           baseItemName: upgrade.base,
           baseWowheadId: upgrade.baseId,
+          baseIcon: SUNMOTE_ICONS[upgrade.baseId] || null,
           upgradedName: upgrade.upgraded,
           upgradedWowheadId: upgrade.upgradedId,
+          upgradedIcon: SUNMOTE_ICONS[upgrade.upgradedId] || null,
           sunmotesRequired: 1,
           slot: upgrade.slot,
           armorType: upgrade.armor,
