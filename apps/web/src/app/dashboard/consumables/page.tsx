@@ -59,6 +59,8 @@ export default function ConsumablesPage() {
   const [assignCategory, setAssignCategory] = useState('');
   const [assignPriority, setAssignPriority] = useState<'best' | 'alternative'>('best');
   const [assigning, setAssigning] = useState(false);
+  const [wowheadUrl, setWowheadUrl] = useState('');
+  const [assignType, setAssignType] = useState('');
 
   useEffect(() => {
     fetchConsumables();
@@ -131,16 +133,74 @@ export default function ConsumablesPage() {
     }
   };
 
+  // Parse Wowhead URL to extract item ID
+  const parseWowheadUrl = (url: string): number | null => {
+    // Match patterns like:
+    // https://www.wowhead.com/tbc/item=22851
+    // https://www.wowhead.com/item=22851
+    // wowhead.com/tbc/item=22851
+    const match = url.match(/item=(\d+)/);
+    return match ? parseInt(match[1]) : null;
+  };
+
   const handleAssignConsumable = async () => {
-    if (!selectedConsumable || !assignSpec || !assignCategory) return;
+    if (!assignSpec || !assignCategory) return;
 
     setAssigning(true);
     try {
+      let consumableToAssign = selectedConsumable;
+
+      // If no consumable selected but URL provided, create/find the consumable first
+      if (!consumableToAssign && wowheadUrl) {
+        const wowheadId = parseWowheadUrl(wowheadUrl);
+        if (!wowheadId) {
+          alert('Invalid Wowhead URL. Please use a URL like: https://www.wowhead.com/tbc/item=22851');
+          setAssigning(false);
+          return;
+        }
+
+        if (!assignType) {
+          alert('Please select a consumable type');
+          setAssigning(false);
+          return;
+        }
+
+        // Check if consumable already exists
+        const existing = consumables.find((c) => c.wowheadId === wowheadId);
+        if (existing) {
+          consumableToAssign = existing;
+        } else {
+          // Create new consumable
+          const createRes = await fetch('/api/consumables', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wowheadId, type: assignType }),
+          });
+
+          if (!createRes.ok) {
+            const error = await createRes.json();
+            alert(error.error || 'Failed to create consumable');
+            setAssigning(false);
+            return;
+          }
+
+          const newConsumable = await createRes.json();
+          consumableToAssign = { ...newConsumable, specConfigs: [] };
+        }
+      }
+
+      if (!consumableToAssign) {
+        alert('Please select a consumable or enter a Wowhead URL');
+        setAssigning(false);
+        return;
+      }
+
+      // Assign the consumable
       const res = await fetch('/api/consumables/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          consumableId: selectedConsumable.id,
+          consumableId: consumableToAssign.id,
           spec: assignSpec,
           category: assignCategory,
           priority: assignPriority,
@@ -155,6 +215,8 @@ export default function ConsumablesPage() {
         setAssignSpec('');
         setAssignCategory('');
         setAssignPriority('best');
+        setWowheadUrl('');
+        setAssignType('');
       }
     } catch (error) {
       console.error('Failed to assign consumable:', error);
@@ -458,24 +520,77 @@ export default function ConsumablesPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             {!selectedConsumable && (
-              <div className="space-y-2">
-                <Label>Select Consumable</Label>
-                <Select
-                  value=""
-                  onValueChange={(id) => setSelectedConsumable(consumables.find((c) => c.id === id) || null)}
-                >
-                  <SelectTrigger className="bg-[#111] border-gray-600">
-                    <SelectValue placeholder="Select consumable" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {consumables.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                {/* Wowhead URL Import */}
+                <div className="space-y-2">
+                  <Label>Wowhead URL</Label>
+                  <Input
+                    type="text"
+                    placeholder="Paste Wowhead URL (e.g., https://www.wowhead.com/tbc/item=22851)"
+                    value={wowheadUrl}
+                    onChange={(e) => {
+                      setWowheadUrl(e.target.value);
+                      // Clear selected consumable when typing URL
+                      if (e.target.value) setSelectedConsumable(null);
+                    }}
+                    className="bg-[#111] border-gray-600"
+                  />
+                </div>
+
+                {/* Type selector for URL import */}
+                {wowheadUrl && (
+                  <div className="space-y-2">
+                    <Label>Consumable Type</Label>
+                    <Select value={assignType} onValueChange={setAssignType}>
+                      <SelectTrigger className="bg-[#111] border-gray-600">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CONSUMABLE_TYPES.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* OR Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-gray-600" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-[#1a1a1a] px-2 text-muted-foreground">OR</span>
+                  </div>
+                </div>
+
+                {/* Existing consumable selector */}
+                <div className="space-y-2">
+                  <Label>Select Existing Consumable</Label>
+                  <Select
+                    value=""
+                    onValueChange={(id) => {
+                      setSelectedConsumable(consumables.find((c) => c.id === id) || null);
+                      // Clear URL when selecting existing
+                      setWowheadUrl('');
+                      setAssignType('');
+                    }}
+                  >
+                    <SelectTrigger className="bg-[#111] border-gray-600">
+                      <SelectValue placeholder="Select consumable" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {consumables.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
             <div className="space-y-2">
               <Label>Spec</Label>
@@ -536,7 +651,12 @@ export default function ConsumablesPage() {
             </Button>
             <Button
               onClick={handleAssignConsumable}
-              disabled={!selectedConsumable || !assignSpec || !assignCategory || assigning}
+              disabled={
+                (!selectedConsumable && (!wowheadUrl || !assignType)) ||
+                !assignSpec ||
+                !assignCategory ||
+                assigning
+              }
             >
               {assigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Assign
