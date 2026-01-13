@@ -182,19 +182,19 @@ export default function DashboardPage() {
           <CardDescription>Join your class community for guides, theorycrafting, and more</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
+          <div className="space-y-1">
             {CLASS_DISCORDS.map((cls) => (
               <a
                 key={cls.name}
                 href={cls.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col items-center gap-2 p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors group"
               >
                 <img
                   src={getClassIconUrl(cls.name)}
                   alt={cls.name}
-                  className="w-10 h-10 rounded"
+                  className="w-8 h-8 rounded"
                   style={{
                     borderWidth: 2,
                     borderStyle: 'solid',
@@ -202,12 +202,12 @@ export default function DashboardPage() {
                   }}
                 />
                 <span
-                  className="text-xs font-medium flex items-center gap-1"
+                  className="text-sm font-medium flex-1"
                   style={{ color: CLASS_COLORS[cls.name] }}
                 >
                   {cls.name}
-                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </span>
+                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
               </a>
             ))}
           </div>
@@ -220,99 +220,89 @@ export default function DashboardPage() {
           <CardDescription>Useful tools for TBC Classic</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
+          <div className="space-y-1">
             <a
               href="https://www.wowsims.com/tbc/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors group"
             >
               <img
                 src="https://www.wowsims.com/tbc/assets/img/logo.png"
                 alt="WoWSims"
                 className="w-8 h-8"
               />
-              <div>
-                <p className="font-medium text-sm flex items-center gap-1">
-                  WoWSims TBC
-                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </p>
+              <div className="flex-1">
+                <p className="font-medium text-sm">WoWSims TBC</p>
                 <p className="text-xs text-muted-foreground">Gear optimizer & simulator</p>
               </div>
+              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </a>
             <a
               href="https://www.youtube.com/watch?v=5wYOVq0s9wY"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors group"
             >
               <div className="w-8 h-8 rounded bg-red-600 flex items-center justify-center">
                 <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               </div>
-              <div>
-                <p className="font-medium text-sm flex items-center gap-1">
-                  How to Sim Guide
-                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </p>
+              <div className="flex-1">
+                <p className="font-medium text-sm">How to Sim Guide</p>
                 <p className="text-xs text-muted-foreground">Video tutorial for WoWSims</p>
               </div>
+              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </a>
             <a
               href="https://www.wowhead.com/tbc"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors group"
             >
               <img
                 src="https://wow.zamimg.com/images/logos/wh-mark-80x80.png"
                 alt="Wowhead"
                 className="w-8 h-8"
               />
-              <div>
-                <p className="font-medium text-sm flex items-center gap-1">
-                  Wowhead TBC
-                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </p>
+              <div className="flex-1">
+                <p className="font-medium text-sm">Wowhead TBC</p>
                 <p className="text-xs text-muted-foreground">Database, guides & news</p>
               </div>
+              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </a>
             <a
               href="https://fresh.warcraftlogs.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors group"
             >
               <img
                 src="https://assets.rpglogs.com/img/warcraft/favicon.png"
                 alt="Warcraft Logs"
                 className="w-8 h-8"
               />
-              <div>
-                <p className="font-medium text-sm flex items-center gap-1">
-                  Warcraft Logs
-                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </p>
+              <div className="flex-1">
+                <p className="font-medium text-sm">Warcraft Logs</p>
                 <p className="text-xs text-muted-foreground">Combat logs & rankings</p>
               </div>
+              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </a>
             <a
               href="https://sixtyupgrades.com/tbc"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-4 py-3 group"
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors group"
             >
               <div className="w-8 h-8 rounded bg-amber-600 flex items-center justify-center">
                 <span className="text-white text-sm font-bold">60</span>
               </div>
-              <div>
-                <p className="font-medium text-sm flex items-center gap-1">
-                  Sixty Upgrades
-                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </p>
+              <div className="flex-1">
+                <p className="font-medium text-sm">Sixty Upgrades</p>
                 <p className="text-xs text-muted-foreground">Gear planner & upgrades</p>
               </div>
+              <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </a>
           </div>
         </CardContent>
@@ -324,33 +314,33 @@ export default function DashboardPage() {
           <CardDescription>Browse TBC WeakAuras on Wago.io</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-1">
             {WEAKAURA_LINKS.map((link) => (
               <a
                 key={link.name}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors px-3 py-2 group"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors group"
               >
                 {link.isClass ? (
                   <img
                     src={getClassIconUrl(link.name)}
                     alt={link.name}
-                    className="w-5 h-5 rounded"
+                    className="w-6 h-6 rounded"
                   />
                 ) : (
-                  <div className="w-5 h-5 rounded bg-purple-600 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded bg-purple-600 flex items-center justify-center">
                     <span className="text-white text-xs font-bold">W</span>
                   </div>
                 )}
                 <span
-                  className="text-xs font-medium flex items-center gap-1"
+                  className="text-sm font-medium flex-1"
                   style={{ color: link.isClass ? CLASS_COLORS[link.name] : undefined }}
                 >
                   {link.name}
-                  <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </span>
+                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
               </a>
             ))}
           </div>
