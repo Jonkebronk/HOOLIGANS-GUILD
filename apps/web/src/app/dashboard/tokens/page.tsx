@@ -814,7 +814,7 @@ export default function TokensPage() {
                             className="flex items-center gap-2 hover:opacity-80"
                           >
                             <img
-                              src={getItemIconUrl('inv_elemental_mote_nether', 'medium')}
+                              src={getItemIconUrl('spell_nature_wispsplode', 'medium')}
                               alt="Sunmote"
                               className="w-8 h-8 rounded"
                               style={{ borderColor: ITEM_QUALITY_COLORS[5], borderWidth: 2, borderStyle: 'solid' }}
