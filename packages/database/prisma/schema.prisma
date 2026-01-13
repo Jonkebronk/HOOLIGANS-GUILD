@@ -678,3 +678,25 @@ model TierTokenPiece {
   @@index([tokenId])
   @@index([className])
 }
+
+// ============================================
+// SUNMOTE UPGRADES
+// ============================================
+
+model SunmoteUpgrade {
+  id                String   @id @default(cuid())
+  baseItemName      String   // "Leggings of Channeled Elements"
+  baseWowheadId     Int?
+  upgradedName      String   // "Sunfire Leggings"
+  upgradedWowheadId Int?
+  sunmotesRequired  Int      @default(1)
+  slot              String   // "Legs", "Chest", etc.
+  armorType         String?  // "Cloth", "Leather", "Mail", "Plate"
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([baseItemName])
+  @@index([slot])
+  @@index([armorType])
+}
