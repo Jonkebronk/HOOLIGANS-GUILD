@@ -384,7 +384,12 @@ export default function RaidSplitsPage() {
     setDraggedPlayer(player);
     setDragSource(source);
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', player.id);
+    // Store both player ID and source info in dataTransfer
+    const dragData = {
+      playerId: player.id,
+      source: source,
+    };
+    e.dataTransfer.setData('application/json', JSON.stringify(dragData));
 
     // Set drag image
     const elem = e.currentTarget as HTMLElement;
@@ -419,12 +424,17 @@ export default function RaidSplitsPage() {
     let sourceInfo = dragSource;
 
     if (!playerToAssign) {
-      // State was cleared (handleDragEnd fired first) - get player ID from dataTransfer
-      const playerId = e.dataTransfer.getData('text/plain');
-      if (!playerId) return;
-      playerToAssign = players.find(p => p.id === playerId) || null;
+      // State was cleared (handleDragEnd fired first) - recover from dataTransfer
+      const jsonData = e.dataTransfer.getData('application/json');
+      if (!jsonData) return;
+      try {
+        const dragData = JSON.parse(jsonData);
+        playerToAssign = players.find(p => p.id === dragData.playerId) || null;
+        sourceInfo = dragData.source;
+      } catch {
+        return;
+      }
       if (!playerToAssign) return;
-      sourceInfo = 'available';
     }
 
     // Update state and save to database
