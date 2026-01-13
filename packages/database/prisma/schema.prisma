@@ -72,9 +72,15 @@ enum GearSlot {
   Trinket1    // For BiS - trinket slot 1
   Trinket2    // For BiS - trinket slot 2
   MainHand    // Two-hand weapons also use this
+  TwoHand     // Legacy - maps to MainHand
   OneHand     // Can go in main or off-hand
   OffHand     // Shields, held in off-hand items
+  Shield      // Legacy - maps to OffHand
+  HeldInOffhand // Legacy - maps to OffHand
   Ranged      // Bows, guns, wands, relics, totems, etc.
+  Relic       // Legacy - maps to Ranged
+  Wand        // Legacy - maps to Ranged
+  Thrown      // Legacy - maps to Ranged
   Misc        // Fallback for unknown slots
 }
 
