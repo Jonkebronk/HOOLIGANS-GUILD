@@ -18,6 +18,7 @@ import {
   Droplets,
   Activity,
   History,
+  FlaskConical,
 } from 'lucide-react';
 
 type NavItem = {
@@ -39,6 +40,7 @@ const navigation: NavItem[] = [
       { name: 'Drops', href: '/dashboard/loot', icon: Droplets },
       { name: 'Items', href: '/dashboard/items', icon: Package },
       { name: 'BiS Lists', href: '/dashboard/bis', icon: Scroll },
+      { name: 'Consumables', href: '/dashboard/consumables', icon: FlaskConical },
       { name: 'Attendance', href: '/dashboard/attendance', icon: Calendar },
       { name: 'Loot History', href: '/dashboard/reports', icon: History },
     ]
