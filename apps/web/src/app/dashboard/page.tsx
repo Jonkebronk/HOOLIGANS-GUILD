@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSession } from 'next-auth/react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ExternalLink, Eye, Zap, FlaskConical, Swords, Users } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getClassIconUrl } from '@/lib/wowhead';
 
-import { useTeam } from '@/components/providers/team-provider';
 
 // Raid tier info
 const CURRENT_TIER = {
@@ -44,8 +44,8 @@ const WEAKAURA_LINKS: { name: string; url: string; isClass?: boolean }[] = [
 ];
 
 export default function DashboardPage() {
-  const { selectedTeam } = useTeam();
-  const isPuG = selectedTeam?.name?.toLowerCase().includes('pug');
+  const { data: session } = useSession();
+  const userName = session?.user?.name || 'Raider';
 
   return (
     <div
@@ -59,53 +59,54 @@ export default function DashboardPage() {
     >
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here is your guild overview.</p>
+        <p className="text-muted-foreground">Welcome back, {userName}</p>
       </div>
 
       {/* Ready to Pump Card */}
       <Card className="overflow-hidden">
-        <div className="flex">
-          <div className="flex-1 p-6">
-            <h2 className="text-xl font-bold text-foreground mb-1">Ready to Pump?</h2>
-            <p className="text-sm text-muted-foreground mb-4">Consumables, items and assignments</p>
+        <div className="flex flex-col items-center text-center p-6">
+          {/* Arnold - centered and prominent */}
+          <img
+            src="/images/pump-arnold.webp"
+            alt="Ready to pump"
+            className="h-32 md:h-40 object-contain mb-4"
+          />
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50">
-                <span className="text-cyan-400 font-bold text-sm">{CURRENT_TIER.tier}</span>
-                <span className="text-sm text-muted-foreground">{CURRENT_TIER.raids.join(', ')}</span>
-              </div>
+          <h2 className="text-xl font-bold text-foreground mb-1">Ready to Pump?</h2>
+          <p className="text-sm text-muted-foreground mb-4">Consumables, items and assignments</p>
 
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href="/dashboard/consumables"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
-                >
-                  <FlaskConical className="w-4 h-4 text-green-400" />
-                  <span>Consumables</span>
-                </Link>
-                <Link
-                  href="/dashboard/items"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
-                >
-                  <Swords className="w-4 h-4 text-purple-400" />
-                  <span>Items</span>
-                </Link>
-                <Link
-                  href="/dashboard/bis"
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
-                >
-                  <Users className="w-4 h-4 text-blue-400" />
-                  <span>BiS Lists</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-          <div className="hidden md:block w-48 relative">
-            <img
-              src="/images/pump-arnold.webp"
-              alt="Ready to pump"
-              className="absolute bottom-0 right-0 h-full object-contain object-bottom opacity-80"
-            />
+          {/* Tier 4 - button link to assigns */}
+          <Link
+            href="/dashboard/assigns"
+            className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors mb-4 text-white font-medium"
+          >
+            <span className="font-bold">{CURRENT_TIER.tier}</span>
+            <span className="text-cyan-100">{CURRENT_TIER.raids.join(', ')}</span>
+            <ExternalLink className="w-4 h-4" />
+          </Link>
+
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link
+              href="/dashboard/consumables"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
+            >
+              <FlaskConical className="w-4 h-4 text-green-400" />
+              <span>Consumables</span>
+            </Link>
+            <Link
+              href="/dashboard/items"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
+            >
+              <Swords className="w-4 h-4 text-purple-400" />
+              <span>Items</span>
+            </Link>
+            <Link
+              href="/dashboard/bis"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
+            >
+              <Users className="w-4 h-4 text-blue-400" />
+              <span>BiS Lists</span>
+            </Link>
           </div>
         </div>
       </Card>
@@ -387,65 +388,81 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Loot Council Criteria - Only show for non-PuG teams */}
-      {!isPuG && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>Loot Council Criteria</CardTitle>
-            <CardDescription>How we evaluate loot distribution</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <div className="border-l-2 border-primary pl-3">
-                <h4 className="font-medium text-foreground text-sm">Engagement</h4>
-                <p className="text-xs text-muted-foreground">Active participation and effort to improve.</p>
-              </div>
-              <div className="border-l-2 border-primary pl-3">
-                <h4 className="font-medium text-foreground text-sm">Attendance</h4>
-                <p className="text-xs text-muted-foreground">High presence and being prepared for raids.</p>
-              </div>
-              <div className="border-l-2 border-primary pl-3">
-                <h4 className="font-medium text-foreground text-sm">Performance</h4>
-                <p className="text-xs text-muted-foreground">DPS/HPS, teamwork, and handling mechanics.</p>
-              </div>
-              <div className="border-l-2 border-primary pl-3">
-                <h4 className="font-medium text-foreground text-sm">Upgrade Value</h4>
-                <p className="text-xs text-muted-foreground">How much the item improves your character.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Leadership */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>Leadership</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <LeadershipBadge name="Johnnypapa" role="Guildmaster" />
-            <LeadershipBadge name="Shredd" role="Officer" />
-            <LeadershipBadge name="Viktorin" role="Officer" />
-            <LeadershipBadge name="Ambo" role="Officer" />
-            <LeadershipBadge name="Quest" role="Officer" />
+        <CardContent className="space-y-4">
+          {/* Guildmaster */}
+          <div className="bg-secondary/50 rounded-lg p-4 border border-primary/30">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-sm font-bold text-primary">Jo</span>
+              </div>
+              <div>
+                <p className="font-bold text-foreground">Johnnypapa</p>
+                <p className="text-xs text-primary">Guildmaster</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Raid Assignments & Strategy</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Primary Raid Leader</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Discord Management</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Loot Council</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Recruitment</span>
+            </div>
           </div>
+
+          {/* Officers Grid */}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <OfficerCard
+              name="Shredd"
+              responsibilities={['Roster Management', 'Human Resources (HR)', 'Loot Council', 'Recruitment']}
+            />
+            <OfficerCard
+              name="Vicked"
+              responsibilities={['Performance Reviewer (RPB, CLA, Logs)', 'Recruitment']}
+            />
+            <OfficerCard
+              name="Ambo"
+              responsibilities={['Performance Reviewer (RPB, CLA, Logs)', 'Secondary Raid Leader', 'Recruitment']}
+            />
+            <OfficerCard
+              name="Quest"
+              responsibilities={['Loot Council Documentation Lead', 'Guild Bank Manager', 'Recruitment']}
+            />
+          </div>
+
+          <p className="text-[10px] text-muted-foreground text-center pt-2">
+            All officers contribute across various areas of guild leadership and operations. The roles listed above highlight each officer&apos;s primary responsibilities.
+          </p>
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function LeadershipBadge({ name, role }: { name: string; role: string }) {
+function OfficerCard({ name, responsibilities }: { name: string; responsibilities: string[] }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5">
-      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
-        <span className="text-xs font-medium text-primary">{name.slice(0, 2)}</span>
+    <div className="bg-secondary/30 rounded-lg p-3">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center">
+          <span className="text-xs font-medium text-foreground">{name.slice(0, 2)}</span>
+        </div>
+        <div>
+          <p className="font-semibold text-sm text-foreground">{name}</p>
+          <p className="text-[10px] text-muted-foreground">Officer</p>
+        </div>
       </div>
-      <div>
-        <p className="font-medium text-xs">{name}</p>
-        <p className="text-[10px] text-muted-foreground">{role}</p>
-      </div>
+      <ul className="space-y-0.5">
+        {responsibilities.map((resp) => (
+          <li key={resp} className="text-[10px] text-muted-foreground flex items-start gap-1">
+            <span className="text-primary mt-0.5">•</span>
+            <span>{resp}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

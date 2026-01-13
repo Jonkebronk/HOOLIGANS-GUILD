@@ -5,13 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -19,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Loader2, Search, Filter, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Loader2, Search, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { ITEM_QUALITY_COLORS, getItemIconUrl } from '@/lib/wowhead';
 import { useTeam } from '@/components/providers/team-provider';
 import { ItemsTable } from '@/components/drops/items-table';
@@ -119,8 +112,6 @@ export default function DropsPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [lootItems, setLootItems] = useState<LootItem[]>([]);
   const [raiders, setRaiders] = useState<RaiderStats[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [raidFilter, setRaidFilter] = useState<string>('all');
   // Add Item dialog state
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [itemSearchQuery, setItemSearchQuery] = useState('');
@@ -432,14 +423,8 @@ export default function DropsPage() {
     }
   };
 
-  // Filter items based on search and raid
-  const filteredItems = lootItems.filter((item) => {
-    const matchesSearch =
-      item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.playerName?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRaid = raidFilter === 'all'; // TODO: Add raid field to items
-    return matchesSearch && matchesRaid;
-  });
+  // All items (no filtering needed since search was removed)
+  const filteredItems = lootItems;
 
   if (loading) {
     return (
@@ -556,37 +541,14 @@ export default function DropsPage() {
         </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="py-3">
-          <div className="flex flex-wrap gap-4">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search items or players..."
-                className="pl-10 h-9"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Select value={raidFilter} onValueChange={setRaidFilter}>
-              <SelectTrigger className="w-[180px] h-9">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Raid" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Raids</SelectItem>
-                {RAIDS.map((raid) => (
-                  <SelectItem key={raid.name} value={raid.name}>
-                    {raid.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Loot Council Criteria */}
+      <div className="flex items-center gap-6 text-xs text-muted-foreground border-b border-border pb-3">
+        <span className="font-medium text-foreground">Loot Criteria:</span>
+        <span><span className="text-primary">Engagement</span> - participation & effort</span>
+        <span><span className="text-primary">Attendance</span> - presence & preparation</span>
+        <span><span className="text-primary">Performance</span> - output & mechanics</span>
+        <span><span className="text-primary">Upgrade Value</span> - item improvement</span>
+      </div>
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-4">
