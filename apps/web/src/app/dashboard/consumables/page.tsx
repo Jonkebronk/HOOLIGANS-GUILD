@@ -338,8 +338,8 @@ export default function ConsumablesPage() {
                           return (
                             <div key={cat.id}>
                               <div
-                                className="text-xs font-semibold px-2 py-1 rounded mb-1"
-                                style={{ backgroundColor: '#8b0000', color: '#ffd700' }}
+                                className="text-xs font-semibold px-2 py-1 rounded mb-1 text-white"
+                                style={{ backgroundColor: '#8b0000' }}
                               >
                                 {cat.name}:
                               </div>
