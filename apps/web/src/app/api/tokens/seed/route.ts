@@ -2,6 +2,28 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
 import { TOKEN_TYPES } from '@hooligans/shared';
 
+// Icon names for tier tokens (from wowhead)
+const TOKEN_ICONS: Record<number, string> = {
+  // T4 - Fallen tokens
+  29761: 'inv_gauntlets_27', 29759: 'inv_gauntlets_27', 29760: 'inv_gauntlets_27', // Head
+  29764: 'inv_shoulder_22', 29762: 'inv_shoulder_22', 29763: 'inv_shoulder_22', // Shoulder
+  29753: 'inv_chest_chain_03', 29754: 'inv_chest_chain_03', 29755: 'inv_chest_chain_03', // Chest
+  29758: 'inv_gauntlets_27', 29756: 'inv_gauntlets_27', 29757: 'inv_gauntlets_27', // Hands
+  29767: 'inv_pants_plate_17', 29765: 'inv_pants_plate_17', 29766: 'inv_pants_plate_17', // Legs
+  // T5 - Vanquished tokens
+  30243: 'inv_helmet_24', 30244: 'inv_helmet_24', 30242: 'inv_helmet_24', // Head
+  30249: 'inv_shoulder_14', 30250: 'inv_shoulder_14', 30248: 'inv_shoulder_14', // Shoulder
+  30237: 'inv_chest_chain_15', 30238: 'inv_chest_chain_15', 30236: 'inv_chest_chain_15', // Chest
+  30240: 'inv_gauntlets_25', 30241: 'inv_gauntlets_25', 30239: 'inv_gauntlets_25', // Hands
+  30246: 'inv_pants_mail_15', 30247: 'inv_pants_mail_15', 30245: 'inv_pants_mail_15', // Legs
+  // T6 - Forgotten tokens
+  31097: 'inv_helmet_30', 31095: 'inv_helmet_30', 31096: 'inv_helmet_30', // Head
+  31101: 'inv_shoulder_25', 31102: 'inv_shoulder_25', 31103: 'inv_shoulder_25', // Shoulder
+  31089: 'inv_chest_plate04', 31090: 'inv_chest_plate04', 31091: 'inv_chest_plate04', // Chest
+  31092: 'inv_gauntlets_26', 31093: 'inv_gauntlets_26', 31094: 'inv_gauntlets_26', // Hands
+  31098: 'inv_pants_plate_12', 31099: 'inv_pants_plate_12', 31100: 'inv_pants_plate_12', // Legs
+};
+
 // TBC Tier Token Data
 const TIER_TOKENS = {
   T4: {
@@ -92,6 +114,13 @@ export async function POST() {
           });
 
           if (existing) {
+            // Update existing token with icon if missing
+            if (!existing.icon && wowheadId && TOKEN_ICONS[wowheadId]) {
+              await prisma.tierToken.update({
+                where: { id: existing.id },
+                data: { icon: TOKEN_ICONS[wowheadId] },
+              });
+            }
             skipped++;
             continue;
           }
@@ -101,6 +130,7 @@ export async function POST() {
             data: {
               name: tokenName,
               wowheadId,
+              icon: wowheadId ? TOKEN_ICONS[wowheadId] || null : null,
               tokenType,
               tier,
               slot: tokenInfo.slot,
