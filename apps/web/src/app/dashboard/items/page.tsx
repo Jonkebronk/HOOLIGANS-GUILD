@@ -124,6 +124,7 @@ export default function ItemsPage() {
   });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [loadingItemDetails, setLoadingItemDetails] = useState(false);
+  const [isRefreshingIcon, setIsRefreshingIcon] = useState(false);
   const [players, setPlayers] = useState<{ id: string; name: string; class: string }[]>([]);
   const [newItem, setNewItem] = useState({
     name: '',
@@ -642,6 +643,45 @@ export default function ItemsPage() {
       console.error('Failed to save item:', error);
     } finally {
       setIsSavingEdit(false);
+    }
+  };
+
+  // Refresh icon from Wowhead
+  const handleRefreshIcon = async () => {
+    const wowheadId = editForm.wowheadId ? parseInt(editForm.wowheadId) : null;
+    if (!wowheadId || !editingItem) return;
+
+    setIsRefreshingIcon(true);
+    try {
+      const res = await fetch('/api/items/refresh-icon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemId: editingItem.id,
+          wowheadId: wowheadId,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.icon) {
+          // Update local state with new icon
+          setEditingItem({ ...editingItem, icon: data.icon, name: data.name || editingItem.name });
+          // Update form if name changed
+          if (data.name) {
+            setEditForm({ ...editForm, name: data.name });
+          }
+          await fetchItems();
+        }
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to refresh icon');
+      }
+    } catch (error) {
+      console.error('Failed to refresh icon:', error);
+      alert('Failed to refresh icon. Please try again.');
+    } finally {
+      setIsRefreshingIcon(false);
     }
   };
 
@@ -1434,11 +1474,28 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                   </div>
                   <div className="space-y-2">
                     <Label>Wowhead ID</Label>
-                    <Input
-                      placeholder="e.g., 32837"
-                      value={editForm.wowheadId}
-                      onChange={(e) => setEditForm({ ...editForm, wowheadId: e.target.value })}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="e.g., 32837"
+                        value={editForm.wowheadId}
+                        onChange={(e) => setEditForm({ ...editForm, wowheadId: e.target.value })}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleRefreshIcon}
+                        disabled={isRefreshingIcon || !editForm.wowheadId}
+                        title="Refresh icon from Wowhead"
+                      >
+                        {isRefreshingIcon ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
