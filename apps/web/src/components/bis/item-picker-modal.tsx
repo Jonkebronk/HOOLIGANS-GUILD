@@ -58,7 +58,7 @@ const slotMapping: Record<string, string[]> = {
   Finger2: ['Finger'],
   Trinket1: ['Trinket'],
   Trinket2: ['Trinket'],
-  MainHand: ['MainHand', 'OneHand', 'Weapon'],  // Two-handers & main-hand only items, one-handers can go here
+  MainHand: ['MainHand', 'TwoHand', 'OneHand', 'Weapon'],  // Two-handers, main-hand only, one-handers can go here
   OffHand: ['OffHand', 'OneHand'],              // Off-hand items & shields, one-handers can go here too
   Ranged: ['Ranged'],                           // Bows, guns, wands, relics, totems, etc.
 };

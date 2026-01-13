@@ -106,7 +106,7 @@ export const GEAR_SLOTS = [
   'Head', 'Neck', 'Shoulder', 'Back', 'Chest',
   'Wrist', 'Hands', 'Waist', 'Legs', 'Feet',
   'Finger', 'Trinket',
-  'MainHand', 'OneHand', 'OffHand', 'Ranged'
+  'MainHand', 'TwoHand', 'OneHand', 'OffHand', 'Ranged'
 ] as const;
 
 // Item Source Types
