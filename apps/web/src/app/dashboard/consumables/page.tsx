@@ -345,8 +345,10 @@ export default function ConsumablesPage() {
                               </div>
                               {/* Best items */}
                               {bestItems.length > 0 && (
-                                <div className="mb-1">
-                                  <span className="text-[10px] text-gray-500 px-1">Best:</span>
+                                <div className="mb-2">
+                                  <div className="text-xs font-bold text-yellow-500 px-1 mb-0.5 flex items-center gap-1">
+                                    <span className="text-yellow-400">★</span> Best:
+                                  </div>
                                   {bestItems.map((item) => (
                                     <ConsumableItem
                                       key={item.id}
@@ -360,7 +362,9 @@ export default function ConsumablesPage() {
                               {/* Alternative items */}
                               {altItems.length > 0 && (
                                 <div>
-                                  <span className="text-[10px] text-gray-500 px-1">Alternatives:</span>
+                                  <div className="text-xs font-medium text-gray-400 px-1 mb-0.5">
+                                    Alternatives:
+                                  </div>
                                   {altItems.map((item) => (
                                     <ConsumableItem
                                       key={item.id}
