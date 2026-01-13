@@ -1499,7 +1499,7 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                       </Button>
                     </div>
                     {/* Bottom Row: Loot Council Info */}
-                    {(item.lootPriority || (item.bisPlayersFromList && item.bisPlayersFromList.length > 0) || item.bisNextPhase || (item.lootRecords && item.lootRecords.length > 0)) && (
+                    {(item.lootPriority || (item.bisPlayersFromList && item.bisPlayersFromList.length > 0) || (item.lootRecords && item.lootRecords.length > 0)) && (
                       <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 ml-13 pl-[52px] text-xs">
                         {item.lootPriority && (
                           <div>
@@ -1523,26 +1523,7 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                             </div>
                           </div>
                         )}
-                        {item.bisNextPhase && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">BiS Next: </span>
-                            <div className="flex flex-wrap gap-1">
-                              {item.bisNextPhase.split(', ').map((spec) => {
-                                const color = getSpecShortNameColor(spec);
-                                return (
-                                  <span
-                                    key={spec}
-                                    className="px-1.5 py-0.5 rounded text-xs"
-                                    style={{ backgroundColor: `${color}20`, color }}
-                                  >
-                                    {spec}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                        {item.lootRecords && item.lootRecords.length > 0 && (
+                                                {item.lootRecords && item.lootRecords.length > 0 && (
                           <div>
                             <span className="text-muted-foreground">Looted by: </span>
                             {item.lootRecords.filter(r => r.player).map((record, idx) => (
