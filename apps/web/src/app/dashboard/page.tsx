@@ -1,12 +1,19 @@
 'use client';
 
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ExternalLink, Eye, Zap } from 'lucide-react';
+import { ExternalLink, Eye, Zap, FlaskConical, Swords, Users } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getClassIconUrl } from '@/lib/wowhead';
 
 import { useTeam } from '@/components/providers/team-provider';
+
+// Raid tier info
+const CURRENT_TIER = {
+  tier: 'Tier 4',
+  raids: ['Karazhan', "Gruul's Lair", "Magtheridon's Lair"],
+};
 
 // Class Discord server links
 const CLASS_DISCORDS: { name: string; url: string }[] = [
@@ -54,6 +61,54 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground">Welcome back! Here is your guild overview.</p>
       </div>
+
+      {/* Ready to Pump Card */}
+      <Card className="overflow-hidden">
+        <div className="flex">
+          <div className="flex-1 p-6">
+            <h2 className="text-xl font-bold text-foreground mb-1">Ready to Pump?</h2>
+            <p className="text-sm text-muted-foreground mb-4">Consumables, items and assignments</p>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50">
+                <span className="text-cyan-400 font-bold text-sm">{CURRENT_TIER.tier}</span>
+                <span className="text-sm text-muted-foreground">{CURRENT_TIER.raids.join(', ')}</span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/dashboard/consumables"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
+                >
+                  <FlaskConical className="w-4 h-4 text-green-400" />
+                  <span>Consumables</span>
+                </Link>
+                <Link
+                  href="/dashboard/items"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
+                >
+                  <Swords className="w-4 h-4 text-purple-400" />
+                  <span>Items</span>
+                </Link>
+                <Link
+                  href="/dashboard/bis"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
+                >
+                  <Users className="w-4 h-4 text-blue-400" />
+                  <span>BiS Lists</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div className="hidden md:block w-48 relative">
+            <img
+              src="/images/pump-arnold.webp"
+              alt="Ready to pump"
+              className="absolute bottom-0 right-0 h-full object-contain object-bottom opacity-80"
+            />
+          </div>
+        </div>
+      </Card>
 
       {/* Main Grid - Resources, WeakAuras, Class Discords */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
