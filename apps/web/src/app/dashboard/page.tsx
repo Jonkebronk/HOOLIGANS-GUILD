@@ -473,42 +473,31 @@ export default function DashboardPage() {
           <CardTitle>Leadership</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Guildmaster */}
-          <div className="bg-secondary/50 rounded-lg p-4 border border-primary/30">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">Jo</span>
-              </div>
-              <div>
-                <p className="font-bold text-foreground">Johnnypapa</p>
-                <p className="text-xs text-primary">Guildmaster</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Raid Assignments & Strategy</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Primary Raid Leader</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Discord Management</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Loot Council</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary">Recruitment</span>
-            </div>
-          </div>
-
-          {/* Officers Grid */}
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            <OfficerCard
+          {/* Leadership Grid */}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+            <LeaderCard
+              name="Johnnypapa"
+              role="Guildmaster"
+              responsibilities={['Raid Assignments & Strategy', 'Primary Raid Leader', 'Discord Management', 'Loot Council', 'Recruitment']}
+            />
+            <LeaderCard
               name="Shredd"
+              role="Officer"
               responsibilities={['Roster Management', 'Human Resources (HR)', 'Loot Council', 'Recruitment']}
             />
-            <OfficerCard
+            <LeaderCard
               name="Vicked"
+              role="Officer"
               responsibilities={['Performance Reviewer (RPB, CLA, Logs)', 'Recruitment']}
             />
-            <OfficerCard
+            <LeaderCard
               name="Ambo"
+              role="Officer"
               responsibilities={['Performance Reviewer (RPB, CLA, Logs)', 'Secondary Raid Leader', 'Recruitment']}
             />
-            <OfficerCard
+            <LeaderCard
               name="Quest"
+              role="Officer"
               responsibilities={['Loot Council Documentation Lead', 'Guild Bank Manager', 'Recruitment']}
             />
           </div>
@@ -522,16 +511,17 @@ export default function DashboardPage() {
   );
 }
 
-function OfficerCard({ name, responsibilities }: { name: string; responsibilities: string[] }) {
+function LeaderCard({ name, role, responsibilities }: { name: string; role: string; responsibilities: string[] }) {
+  const isGM = role === 'Guildmaster';
   return (
     <div className="bg-secondary/30 rounded-lg p-3">
       <div className="flex items-center gap-2 mb-2">
-        <div className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center">
-          <span className="text-xs font-medium text-foreground">{name.slice(0, 2)}</span>
+        <div className={`h-7 w-7 rounded-full flex items-center justify-center ${isGM ? 'bg-primary/20' : 'bg-secondary'}`}>
+          <span className={`text-xs font-medium ${isGM ? 'text-primary' : 'text-foreground'}`}>{name.slice(0, 2)}</span>
         </div>
         <div>
           <p className="font-semibold text-sm text-foreground">{name}</p>
-          <p className="text-[10px] text-muted-foreground">Officer</p>
+          <p className={`text-[10px] ${isGM ? 'text-primary' : 'text-muted-foreground'}`}>{role}</p>
         </div>
       </div>
       <ul className="space-y-0.5">
