@@ -147,6 +147,7 @@ model Team {
   name          String    // e.g., "TEAM NATO", "TEAM SWEDEN", "PuG"
   description   String?
   icon          String?   // URL to team icon/logo
+  softResUrl    String?   // Soft-res URL for PuG raids (editable by officers)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

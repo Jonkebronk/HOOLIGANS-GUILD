@@ -7,6 +7,7 @@ export type Team = {
   name: string;
   description?: string;
   icon?: string;
+  softResUrl?: string;
   role: string;
   playerCount: number;
   memberCount: number;
@@ -25,6 +26,7 @@ type TeamContextType = {
   refetchTeams: () => Promise<void>;
   isOfficer: boolean;
   discordRoles: string[];
+  updateTeamSoftRes: (teamId: string, softResUrl: string) => Promise<boolean>;
 };
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
@@ -147,6 +149,31 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     await fetchTeams(roleInfo);
   };
 
+  const updateTeamSoftRes = async (teamId: string, softResUrl: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/teams', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId, softResUrl }),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setTeams(prev => prev.map(t =>
+          t.id === teamId ? { ...t, softResUrl } : t
+        ));
+        if (selectedTeam?.id === teamId) {
+          setSelectedTeamState({ ...selectedTeam, softResUrl });
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to update soft-res URL:', error);
+      return false;
+    }
+  };
+
   return (
     <TeamContext.Provider
       value={{
@@ -157,6 +184,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
         refetchTeams,
         isOfficer,
         discordRoles,
+        updateTeamSoftRes,
       }}
     >
       {children}

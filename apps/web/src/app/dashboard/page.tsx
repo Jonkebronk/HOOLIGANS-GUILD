@@ -1,12 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ExternalLink, Eye, Zap, FlaskConical, Swords, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ExternalLink, Eye, Zap, FlaskConical, Swords, Users, Gift, Pencil } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getClassIconUrl } from '@/lib/wowhead';
+import { useTeam } from '@/components/providers/team-provider';
 
 
 // Raid tier info
@@ -45,7 +49,28 @@ const WEAKAURA_LINKS: { name: string; url: string; isClass?: boolean }[] = [
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const { selectedTeam, isOfficer, updateTeamSoftRes } = useTeam();
   const userName = session?.user?.name || 'Raider';
+
+  const isPuG = selectedTeam?.name?.toLowerCase().includes('pug');
+  const [softResDialogOpen, setSoftResDialogOpen] = useState(false);
+  const [softResInput, setSoftResInput] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveSoftRes = async () => {
+    if (!selectedTeam) return;
+    setIsSaving(true);
+    const success = await updateTeamSoftRes(selectedTeam.id, softResInput);
+    setIsSaving(false);
+    if (success) {
+      setSoftResDialogOpen(false);
+    }
+  };
+
+  const openSoftResDialog = () => {
+    setSoftResInput(selectedTeam?.softResUrl || '');
+    setSoftResDialogOpen(true);
+  };
 
   return (
     <div
@@ -84,6 +109,60 @@ export default function DashboardPage() {
             <span className="text-cyan-100">{CURRENT_TIER.raids.join(', ')}</span>
             <ExternalLink className="w-4 h-4" />
           </Link>
+
+          {/* Soft-res link for PuGs */}
+          {isPuG && (
+            <div className="flex items-center gap-2 mb-4">
+              {selectedTeam?.softResUrl ? (
+                <a
+                  href={selectedTeam.softResUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 transition-colors text-white font-medium"
+                >
+                  <Gift className="w-4 h-4" />
+                  <span>Soft-Res for Tonight</span>
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              ) : (
+                <span className="text-sm text-muted-foreground">No soft-res link set</span>
+              )}
+              {isOfficer && (
+                <Dialog open={softResDialogOpen} onOpenChange={setSoftResDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={openSoftResDialog}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit Soft-Res URL</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 pt-4">
+                      <Input
+                        placeholder="https://softres.it/raid/..."
+                        value={softResInput}
+                        onChange={(e) => setSoftResInput(e.target.value)}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setSoftResDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleSaveSoftRes} disabled={isSaving}>
+                          {isSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-wrap justify-center gap-2">
             <Link

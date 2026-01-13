@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
 import { auth } from '@/lib/auth';
+import { requireOfficer } from '@/lib/auth-utils';
 
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const DISCORD_GUILD_ID = process.env.DISCORD_GUILD_ID;
@@ -175,5 +176,34 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Failed to create team:', error);
     return NextResponse.json({ error: 'Failed to create team' }, { status: 500 });
+  }
+}
+
+// PATCH /api/teams - Update team settings (officer only)
+export async function PATCH(request: Request) {
+  try {
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { teamId, softResUrl } = body;
+
+    if (!teamId) {
+      return NextResponse.json({ error: 'Team ID is required' }, { status: 400 });
+    }
+
+    const team = await prisma.team.update({
+      where: { id: teamId },
+      data: {
+        softResUrl: softResUrl || null,
+      },
+    });
+
+    return NextResponse.json(team);
+  } catch (error) {
+    console.error('Failed to update team:', error);
+    return NextResponse.json({ error: 'Failed to update team' }, { status: 500 });
   }
 }
