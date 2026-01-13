@@ -770,7 +770,7 @@ export default function ItemsPage() {
                           <SelectTrigger><SelectValue placeholder="Select raid" /></SelectTrigger>
                           <SelectContent>
                             {RAIDS.map((raid) => (
-                              <SelectItem key={raid} value={raid}>{raid}</SelectItem>
+                              <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
