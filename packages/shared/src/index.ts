@@ -16,7 +16,7 @@ export const CLASS_COLORS: Record<string, string> = {
 
 // Class Specs
 export const CLASS_SPECS: Record<string, string[]> = {
-  Druid: ['DruidBalance', 'DruidRestoration', 'DruidFeral', 'DruidGuardian', 'DruidDreamstate'],
+  Druid: ['DruidBalance', 'DruidRestoration', 'DruidFeral', 'DruidGuardian'],
   Hunter: ['HunterMarksmanship', 'HunterSurvival', 'HunterBeastMastery'],
   Mage: ['MageArcane', 'MageFire', 'MageFrost'],
   Paladin: ['PaladinProtection', 'PaladinHoly', 'PaladinRetribution'],
@@ -24,7 +24,7 @@ export const CLASS_SPECS: Record<string, string[]> = {
   Rogue: ['RogueAssassination', 'RogueSubtlety', 'RogueCombat'],
   Shaman: ['ShamanElemental', 'ShamanRestoration', 'ShamanEnhancement'],
   Warlock: ['WarlockDemonology', 'WarlockAffliction', 'WarlockDestruction'],
-  Warrior: ['WarriorFury', 'WarriorProtection', 'WarriorArms'],
+  Warrior: ['WarriorFury', 'WarriorProtection', 'WarriorArms', 'WarriorKebab'],
 };
 
 // Spec to Role mapping
@@ -37,7 +37,6 @@ export const SPEC_ROLES: Record<string, { role: string; subtype: string }> = {
 
   // Healers
   DruidRestoration: { role: 'Heal', subtype: 'Heal' },
-  DruidDreamstate: { role: 'Heal', subtype: 'Heal' },
   PaladinHoly: { role: 'Heal', subtype: 'Heal' },
   PriestDiscipline: { role: 'Heal', subtype: 'Heal' },
   PriestHoly: { role: 'Heal', subtype: 'Heal' },
@@ -49,6 +48,7 @@ export const SPEC_ROLES: Record<string, { role: string; subtype: string }> = {
   RogueCombat: { role: 'DPS', subtype: 'DPS_Melee' },
   WarriorFury: { role: 'DPS', subtype: 'DPS_Melee' },
   WarriorArms: { role: 'DPS', subtype: 'DPS_Melee' },
+  WarriorKebab: { role: 'DPS', subtype: 'DPS_Melee' },  // Same as Arms
   ShamanEnhancement: { role: 'DPS', subtype: 'DPS_Melee' },
   PaladinRetribution: { role: 'DPS', subtype: 'DPS_Melee' },
 
@@ -99,7 +99,8 @@ export const TOKEN_TYPES: Record<string, string[]> = {
   'Fallen Champion': ['Paladin', 'Rogue', 'Shaman'],
 };
 
-// Gear Slots - must match Prisma GearSlot enum
+// Gear Slots for Items - simplified slots (not BiS character slots)
+// Items use: Finger (not Finger1/2), Trinket (not Trinket1/2)
 export const GEAR_SLOTS = [
   'Head', 'Neck', 'Shoulder', 'Back', 'Chest',
   'Wrist', 'Hands', 'Waist', 'Legs', 'Feet',
