@@ -11,7 +11,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Loader2, Search, Filter, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { ITEM_QUALITY_COLORS, getItemIconUrl } from '@/lib/wowhead';
 import { useTeam } from '@/components/providers/team-provider';
 import { ItemsTable } from '@/components/drops/items-table';
 import { RaidersTable } from '@/components/drops/raiders-table';
@@ -85,6 +94,17 @@ type ParsedItem = {
   quality: number;
 };
 
+type DatabaseItem = {
+  id: string;
+  name: string;
+  wowheadId: number;
+  icon?: string;
+  quality: number;
+  slot: string;
+  raid: string;
+  boss: string;
+};
+
 export default function DropsPage() {
   const { selectedTeam } = useTeam();
   const [loading, setLoading] = useState(true);
@@ -93,6 +113,12 @@ export default function DropsPage() {
   const [raiders, setRaiders] = useState<RaiderStats[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [raidFilter, setRaidFilter] = useState<string>('all');
+  // Add Item dialog state
+  const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
+  const [itemSearchResults, setItemSearchResults] = useState<DatabaseItem[]>([]);
+  const [isSearchingItems, setIsSearchingItems] = useState(false);
+  const [isAddingItem, setIsAddingItem] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!selectedTeam) return;
@@ -338,6 +364,62 @@ export default function DropsPage() {
     }
   };
 
+  // Search items in database
+  const handleItemSearch = async (query: string) => {
+    setItemSearchQuery(query);
+    if (query.length < 2) {
+      setItemSearchResults([]);
+      return;
+    }
+    setIsSearchingItems(true);
+    try {
+      const res = await fetch(`/api/items/search?q=${encodeURIComponent(query)}&limit=15`);
+      if (res.ok) {
+        const data = await res.json();
+        setItemSearchResults(data);
+      }
+    } catch (error) {
+      console.error('Failed to search items:', error);
+    } finally {
+      setIsSearchingItems(false);
+    }
+  };
+
+  // Add item from database as a drop
+  const handleAddItemFromDb = async (item: DatabaseItem) => {
+    if (!selectedTeam) return;
+    setIsAddingItem(true);
+    try {
+      const res = await fetch('/api/loot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemId: item.id,
+          teamId: selectedTeam.id,
+          lootDate: new Date().toISOString(),
+          phase: 'P5', // Default to current phase
+        }),
+      });
+
+      if (res.ok) {
+        // Refresh data to get the new item with all relations
+        await fetchData();
+        // Reset and close dialog
+        setItemSearchQuery('');
+        setItemSearchResults([]);
+        setIsAddItemOpen(false);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to add item');
+      }
+    } catch (error) {
+      console.error('Failed to add item:', error);
+      alert('Failed to add item');
+    } finally {
+      setIsAddingItem(false);
+    }
+  };
+
   // Filter items based on search and raid
   const filteredItems = lootItems.filter((item) => {
     const matchesSearch =
@@ -374,10 +456,85 @@ export default function DropsPage() {
           </Button>
           <RCImportDialog onImport={handleRCImport} />
           <RCExportDialog items={lootItems} />
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Item
-          </Button>
+          <Dialog open={isAddItemOpen} onOpenChange={(open) => {
+            setIsAddItemOpen(open);
+            if (!open) {
+              setItemSearchQuery('');
+              setItemSearchResults([]);
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add Item from Database</DialogTitle>
+                <DialogDescription>
+                  Search for an item to add as a drop.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search items..."
+                    value={itemSearchQuery}
+                    onChange={(e) => handleItemSearch(e.target.value)}
+                    className="pl-10"
+                    autoFocus
+                  />
+                </div>
+                {isSearchingItems && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Searching...
+                  </div>
+                )}
+                {itemSearchResults.length > 0 && (
+                  <div className="max-h-80 overflow-y-auto space-y-1 border rounded-md p-2">
+                    {itemSearchResults.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="flex items-center gap-3 w-full text-left hover:bg-muted/50 rounded-md p-2 transition-colors"
+                        onClick={() => handleAddItemFromDb(item)}
+                        disabled={isAddingItem}
+                      >
+                        <img
+                          src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'small')}
+                          alt=""
+                          className="w-8 h-8 rounded flex-shrink-0"
+                          style={{
+                            borderWidth: 2,
+                            borderStyle: 'solid',
+                            borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4],
+                          }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div
+                            className="font-medium truncate"
+                            style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                          >
+                            {item.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {item.boss || item.raid} • {item.slot}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {itemSearchQuery.length >= 2 && !isSearchingItems && itemSearchResults.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No items found matching &quot;{itemSearchQuery}&quot;
+                  </p>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

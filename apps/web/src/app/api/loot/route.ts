@@ -64,19 +64,60 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { itemId, playerId, response, lootDate, phase, lootPoints } = body;
+    const { itemId, playerId, response, lootDate, phase, lootPoints, teamId } = body;
 
     const lootRecord = await prisma.lootRecord.create({
       data: {
         itemId,
-        playerId,
-        response,
-        lootDate: new Date(lootDate),
-        phase,
-        lootPoints,
+        playerId: playerId || null,
+        teamId: teamId || null,
+        response: response || null,
+        lootDate: lootDate ? new Date(lootDate) : new Date(),
+        phase: phase || 'P5',
+        lootPoints: lootPoints || 0,
       },
       include: {
-        item: true,
+        item: {
+          select: {
+            id: true,
+            name: true,
+            wowheadId: true,
+            quality: true,
+            icon: true,
+            slot: true,
+            lootPriority: true,
+            bisFor: true,
+            bisNextPhase: true,
+            tokenRedemptions: {
+              include: {
+                redemptionItem: {
+                  select: {
+                    id: true,
+                    name: true,
+                    wowheadId: true,
+                    icon: true,
+                    quality: true,
+                    bisFor: true,
+                    lootRecords: {
+                      include: {
+                        player: {
+                          select: {
+                            id: true,
+                            name: true,
+                            class: true,
+                          },
+                        },
+                      },
+                      orderBy: { lootDate: 'desc' },
+                      take: 3,
+                    },
+                  },
+                },
+              },
+              orderBy: { className: 'asc' },
+            },
+          },
+        },
         player: true,
       },
     });
