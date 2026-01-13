@@ -99,8 +99,6 @@ export default function ItemsPage() {
   const [fetchErrors, setFetchErrors] = useState<{ url: string; error: string }[]>([]);
   const [isFetchingItems, setIsFetchingItems] = useState(false);
   const [isSavingImport, setIsSavingImport] = useState(false);
-  const [importRaid, setImportRaid] = useState('');
-  const [importPhase, setImportPhase] = useState('P1');
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -309,7 +307,7 @@ export default function ItemsPage() {
 
   // Fetch items from Wowhead URLs
   const handleFetchWowheadItems = async () => {
-    if (!wowheadUrls.trim() || !importRaid) {
+    if (!wowheadUrls.trim()) {
       return;
     }
 
@@ -329,12 +327,12 @@ export default function ItemsPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // Add raid/phase/boss to fetched items
+        // Add default values - user will fill in raid/phase/source per item
         const itemsWithDefaults = (data.items || []).map((item: { wowheadId: number; name: string; icon: string; quality: number; slot: string; url: string }) => ({
           ...item,
-          raid: importRaid,
-          phase: importPhase,
-          boss: 'Unknown',
+          raid: '',
+          phase: '',
+          boss: '',
         }));
         setFetchedItems(itemsWithDefaults);
         setFetchErrors(data.errors || []);
@@ -352,9 +350,14 @@ export default function ItemsPage() {
 
   // Update a fetched item field
   const updateFetchedItem = (index: number, field: string, value: string) => {
-    setFetchedItems(prev => prev.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    ));
+    setFetchedItems(prev => prev.map((item, i) => {
+      if (i !== index) return item;
+      // Convert quality to number
+      if (field === 'quality') {
+        return { ...item, quality: parseInt(value) };
+      }
+      return { ...item, [field]: value };
+    }));
   };
 
   // Remove item from import list
@@ -420,8 +423,6 @@ export default function ItemsPage() {
     setFetchedItems([]);
     setFetchErrors([]);
     setImportStage('input');
-    setImportRaid('');
-    setImportPhase('P1');
   };
 
   const handleFixPhases = async () => {
@@ -763,30 +764,6 @@ export default function ItemsPage() {
               {importStage === 'input' ? (
                 <>
                   <div className="space-y-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Raid</Label>
-                        <Select value={importRaid} onValueChange={setImportRaid}>
-                          <SelectTrigger><SelectValue placeholder="Select raid" /></SelectTrigger>
-                          <SelectContent>
-                            {RAIDS.map((raid) => (
-                              <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Phase</Label>
-                        <Select value={importPhase} onValueChange={setImportPhase}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {PHASES.map((phase) => (
-                              <SelectItem key={phase} value={phase}>{phase}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
                     <div className="space-y-2">
                       <Label>Wowhead URLs (one per line)</Label>
                       <Textarea
@@ -795,11 +772,11 @@ https://www.wowhead.com/tbc/item=30110/amani-mask-of-death
 https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                         value={wowheadUrls}
                         onChange={(e) => setWowheadUrls(e.target.value)}
-                        rows={8}
+                        rows={10}
                         className="font-mono text-sm"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Paste full Wowhead URLs or just item IDs (e.g., 32837)
+                        Paste full Wowhead URLs or just item IDs (e.g., 32837). Item name, quality, and slot will be fetched automatically.
                       </p>
                     </div>
                     {fetchErrors.length > 0 && (
@@ -817,7 +794,7 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                     <Button variant="outline" onClick={() => setIsWowheadImportOpen(false)} disabled={isFetchingItems}>
                       Cancel
                     </Button>
-                    <Button onClick={handleFetchWowheadItems} disabled={!wowheadUrls.trim() || !importRaid || isFetchingItems}>
+                    <Button onClick={handleFetchWowheadItems} disabled={!wowheadUrls.trim() || isFetchingItems}>
                       {isFetchingItems ? (
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       ) : (
@@ -829,74 +806,101 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                 </>
               ) : (
                 <>
-                  <div className="flex-1 overflow-y-auto space-y-2 py-2 pr-2">
+                  <div className="flex-1 overflow-y-auto space-y-3 py-2 pr-2">
                     {fetchedItems.map((item, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border">
-                        <a
-                          href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          data-wh-icon-size="0"
-                        >
-                          <img
-                            src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
-                            alt={item.name}
-                            className="w-10 h-10 rounded"
-                            style={{ borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4], borderWidth: 2, borderStyle: 'solid' }}
-                          />
-                        </a>
-                        <div className="flex-1 space-y-2 min-w-0">
+                      <div key={index} className="p-3 bg-muted/30 rounded-lg border space-y-3">
+                        <div className="flex items-center gap-3">
                           <a
                             href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             data-wh-icon-size="0"
-                            className="font-medium text-sm hover:underline block truncate"
+                          >
+                            <img
+                              src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
+                              alt={item.name}
+                              className="w-10 h-10 rounded"
+                              style={{ borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4], borderWidth: 2, borderStyle: 'solid' }}
+                            />
+                          </a>
+                          <a
+                            href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-wh-icon-size="0"
+                            className="font-medium text-sm hover:underline flex-1 truncate"
                             style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                           >
                             {item.name}
                           </a>
-                          <div className="grid grid-cols-4 gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            onClick={() => removeFetchedItem(index)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Slot</Label>
                             <Select value={item.slot} onValueChange={(v) => updateFetchedItem(index, 'slot', v)}>
-                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select slot" /></SelectTrigger>
                               <SelectContent>
                                 {GEAR_SLOTS.map((slot) => (
                                   <SelectItem key={slot} value={slot}>{slot}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Input
-                              placeholder="Boss"
-                              value={item.boss}
-                              onChange={(e) => updateFetchedItem(index, 'boss', e.target.value)}
-                              className="h-8 text-xs"
-                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Phase</Label>
                             <Select value={item.phase} onValueChange={(v) => updateFetchedItem(index, 'phase', v)}>
-                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select phase" /></SelectTrigger>
                               <SelectContent>
                                 {PHASES.map((p) => (
                                   <SelectItem key={p} value={p}>{p}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Source</Label>
                             <Select value={item.raid} onValueChange={(v) => updateFetchedItem(index, 'raid', v)}>
-                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select source" /></SelectTrigger>
                               <SelectContent>
-                                {RAIDS.map((r) => (
-                                  <SelectItem key={r.name} value={r.name}>{r.name}</SelectItem>
+                                <SelectGroup>
+                                  <SelectLabel>Raids</SelectLabel>
+                                  {RAIDS.map((r) => (
+                                    <SelectItem key={r.name} value={r.name}>{r.name}</SelectItem>
+                                  ))}
+                                </SelectGroup>
+                                <SelectGroup>
+                                  <SelectLabel>Other Sources</SelectLabel>
+                                  {ITEM_SOURCES.filter(s => s !== 'Raid').map((source) => (
+                                    <SelectItem key={source} value={source}>{source}</SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-muted-foreground">Quality</Label>
+                            <Select value={item.quality.toString()} onValueChange={(v) => updateFetchedItem(index, 'quality', v)}>
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {QUALITIES.map((q) => (
+                                  <SelectItem key={q.value} value={q.value}>
+                                    <span style={{ color: q.color }}>{q.label}</span>
+                                  </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                          onClick={() => removeFetchedItem(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     ))}
                     {fetchedItems.length === 0 && (
