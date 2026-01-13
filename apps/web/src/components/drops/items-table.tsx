@@ -148,6 +148,19 @@ export function ItemsTable({
             const tokenType = getTokenType(item.itemName);
             const tokenClasses = tokenType ? TOKEN_CLASS_MAP[tokenType] : [];
 
+            // Aggregate BiS specs from all redemption items for tokens
+            const tokenBisSpecs: string[] = hasRedemptions
+              ? [...new Set(
+                  (item.tokenRedemptions || [])
+                    .flatMap(r => r.redemptionItem.bisFor?.split(',').map(s => s.trim()).filter(Boolean) || [])
+                )]
+              : [];
+
+            // Use token BiS specs if available, otherwise use regular bisPlayers
+            const displayBisPlayers = hasRedemptions && tokenBisSpecs.length > 0
+              ? tokenBisSpecs
+              : item.bisPlayers || [];
+
             return (
               <>
                 <tr
@@ -281,7 +294,7 @@ export function ItemsTable({
               </td>
               <td className="py-1.5 px-2">
                 <div className="flex flex-wrap gap-1">
-                  {item.bisPlayers?.slice(0, 2).map((name) => (
+                  {displayBisPlayers.slice(0, 2).map((name) => (
                     <span
                       key={name}
                       className="px-1.5 py-0.5 text-xs font-medium rounded bg-purple-500/30 text-purple-300 border border-purple-500/50"
@@ -289,9 +302,9 @@ export function ItemsTable({
                       {name}
                     </span>
                   ))}
-                  {(item.bisPlayers?.length || 0) > 2 && (
+                  {displayBisPlayers.length > 2 && (
                     <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
-                      +{(item.bisPlayers?.length || 0) - 2}
+                      +{displayBisPlayers.length - 2}
                     </span>
                   )}
                 </div>
