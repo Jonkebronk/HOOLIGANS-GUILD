@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Users, Sword, Calendar, TrendingUp, Loader2, ExternalLink, Eye } from 'lucide-react';
+import { Users, Sword, Calendar, TrendingUp, Loader2, ExternalLink, Eye, Zap } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getItemIconUrl, getClassIconUrl, ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
 
@@ -357,6 +357,62 @@ export default function DashboardPage() {
                       <span className="text-sm font-medium">Watch Video Guide</span>
                       <ExternalLink className="h-3 w-3" />
                     </a>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group w-full text-left">
+                    <div className="w-6 h-6 rounded bg-yellow-600 flex items-center justify-center">
+                      <Zap className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span className="text-sm font-medium flex-1 text-yellow-400">Skip Bar</span>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-yellow-500" />
+                      How to be Successful with Skips
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 text-sm">
+                    <p className="text-muted-foreground">
+                      We&apos;ll be using skips in T5, T6 and T6.5 to save time and stay competitive for top progression rankings during content releases.
+                    </p>
+                    <p className="text-muted-foreground">
+                      In other raids, skips will be applied strategically, clearing trash when it helps us better position for boss encounters and optimize parsing performance.
+                    </p>
+                    <p className="text-muted-foreground">
+                      To succeed and minimize mistakes, we&apos;re all following the same setup.
+                    </p>
+
+                    <div className="bg-secondary/50 border border-yellow-600/30 rounded-lg p-4">
+                      <p className="font-medium text-yellow-400 mb-2">Please follow this guide:</p>
+                      <a
+                        href="https://docs.google.com/spreadsheets/d/1sXsIHAvNk8gkW0ezYBKVnJPwnqcF0g3LmkJqTMP3MEY/edit?gid=1407277678#gid=1407277678"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        <div className="w-5 h-5 rounded bg-green-600 flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1.99 6H13V7h4.01v2zm0 4H13v-2h4.01v2zm-6 4H7v-2h4.01v2zm0-4H7v-2h4.01v2zm0-4H7V7h4.01v2zm6 8H13v-2h4.01v2z"/>
+                          </svg>
+                        </div>
+                        <span className="font-medium">How to set up Skip Bar</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+
+                    <div className="bg-red-950/30 border border-red-600/30 rounded-lg p-4">
+                      <p className="text-red-400 font-medium">
+                        Don&apos;t be the one who shows up unprepared on raid day.
+                      </p>
+                      <p className="text-muted-foreground mt-2 text-xs">
+                        Get everything set up ahead of time and watch the skip videos in the playbook to see exactly how it&apos;s done.
+                      </p>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
