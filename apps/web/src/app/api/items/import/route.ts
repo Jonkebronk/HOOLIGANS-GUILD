@@ -242,16 +242,13 @@ export async function POST(request: Request) {
         const details = await fetchItemDetails(itemId);
 
         if (details) {
-          // Use upsert to handle duplicates - unique constraint is on (name, raid)
+          // Use upsert to handle duplicates - unique constraint is on wowheadId
           await prisma.item.upsert({
             where: {
-              name_raid: {
-                name: details.name,
-                raid: raidName,
-              },
+              wowheadId: itemId,
             },
             update: {
-              wowheadId: itemId,
+              name: details.name,
               icon: details.icon,
               quality: details.quality,
               slot: details.slot || 'Misc',
