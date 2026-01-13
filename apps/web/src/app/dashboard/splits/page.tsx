@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, DragEvent, useCallback } from 'react';
+import { useState, useEffect, useRef, DragEvent } from 'react';
 import html2canvas from 'html2canvas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, X, Share2, Send, Hash, Wand2 } from 'lucide-react';
+import { Users, Copy, RotateCcw, Download, Plus, Loader2, Upload, FileText, Camera, X, Share2, Send, Hash, Wand2, Save, Check } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -138,6 +138,8 @@ export default function RaidSplitsPage() {
   const [karazhanItems, setKarazhanItems] = useState<LootOptimizerItem[]>([]);
   const [isAutoSorting, setIsAutoSorting] = useState(false);
   const [conflictScores, setConflictScores] = useState<number[]>([]);
+  const [savingRaidName, setSavingRaidName] = useState<string | null>(null);
+  const [savedRaidNames, setSavedRaidNames] = useState<Record<string, boolean>>({});
 
   // Multi-raid state: 1x 25-man + 3x 10-man
   const [raids, setRaids] = useState<RaidConfig[]>([
@@ -593,41 +595,44 @@ export default function RaidSplitsPage() {
     });
   };
 
-  // Debounce refs for saving raid names
-  const raidNameTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
-
-  // Save raid name to database
-  const saveRaidName = useCallback(async (raidId: string, name: string) => {
+  // Save raid name to database (manual save with button)
+  const saveRaidName = async (raidId: string) => {
     if (!selectedTeam) return;
+    const raid = raids.find(r => r.id === raidId);
+    if (!raid) return;
+
+    setSavingRaidName(raidId);
     try {
-      await fetch('/api/splits', {
+      const res = await fetch('/api/splits', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           raidId,
-          name,
+          name: raid.name,
           teamId: selectedTeam.id,
         }),
       });
+      if (res.ok) {
+        setSavedRaidNames(prev => ({ ...prev, [raidId]: true }));
+        // Clear the saved indicator after 2 seconds
+        setTimeout(() => {
+          setSavedRaidNames(prev => ({ ...prev, [raidId]: false }));
+        }, 2000);
+      }
     } catch (error) {
       console.error('Failed to save raid name:', error);
+    } finally {
+      setSavingRaidName(null);
     }
-  }, [selectedTeam]);
+  };
 
-  // Update raid name (with debounced save)
+  // Update raid name (local only, save with button)
   const updateRaidName = (raidId: string, name: string) => {
-    // Update local state immediately
     setRaids(prevRaids => prevRaids.map(raid =>
       raid.id === raidId ? { ...raid, name } : raid
     ));
-
-    // Debounce the save to database
-    if (raidNameTimeouts.current[raidId]) {
-      clearTimeout(raidNameTimeouts.current[raidId]);
-    }
-    raidNameTimeouts.current[raidId] = setTimeout(() => {
-      saveRaidName(raidId, name);
-    }, 500);
+    // Clear saved indicator when name changes
+    setSavedRaidNames(prev => ({ ...prev, [raidId]: false }));
   };
 
   // Get raid stats
@@ -1418,13 +1423,29 @@ export default function RaidSplitsPage() {
       >
         {/* Card Header */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-[#30363d]">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Input
               value={raid.name}
               onChange={(e) => updateRaidName(raid.id, e.target.value)}
-              className="w-36 h-8 text-lg bg-transparent border-none text-white font-bold hover:bg-white/10 focus:bg-white/10 px-1"
+              className="w-32 h-7 text-sm bg-transparent border-none text-white font-bold hover:bg-white/10 focus:bg-white/10 px-1"
             />
-            <span className="text-base text-gray-300 font-semibold">{totalAssigned}/{maxPlayers}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-6 w-6 screenshot-hide ${savedRaidNames[raid.id] ? 'text-green-500' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+              onClick={() => saveRaidName(raid.id)}
+              disabled={savingRaidName === raid.id}
+              title="Save name"
+            >
+              {savingRaidName === raid.id ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : savedRaidNames[raid.id] ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <Save className="h-3 w-3" />
+              )}
+            </Button>
+            <span className="text-sm text-gray-300 font-semibold">{totalAssigned}/{maxPlayers}</span>
           </div>
           <div className="flex gap-1 screenshot-hide">
             <Button variant="ghost" size="icon" className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10" onClick={() => openScreenshotDialog(raid.id)} title="Screenshot">
