@@ -25,6 +25,7 @@ import {
 import { getSpecIconUrl } from '@/lib/wowhead';
 import { CLASS_SPECS, SPEC_ROLES } from '@hooligans/shared';
 import { useTeam } from '@/components/providers/team-provider';
+import { KarazhanOverview } from '@/components/splits/karazhan-overview';
 
 // WoWSims TBC class colors
 const WOWSIMS_CLASS_COLORS: Record<string, string> = {
@@ -1550,6 +1551,13 @@ export default function RosterPage() {
               ))}
             </div>
           </div>
+
+          {/* Karazhan Loot Overview */}
+          {selectedTeam && (
+            <div className="mt-6">
+              <KarazhanOverview teamId={selectedTeam.id} />
+            </div>
+          )}
         </div>
 
         {/* Right Side: Role Columns */}
