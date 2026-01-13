@@ -77,6 +77,7 @@ type LootItem = {
   bisPlayers?: string[];
   bisNextPhasePlayers?: string[];
   bisPlayersFromList?: BisPlayer[];
+  bisNextPlayersFromList?: BisPlayer[];
   tokenRedemptions?: TokenRedemption[];
 };
 
@@ -174,6 +175,7 @@ export default function DropsPage() {
           response?: string;
           lootDate?: string;
           bisPlayersFromList?: BisPlayer[];
+          bisNextPlayersFromList?: BisPlayer[];
         }) => {
           // Parse comma-separated player names into arrays
           const parsePlayerList = (str: string | null | undefined): string[] => {
@@ -198,6 +200,7 @@ export default function DropsPage() {
             bisPlayers: parsePlayerList(record.item?.bisFor),
             bisNextPhasePlayers: parsePlayerList(record.item?.bisNextPhase),
             bisPlayersFromList: record.bisPlayersFromList,
+            bisNextPlayersFromList: record.bisNextPlayersFromList,
             tokenRedemptions: record.item?.tokenRedemptions,
           };
         });

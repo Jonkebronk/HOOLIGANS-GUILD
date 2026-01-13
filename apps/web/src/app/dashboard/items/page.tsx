@@ -77,6 +77,7 @@ type Item = {
   lootRecords?: LootRecord[];
   tokenRedemptions?: TokenRedemption[];
   bisPlayersFromList?: BisPlayer[];
+  bisNextPlayersFromList?: BisPlayer[];
 };
 
 // Token type mappings
@@ -639,7 +640,8 @@ export default function ItemsPage() {
     // Load full item details including loot records
     setLoadingItemDetails(true);
     try {
-      const res = await fetch(`/api/items/${item.id}`);
+      const url = selectedTeam ? `/api/items/${item.id}?teamId=${selectedTeam.id}` : `/api/items/${item.id}`;
+      const res = await fetch(url);
       if (res.ok) {
         const fullItem = await res.json();
         setEditingItem(fullItem);
@@ -1500,7 +1502,7 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                       </Button>
                     </div>
                     {/* Bottom Row: Loot Council Info */}
-                    {(item.lootPriority || (item.bisPlayersFromList && item.bisPlayersFromList.length > 0) || (item.lootRecords && item.lootRecords.length > 0)) && (
+                    {(item.lootPriority || (item.bisPlayersFromList && item.bisPlayersFromList.length > 0) || (item.bisNextPlayersFromList && item.bisNextPlayersFromList.length > 0) || (item.lootRecords && item.lootRecords.length > 0)) && (
                       <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 ml-13 pl-[52px] text-xs">
                         {item.lootPriority && (
                           <div>
@@ -1524,7 +1526,23 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                             </div>
                           </div>
                         )}
-                                                {item.lootRecords && item.lootRecords.length > 0 && (
+                        {item.bisNextPlayersFromList && item.bisNextPlayersFromList.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">BiS Next: </span>
+                            <div className="flex flex-wrap gap-1">
+                              {item.bisNextPlayersFromList.map((player) => (
+                                <span
+                                  key={player.id}
+                                  className="px-1.5 py-0.5 rounded text-xs"
+                                  style={{ backgroundColor: `${CLASS_COLORS[player.class]}20`, color: CLASS_COLORS[player.class] }}
+                                >
+                                  {player.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {item.lootRecords && item.lootRecords.length > 0 && (
                           <div>
                             <span className="text-muted-foreground">Looted by: </span>
                             {item.lootRecords.filter(r => r.player).map((record, idx) => (
@@ -1708,28 +1726,53 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>BiS For (From Player Lists)</Label>
-                <div className="bg-muted/50 rounded-md p-3">
-                  {editingItem?.bisPlayersFromList && editingItem.bisPlayersFromList.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {editingItem.bisPlayersFromList.map((player) => (
-                        <span
-                          key={player.id}
-                          className="px-2 py-1 rounded text-sm"
-                          style={{ backgroundColor: `${CLASS_COLORS[player.class]}20`, color: CLASS_COLORS[player.class] }}
-                        >
-                          {player.name}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No players have this item as BiS</p>
-                  )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>BiS For (From Player Lists)</Label>
+                  <div className="bg-muted/50 rounded-md p-3 min-h-[60px]">
+                    {editingItem?.bisPlayersFromList && editingItem.bisPlayersFromList.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {editingItem.bisPlayersFromList.map((player) => (
+                          <span
+                            key={player.id}
+                            className="px-2 py-1 rounded text-sm"
+                            style={{ backgroundColor: `${CLASS_COLORS[player.class]}20`, color: CLASS_COLORS[player.class] }}
+                          >
+                            {player.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No players have this item as BiS</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Auto-populated from Player BiS Lists (P1)
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Auto-populated from Player BiS Lists
-                </p>
+                <div className="space-y-2">
+                  <Label>BiS Next (From Player Lists)</Label>
+                  <div className="bg-muted/50 rounded-md p-3 min-h-[60px]">
+                    {editingItem?.bisNextPlayersFromList && editingItem.bisNextPlayersFromList.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {editingItem.bisNextPlayersFromList.map((player) => (
+                          <span
+                            key={player.id}
+                            className="px-2 py-1 rounded text-sm"
+                            style={{ backgroundColor: `${CLASS_COLORS[player.class]}20`, color: CLASS_COLORS[player.class] }}
+                          >
+                            {player.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No players have this item as BiS Next</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Auto-populated from Player BiS Lists (P2+)
+                  </p>
+                </div>
               </div>
 
               

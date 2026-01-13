@@ -9,6 +9,8 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const teamId = searchParams.get('teamId');
 
     const item = await prisma.item.findUnique({
       where: { id },
@@ -55,7 +57,71 @@ export async function GET(
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
 
-    return NextResponse.json(item);
+    // Get player BiS configurations filtered by team
+    let allBisConfigs: { phase: string; player: { id: string; name: string; class: string } }[] = [];
+    if (item.wowheadId) {
+      allBisConfigs = await prisma.playerBisConfiguration.findMany({
+        where: {
+          ...(teamId ? { player: { teamId } } : {}),
+          wowheadId: item.wowheadId,
+        },
+        include: {
+          player: {
+            select: {
+              id: true,
+              name: true,
+              class: true,
+            },
+          },
+        },
+      });
+    }
+
+    // Also check redemption items for tokens
+    const redemptionWowheadIds = item.tokenRedemptions
+      ?.map(r => r.redemptionItem?.wowheadId)
+      .filter((id): id is number => id !== null && id !== undefined) || [];
+
+    let redemptionBisConfigs: { phase: string; player: { id: string; name: string; class: string } }[] = [];
+    if (redemptionWowheadIds.length > 0) {
+      redemptionBisConfigs = await prisma.playerBisConfiguration.findMany({
+        where: {
+          ...(teamId ? { player: { teamId } } : {}),
+          wowheadId: { in: redemptionWowheadIds },
+        },
+        include: {
+          player: {
+            select: {
+              id: true,
+              name: true,
+              class: true,
+            },
+          },
+        },
+      });
+    }
+
+    // Combine all BiS configs
+    const combinedConfigs = [...allBisConfigs, ...redemptionBisConfigs];
+
+    // Separate by phase
+    const bisPlayersFromList: { id: string; name: string; class: string }[] = [];
+    const bisNextPlayersFromList: { id: string; name: string; class: string }[] = [];
+
+    for (const config of combinedConfigs) {
+      if (config.player) {
+        const targetList = config.phase === 'P1' ? bisPlayersFromList : bisNextPlayersFromList;
+        if (!targetList.find(p => p.id === config.player.id)) {
+          targetList.push(config.player);
+        }
+      }
+    }
+
+    return NextResponse.json({
+      ...item,
+      bisPlayersFromList,
+      bisNextPlayersFromList,
+    });
   } catch (error) {
     console.error('Failed to fetch item:', error);
     return NextResponse.json({ error: 'Failed to fetch item' }, { status: 500 });
