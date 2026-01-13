@@ -295,9 +295,10 @@ model Item {
   updatedAt     DateTime  @updatedAt @default(now())
 
   // Relations
-  lootRecords   LootRecord[]
-  bisSpecs      ItemBisSpec[]
-  playerGear    PlayerGear[]
+  lootRecords     LootRecord[]
+  bisSpecs        ItemBisSpec[]
+  playerGear      PlayerGear[]
+  tierTokenPieces TierTokenPiece[]
 
   @@unique([name, raid])
   @@index([raid])
@@ -635,4 +636,45 @@ model ConsumableSpecConfig {
   @@unique([consumableId, spec, category])
   @@index([spec])
   @@index([category])
+}
+
+// ============================================
+// TIER TOKENS
+// ============================================
+
+model TierToken {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Helm of the Fallen Defender"
+  wowheadId   Int?
+  icon        String?
+  tokenType   String   // "Fallen Defender", "Fallen Hero", "Fallen Champion"
+  tier        String   // "T4", "T5", "T6"
+  slot        String   // "Head", "Shoulder", "Chest", "Hands", "Legs"
+  boss        String?
+  raid        String?
+  phase       String   @default("P1")
+
+  linkedPieces TierTokenPiece[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tokenType, tier, slot])
+  @@index([tier])
+  @@index([tokenType])
+}
+
+model TierTokenPiece {
+  id          String    @id @default(cuid())
+  tokenId     String
+  token       TierToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  className   String    // "Druid", "Priest", "Warrior"
+  pieceName   String    // "Nordrassil Headguard" (actual tier piece name)
+  pieceItemId String?   // Link to Item if exists in database
+  pieceItem   Item?     @relation(fields: [pieceItemId], references: [id])
+
+  @@unique([tokenId, className])
+  @@index([tokenId])
+  @@index([className])
 }
