@@ -98,30 +98,36 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { raidId, name, teamId } = body;
 
-    if (!raidId || !name) {
-      return NextResponse.json({ error: 'raidId and name are required' }, { status: 400 });
+    if (!raidId || !name || !teamId) {
+      return NextResponse.json({ error: 'raidId, name, and teamId are required' }, { status: 400 });
     }
 
     const raidNumber = RAID_NUMBER_MAP[raidId] ?? 0;
 
-    // Use upsert to handle both create and update
-    const raidConfig = await prisma.raidSplit.upsert({
+    // Find existing raid config
+    let raidConfig = await prisma.raidSplit.findFirst({
       where: {
-        raidNumber_teamId: {
-          raidNumber,
-          teamId: teamId,
-        },
-      },
-      update: {
-        name,
-      },
-      create: {
-        id: `${teamId}-${raidId}`,
-        name,
         raidNumber,
         teamId,
       },
     });
+
+    if (raidConfig) {
+      // Update existing
+      raidConfig = await prisma.raidSplit.update({
+        where: { id: raidConfig.id },
+        data: { name },
+      });
+    } else {
+      // Create new
+      raidConfig = await prisma.raidSplit.create({
+        data: {
+          name,
+          raidNumber,
+          teamId,
+        },
+      });
+    }
 
     return NextResponse.json(raidConfig);
   } catch (error) {
