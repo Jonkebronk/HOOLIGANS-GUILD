@@ -742,9 +742,25 @@ export default function TokensPage() {
                         </div>
 
                         {/* Arrow + Sunmote */}
-                        <div className="flex items-center gap-2 text-yellow-500">
-                          <ArrowDown className="h-6 w-6" />
-                          <span className="text-sm font-medium">+ {selectedUpgrade.sunmotesRequired} Sunmote</span>
+                        <div className="flex flex-col items-center gap-1">
+                          <ArrowDown className="h-6 w-6 text-yellow-500" />
+                          <a
+                            href="https://www.wowhead.com/tbc/item=34664"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-wowhead="item=34664&domain=tbc"
+                            className="flex items-center gap-2 hover:opacity-80"
+                          >
+                            <img
+                              src={getItemIconUrl('inv_misc_gem_pearl_05', 'medium')}
+                              alt="Sunmote"
+                              className="w-8 h-8 rounded"
+                              style={{ borderColor: ITEM_QUALITY_COLORS[5], borderWidth: 2, borderStyle: 'solid' }}
+                            />
+                            <span className="text-sm font-medium" style={{ color: ITEM_QUALITY_COLORS[5] }}>
+                              + {selectedUpgrade.sunmotesRequired} Sunmote
+                            </span>
+                          </a>
                         </div>
 
                         {/* Upgraded Item */}

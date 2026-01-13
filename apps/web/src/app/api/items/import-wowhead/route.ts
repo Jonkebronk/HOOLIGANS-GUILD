@@ -16,21 +16,21 @@ const SLOT_TEXT_MAP: Record<string, GearSlot> = {
   'Finger': 'Finger',
   'Trinket': 'Trinket',
   'Main Hand': 'MainHand',
-  'Off Hand': 'OffHand',
+  'Two-Hand': 'MainHand',    // Two-handers go in MainHand
   'One-Hand': 'OneHand',
-  'Two-Hand': 'TwoHand',
+  'Off Hand': 'OffHand',
+  'Shield': 'OffHand',       // Shields go in OffHand
+  'Held In Off-hand': 'OffHand', // Off-hand items go in OffHand
   'Ranged': 'Ranged',
-  'Relic': 'Relic',
-  'Idol': 'Relic',
-  'Libram': 'Relic',
-  'Totem': 'Relic',
-  'Wand': 'Wand',
+  'Relic': 'Ranged',         // Relics go in Ranged slot
+  'Idol': 'Ranged',
+  'Libram': 'Ranged',
+  'Totem': 'Ranged',
+  'Wand': 'Ranged',
   'Gun': 'Ranged',
   'Bow': 'Ranged',
   'Crossbow': 'Ranged',
-  'Thrown': 'Thrown',
-  'Shield': 'Shield',
-  'Held In Off-hand': 'HeldInOffhand',
+  'Thrown': 'Ranged',
 };
 
 // Parse item ID from Wowhead URL

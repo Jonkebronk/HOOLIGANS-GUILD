@@ -42,6 +42,7 @@ interface ItemPickerModalProps {
 }
 
 // Map BiS slot names to database slot names
+// Map BiS slots to item slots (what items can go in each character slot)
 const slotMapping: Record<string, string[]> = {
   Head: ['Head'],
   Neck: ['Neck'],
@@ -57,9 +58,9 @@ const slotMapping: Record<string, string[]> = {
   Finger2: ['Finger'],
   Trinket1: ['Trinket'],
   Trinket2: ['Trinket'],
-  MainHand: ['Weapon', 'MainHand', 'One-Hand', 'Two-Hand'],
-  OffHand: ['OffHand', 'Off-hand', 'Shield', 'Held In Off-hand'],
-  Ranged: ['Ranged', 'Gun', 'Bow', 'Crossbow', 'Wand', 'Thrown', 'Relic', 'Totem', 'Libram', 'Idol'],
+  MainHand: ['MainHand', 'OneHand', 'Weapon'],  // Two-handers & main-hand only items, one-handers can go here
+  OffHand: ['OffHand', 'OneHand'],              // Off-hand items & shields, one-handers can go here too
+  Ranged: ['Ranged'],                           // Bows, guns, wands, relics, totems, etc.
 };
 
 export function ItemPickerModal({

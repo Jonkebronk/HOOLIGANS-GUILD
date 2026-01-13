@@ -103,8 +103,8 @@ export const TOKEN_TYPES: Record<string, string[]> = {
 export const GEAR_SLOTS = [
   'Head', 'Neck', 'Shoulder', 'Back', 'Chest',
   'Wrist', 'Hands', 'Waist', 'Legs', 'Feet',
-  'Finger1', 'Finger2', 'Trinket1', 'Trinket2',
-  'MainHand', 'OffHand', 'Ranged'
+  'Finger', 'Trinket',
+  'MainHand', 'OneHand', 'OffHand', 'Ranged'
 ] as const;
 
 // Item Source Types

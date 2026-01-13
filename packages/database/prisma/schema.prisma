@@ -65,23 +65,16 @@ enum GearSlot {
   Waist
   Legs
   Feet
-  Finger
-  Finger1
-  Finger2
-  Trinket
-  Trinket1
-  Trinket2
-  MainHand
-  OneHand
-  TwoHand
-  OffHand
-  Shield
-  HeldInOffhand
-  Ranged
-  Relic
-  Wand
-  Thrown
-  Misc
+  Finger      // For Items - generic ring slot
+  Finger1     // For BiS - ring slot 1
+  Finger2     // For BiS - ring slot 2
+  Trinket     // For Items - generic trinket slot
+  Trinket1    // For BiS - trinket slot 1
+  Trinket2    // For BiS - trinket slot 2
+  MainHand    // Two-hand weapons also use this
+  OneHand     // Can go in main or off-hand
+  OffHand     // Shields, held in off-hand items
+  Ranged      // Bows, guns, wands, relics, totems, etc.
 }
 
 enum UserRole {

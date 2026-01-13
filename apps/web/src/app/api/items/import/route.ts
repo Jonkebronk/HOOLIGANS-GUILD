@@ -18,14 +18,14 @@ const INVENTORY_TYPE_MAP: Record<number, GearSlot> = {
   14: 'OffHand',
   15: 'Ranged',
   16: 'Back',
-  17: 'TwoHand',
+  17: 'MainHand',    // Two-handers go in MainHand
   20: 'Chest',       // Robe
   21: 'MainHand',
   22: 'OffHand',
-  23: 'HeldInOffhand',
-  25: 'Thrown',
+  23: 'OffHand',     // Held in off-hand -> OffHand
+  25: 'Ranged',      // Thrown -> Ranged
   26: 'Ranged',
-  28: 'Relic',
+  28: 'Ranged',      // Relic -> Ranged
 };
 
 // Map slot text to GearSlot enum
@@ -43,21 +43,21 @@ const SLOT_TEXT_MAP: Record<string, GearSlot> = {
   'Finger': 'Finger',
   'Trinket': 'Trinket',
   'Main Hand': 'MainHand',
-  'Off Hand': 'OffHand',
+  'Two-Hand': 'MainHand',    // Two-handers go in MainHand
   'One-Hand': 'OneHand',
-  'Two-Hand': 'TwoHand',
+  'Off Hand': 'OffHand',
+  'Shield': 'OffHand',       // Shields go in OffHand
+  'Held In Off-hand': 'OffHand', // Off-hand items go in OffHand
   'Ranged': 'Ranged',
-  'Relic': 'Relic',
-  'Idol': 'Relic',
-  'Libram': 'Relic',
-  'Totem': 'Relic',
-  'Wand': 'Wand',
+  'Relic': 'Ranged',         // Relics go in Ranged slot
+  'Idol': 'Ranged',
+  'Libram': 'Ranged',
+  'Totem': 'Ranged',
+  'Wand': 'Ranged',
   'Gun': 'Ranged',
   'Bow': 'Ranged',
   'Crossbow': 'Ranged',
-  'Thrown': 'Thrown',
-  'Shield': 'Shield',
-  'Held In Off-hand': 'HeldInOffhand',
+  'Thrown': 'Ranged',
 };
 
 // Extract item IDs from Wowhead zone page HTML using bracket counting (like GDKP module)
