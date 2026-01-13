@@ -108,11 +108,14 @@ export async function POST() {
     for (const [tier, tierData] of Object.entries(TIER_TOKENS)) {
       for (const tokenInfo of tierData.tokens) {
         for (const [tokenType, classes] of Object.entries(TOKEN_TYPES)) {
-          // Extract just the suffix (Defender/Hero/Champion) to avoid duplication
-          // e.g., "Fallen Champion" -> "Champion" when namePattern already has "Fallen"
+          // Only process token types that exist for this token
+          // T4/T5 use Fallen tokens, T6 uses Forgotten tokens
+          const wowheadId = tokenInfo.wowheadIds[tokenType as keyof typeof tokenInfo.wowheadIds];
+          if (!wowheadId) continue; // Skip token types not in this tier
+
+          // Extract just the suffix (Defender/Hero/Champion/Conqueror/Protector/Vanquisher)
           const tokenSuffix = tokenType.split(' ').pop() || tokenType;
           const tokenName = `${tokenInfo.namePattern} ${tokenSuffix}`;
-          const wowheadId = tokenInfo.wowheadIds[tokenType as keyof typeof tokenInfo.wowheadIds];
 
           // Check if already exists
           const existing = await prisma.tierToken.findUnique({
@@ -126,17 +129,22 @@ export async function POST() {
           });
 
           if (existing) {
-            // Update existing token - fix name and icon
-            const updateData: { name?: string; icon?: string } = {};
+            // Update existing token - fix name, icon, and linked pieces
+            const updateData: { name?: string; icon?: string; wowheadId?: number } = {};
 
-            // Fix duplicated "Fallen" in name
+            // Fix name
             if (existing.name !== tokenName) {
               updateData.name = tokenName;
             }
 
-            // Add icon if missing
-            if (!existing.icon && wowheadId && TOKEN_ICONS[wowheadId]) {
+            // Fix icon
+            if (TOKEN_ICONS[wowheadId] && existing.icon !== TOKEN_ICONS[wowheadId]) {
               updateData.icon = TOKEN_ICONS[wowheadId];
+            }
+
+            // Fix wowheadId
+            if (existing.wowheadId !== wowheadId) {
+              updateData.wowheadId = wowheadId;
             }
 
             if (Object.keys(updateData).length > 0) {
@@ -145,6 +153,21 @@ export async function POST() {
                 data: updateData,
               });
             }
+
+            // Delete existing linked pieces and recreate with correct classes
+            await prisma.tierTokenPiece.deleteMany({
+              where: { tokenId: existing.id },
+            });
+
+            // Recreate linked pieces with correct classes
+            await prisma.tierTokenPiece.createMany({
+              data: classes.map((className) => ({
+                tokenId: existing.id,
+                className,
+                pieceName: tierData.pieces[className as keyof typeof tierData.pieces]?.[tokenInfo.slot as keyof (typeof tierData.pieces)['Druid']] || 'Unknown',
+              })),
+            });
+
             skipped++;
             continue;
           }
