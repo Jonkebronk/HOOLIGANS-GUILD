@@ -1,20 +1,28 @@
+// WoW role icon URLs
+export const ROLE_ICON_URLS = {
+  tank: 'https://wow.zamimg.com/images/wow/icons/medium/role_tank.jpg',
+  healer: 'https://wow.zamimg.com/images/wow/icons/medium/role_healer.jpg',
+  melee: 'https://wow.zamimg.com/images/wow/icons/medium/role_dps_melee.jpg',
+  ranged: 'https://wow.zamimg.com/images/wow/icons/medium/role_dps_ranged.jpg',
+};
+
 // Consumable roles and specs organization
 export const CONSUMABLE_ROLES = {
   tanks: {
     name: 'Tanks',
-    icon: 'Shield',
+    icon: 'tank',
     color: '#3b82f6', // blue
     specs: ['DruidGuardian', 'PaladinProtection', 'WarriorProtection'],
   },
   healers: {
     name: 'Healers',
-    icon: 'Plus',
+    icon: 'healer',
     color: '#22c55e', // green
     specs: ['DruidRestoration', 'PaladinHoly', 'PriestHoly', 'ShamanRestoration'],
   },
   physicalDps: {
-    name: 'Physical DPS',
-    icon: 'Sword',
+    name: 'Melee DPS',
+    icon: 'melee',
     color: '#ef4444', // red
     specs: [
       'DruidFeral',
@@ -23,15 +31,15 @@ export const CONSUMABLE_ROLES = {
       'ShamanEnhancement',
       'WarriorArms',
       'WarriorFury',
-      'HunterBeastMastery',
-      'HunterSurvival',
     ],
   },
-  casterDps: {
-    name: 'Caster DPS',
-    icon: 'Wand2',
+  rangedDps: {
+    name: 'Ranged DPS',
+    icon: 'ranged',
     color: '#a855f7', // purple
     specs: [
+      'HunterBeastMastery',
+      'HunterSurvival',
       'DruidBalance',
       'MageArcane',
       'MageFire',

@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Shield, Plus, Sword, Wand2, Loader2, X, Pencil } from 'lucide-react';
+import { Plus, Loader2, X, Pencil } from 'lucide-react';
 import { refreshWowheadTooltips, getItemIconUrl } from '@/lib/wowhead';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl } from '@/lib/wowhead';
@@ -28,18 +28,11 @@ import {
   CONSUMABLE_CATEGORIES,
   CONSUMABLE_TYPES,
   SPEC_DISPLAY_NAMES,
+  ROLE_ICON_URLS,
   getClassFromSpec,
   getConsumablesForSpecCategory,
   type ConsumableType,
 } from '@/lib/consumables';
-
-// Role icons mapping
-const ROLE_ICONS = {
-  Shield: Shield,
-  Plus: Plus,
-  Sword: Sword,
-  Wand2: Wand2,
-};
 
 export default function ConsumablesPage() {
   const [consumables, setConsumables] = useState<ConsumableType[]>([]);
@@ -276,7 +269,7 @@ export default function ConsumablesPage() {
 
       {/* Role Sections */}
       {Object.entries(CONSUMABLE_ROLES).map(([roleId, role]) => {
-        const RoleIcon = ROLE_ICONS[role.icon as keyof typeof ROLE_ICONS];
+        const roleIconUrl = ROLE_ICON_URLS[role.icon as keyof typeof ROLE_ICON_URLS];
         return (
           <Card key={roleId} className="bg-[#111] border-[#333]">
             <CardHeader
@@ -284,7 +277,9 @@ export default function ConsumablesPage() {
               style={{ backgroundColor: role.color + '20', borderBottom: `2px solid ${role.color}` }}
             >
               <CardTitle className="flex items-center gap-2 text-lg" style={{ color: role.color }}>
-                {RoleIcon && <RoleIcon className="h-5 w-5" />}
+                {roleIconUrl && (
+                  <img src={roleIconUrl} alt={role.name} className="h-6 w-6 rounded" />
+                )}
                 {role.name}
               </CardTitle>
             </CardHeader>
