@@ -24,6 +24,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get('teamId');
+    const isPuG = searchParams.get('isPuG') === 'true';
 
     if (!teamId) {
       return NextResponse.json(
@@ -131,7 +132,8 @@ export async function GET(request: Request) {
           needers,
         };
       })
-      .filter(item => item.needers.length > 0); // Only items with needers
+      // For PuG mode, show all items; for team mode, only show items with BiS needers
+      .filter(item => isPuG || item.needers.length > 0);
 
     // Get unique bosses for filtering
     const bosses = [...new Set(items.map(i => i.boss))].sort();
