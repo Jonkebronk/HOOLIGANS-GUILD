@@ -16,9 +16,38 @@ export async function GET(request: Request) {
             wowheadId: true,
             quality: true,
             icon: true,
+            slot: true,
             lootPriority: true,
             bisFor: true,
             bisNextPhase: true,
+            tokenRedemptions: {
+              include: {
+                redemptionItem: {
+                  select: {
+                    id: true,
+                    name: true,
+                    wowheadId: true,
+                    icon: true,
+                    quality: true,
+                    bisFor: true,
+                    lootRecords: {
+                      include: {
+                        player: {
+                          select: {
+                            id: true,
+                            name: true,
+                            class: true,
+                          },
+                        },
+                      },
+                      orderBy: { lootDate: 'desc' },
+                      take: 3,
+                    },
+                  },
+                },
+              },
+              orderBy: { className: 'asc' },
+            },
           },
         },
         player: true,

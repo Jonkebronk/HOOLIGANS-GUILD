@@ -28,6 +28,23 @@ type Player = {
   joinedDate: string;
 };
 
+type TokenRedemption = {
+  id: string;
+  className: string;
+  redemptionItem: {
+    id: string;
+    name: string;
+    wowheadId: number;
+    icon?: string;
+    quality: number;
+    bisFor?: string;
+    lootRecords?: {
+      id: string;
+      player: { id: string; name: string; class: string } | null;
+    }[];
+  };
+};
+
 type LootItem = {
   id: string;
   itemId?: string;
@@ -35,6 +52,7 @@ type LootItem = {
   wowheadId?: number;
   quality?: number;
   icon?: string;
+  slot?: string;
   playerId?: string;
   playerName?: string;
   playerClass?: string;
@@ -43,6 +61,7 @@ type LootItem = {
   lootPrio?: string;
   bisPlayers?: string[];
   bisNextPhasePlayers?: string[];
+  tokenRedemptions?: TokenRedemption[];
 };
 
 type RaiderStats = {
@@ -102,7 +121,18 @@ export default function DropsPage() {
         const items: LootItem[] = lootData.map((record: {
           id: string;
           itemId?: string;
-          item?: { id: string; name: string; wowheadId?: number; quality?: number; icon?: string; lootPriority?: string; bisFor?: string; bisNextPhase?: string };
+          item?: {
+            id: string;
+            name: string;
+            wowheadId?: number;
+            quality?: number;
+            icon?: string;
+            slot?: string;
+            lootPriority?: string;
+            bisFor?: string;
+            bisNextPhase?: string;
+            tokenRedemptions?: TokenRedemption[];
+          };
           itemName?: string;
           wowheadId?: number;
           quality?: number;
@@ -124,6 +154,7 @@ export default function DropsPage() {
             wowheadId: record.item?.wowheadId || record.wowheadId,
             quality: record.item?.quality || record.quality || 4,
             icon: record.item?.icon,
+            slot: record.item?.slot,
             playerId: record.player?.id,
             playerName: record.player?.name,
             playerClass: record.player?.class,
@@ -132,6 +163,7 @@ export default function DropsPage() {
             lootPrio: record.item?.lootPriority || record.lootPrio,
             bisPlayers: parsePlayerList(record.item?.bisFor),
             bisNextPhasePlayers: parsePlayerList(record.item?.bisNextPhase),
+            tokenRedemptions: record.item?.tokenRedemptions,
           };
         });
         setLootItems(items);
