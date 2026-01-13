@@ -346,8 +346,8 @@ export default function ConsumablesPage() {
                               {/* Best items */}
                               {bestItems.length > 0 && (
                                 <div className="mb-2">
-                                  <div className="text-xs font-bold text-yellow-500 px-1 mb-0.5 flex items-center gap-1">
-                                    <span className="text-yellow-400">★</span> Best:
+                                  <div className="text-xs font-bold text-yellow-500 px-1 mb-0.5">
+                                    Best:
                                   </div>
                                   {bestItems.map((item) => (
                                     <ConsumableItem
