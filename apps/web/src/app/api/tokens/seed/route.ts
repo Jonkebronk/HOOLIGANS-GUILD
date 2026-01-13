@@ -99,7 +99,10 @@ export async function POST() {
     for (const [tier, tierData] of Object.entries(TIER_TOKENS)) {
       for (const tokenInfo of tierData.tokens) {
         for (const [tokenType, classes] of Object.entries(TOKEN_TYPES)) {
-          const tokenName = `${tokenInfo.namePattern} ${tokenType}`;
+          // Extract just the suffix (Defender/Hero/Champion) to avoid duplication
+          // e.g., "Fallen Champion" -> "Champion" when namePattern already has "Fallen"
+          const tokenSuffix = tokenType.split(' ').pop() || tokenType;
+          const tokenName = `${tokenInfo.namePattern} ${tokenSuffix}`;
           const wowheadId = tokenInfo.wowheadIds[tokenType as keyof typeof tokenInfo.wowheadIds];
 
           // Check if already exists
@@ -114,11 +117,23 @@ export async function POST() {
           });
 
           if (existing) {
-            // Update existing token with icon if missing
+            // Update existing token - fix name and icon
+            const updateData: { name?: string; icon?: string } = {};
+
+            // Fix duplicated "Fallen" in name
+            if (existing.name !== tokenName) {
+              updateData.name = tokenName;
+            }
+
+            // Add icon if missing
             if (!existing.icon && wowheadId && TOKEN_ICONS[wowheadId]) {
+              updateData.icon = TOKEN_ICONS[wowheadId];
+            }
+
+            if (Object.keys(updateData).length > 0) {
               await prisma.tierToken.update({
                 where: { id: existing.id },
-                data: { icon: TOKEN_ICONS[wowheadId] },
+                data: updateData,
               });
             }
             skipped++;
