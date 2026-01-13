@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 // GET - Get single item with loot records
 export async function GET(
@@ -67,6 +68,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Require officer permission for editing items
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     const { id } = await params;
     const body = await request.json();
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { canAccessTeam, requireOfficer } from '@/lib/auth-utils';
 
 // PATCH - Update loot record (assign player, update response, etc.)
 export async function PATCH(
@@ -8,8 +9,31 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
 
+    // Require officer permission for editing
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
+    // Verify loot record exists and check team access
+    const existingRecord = await prisma.lootRecord.findUnique({
+      where: { id },
+      select: { teamId: true },
+    });
+
+    if (!existingRecord) {
+      return NextResponse.json({ error: 'Loot record not found' }, { status: 404 });
+    }
+
+    if (existingRecord.teamId) {
+      const hasAccess = await canAccessTeam(existingRecord.teamId);
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      }
+    }
+
+    const body = await request.json();
     const { playerId, response, lootPrio } = body;
 
     const updateData: Record<string, unknown> = {};
@@ -60,6 +84,29 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+
+    // Require officer permission for deleting
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
+    // Verify loot record exists and check team access
+    const existingRecord = await prisma.lootRecord.findUnique({
+      where: { id },
+      select: { teamId: true },
+    });
+
+    if (!existingRecord) {
+      return NextResponse.json({ error: 'Loot record not found' }, { status: 404 });
+    }
+
+    if (existingRecord.teamId) {
+      const hasAccess = await canAccessTeam(existingRecord.teamId);
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      }
+    }
 
     await prisma.lootRecord.delete({
       where: { id },

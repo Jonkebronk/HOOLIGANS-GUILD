@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
 import { SPEC_ROLES } from '@hooligans/shared';
+import { requireOfficer } from '@/lib/auth-utils';
 
 export async function GET(request: Request) {
   try {
@@ -23,6 +24,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Require officer permission for creating players
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     const body = await request.json();
 
     // Bulk import mode: create multiple players from Discord members with optional class/spec
@@ -105,6 +112,12 @@ export async function POST(request: Request) {
 // PATCH - Assign unassigned players to a team
 export async function PATCH(request: Request) {
   try {
+    // Require officer permission for assigning players
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { teamId } = body;
 

@@ -92,6 +92,7 @@ type ItemsTableProps = {
   players: Player[];
   onAssignPlayer: (itemId: string, playerId: string) => void;
   onUpdateResponse: (itemId: string, response: string) => void;
+  isOfficer?: boolean;
 };
 
 const RESPONSE_TYPES = [
@@ -108,6 +109,7 @@ export function ItemsTable({
   players,
   onAssignPlayer,
   onUpdateResponse,
+  isOfficer = false,
 }: ItemsTableProps) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
@@ -221,66 +223,81 @@ export function ItemsTable({
                     </div>
                   </td>
               <td className="py-1.5 px-2">
-                <Select
-                  value={item.playerId || 'unassigned'}
-                  onValueChange={(value) => onAssignPlayer(item.id, value === 'unassigned' ? '' : value)}
-                >
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue placeholder="Select...">
-                      {item.playerName ? (
-                        <span style={{ color: CLASS_COLORS[item.playerClass || ''] }}>
-                          {item.playerName}
-                        </span>
-                      ) : (
+                {isOfficer ? (
+                  <Select
+                    value={item.playerId || 'unassigned'}
+                    onValueChange={(value) => onAssignPlayer(item.id, value === 'unassigned' ? '' : value)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Select...">
+                        {item.playerName ? (
+                          <span style={{ color: CLASS_COLORS[item.playerClass || ''] }}>
+                            {item.playerName}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">Unassigned</span>
+                        )}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">
                         <span className="text-muted-foreground">Unassigned</span>
-                      )}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">
-                      <span className="text-muted-foreground">Unassigned</span>
-                    </SelectItem>
-                    {players.map((player) => (
-                      <SelectItem key={player.id} value={player.id}>
-                        <span style={{ color: CLASS_COLORS[player.class] }}>
-                          {player.name}
-                        </span>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      {players.map((player) => (
+                        <SelectItem key={player.id} value={player.id}>
+                          <span style={{ color: CLASS_COLORS[player.class] }}>
+                            {player.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="text-xs" style={{ color: item.playerClass ? CLASS_COLORS[item.playerClass] : undefined }}>
+                    {item.playerName || <span className="text-muted-foreground">Unassigned</span>}
+                  </span>
+                )}
               </td>
               <td className="py-1.5 px-2">
-                <Select
-                  value={item.response || 'none'}
-                  onValueChange={(value) => onUpdateResponse(item.id, value === 'none' ? '' : value)}
-                >
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue placeholder="Response...">
-                      {item.response ? (
-                        <span
-                          style={{
-                            color: RESPONSE_TYPES.find((r) => r.value === item.response)?.color,
-                          }}
-                        >
-                          {RESPONSE_TYPES.find((r) => r.value === item.response)?.label}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Select...</span>
-                      )}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">
-                      <span className="text-muted-foreground">None</span>
-                    </SelectItem>
-                    {RESPONSE_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <span style={{ color: type.color }}>{type.label}</span>
+                {isOfficer ? (
+                  <Select
+                    value={item.response || 'none'}
+                    onValueChange={(value) => onUpdateResponse(item.id, value === 'none' ? '' : value)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue placeholder="Response...">
+                        {item.response ? (
+                          <span
+                            style={{
+                              color: RESPONSE_TYPES.find((r) => r.value === item.response)?.color,
+                            }}
+                          >
+                            {RESPONSE_TYPES.find((r) => r.value === item.response)?.label}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">Select...</span>
+                        )}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        <span className="text-muted-foreground">None</span>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      {RESPONSE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          <span style={{ color: type.color }}>{type.label}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span
+                    className="text-xs"
+                    style={{ color: item.response ? RESPONSE_TYPES.find((r) => r.value === item.response)?.color : undefined }}
+                  >
+                    {item.response ? RESPONSE_TYPES.find((r) => r.value === item.response)?.label : <span className="text-muted-foreground">-</span>}
+                  </span>
+                )}
               </td>
               <td className="py-1.5 px-2 text-muted-foreground text-xs">
                 {item.lootDate ? new Date(item.lootDate).toLocaleDateString() : '-'}

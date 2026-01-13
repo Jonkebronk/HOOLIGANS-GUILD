@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 export async function GET(request: Request) {
   try {
@@ -140,6 +141,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Require officer permission for creating loot records
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { itemId, playerId, response, lootDate, phase, lootPoints, teamId } = body;
 

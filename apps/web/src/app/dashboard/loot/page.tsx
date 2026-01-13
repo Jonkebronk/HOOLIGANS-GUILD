@@ -113,7 +113,7 @@ type DatabaseItem = {
 };
 
 export default function DropsPage() {
-  const { selectedTeam } = useTeam();
+  const { selectedTeam, isOfficer } = useTeam();
   const [loading, setLoading] = useState(true);
   const [players, setPlayers] = useState<Player[]>([]);
   const [lootItems, setLootItems] = useState<LootItem[]>([]);
@@ -459,12 +459,17 @@ export default function DropsPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={handleNewSession}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            New Session
-          </Button>
-          <RCImportDialog onImport={handleRCImport} />
+          {isOfficer && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleNewSession}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                New Session
+              </Button>
+              <RCImportDialog onImport={handleRCImport} />
+            </>
+          )}
           <RCExportDialog items={lootItems} />
+          {isOfficer && (
           <Dialog open={isAddItemOpen} onOpenChange={(open) => {
             setIsAddItemOpen(open);
             if (!open) {
@@ -544,6 +549,7 @@ export default function DropsPage() {
               </div>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </div>
 
@@ -592,6 +598,7 @@ export default function DropsPage() {
               players={players}
               onAssignPlayer={handleAssignPlayer}
               onUpdateResponse={handleUpdateResponse}
+              isOfficer={isOfficer}
             />
           </CardContent>
         </Card>

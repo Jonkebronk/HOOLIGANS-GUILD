@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 // DELETE /api/items?raid=RaidName - Delete all items from a raid
 export async function DELETE(request: Request) {
   try {
+    // Require officer permission for deleting items
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const raid = searchParams.get('raid');
 
@@ -149,6 +156,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // Require officer permission for creating items
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { name, wowheadId, icon, quality, slot, raid, boss, phase, lootPriority, bisSpecs } = body;
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer, canAccessTeam } from '@/lib/auth-utils';
 
 type ImportItem = {
   itemName: string;
@@ -10,6 +11,12 @@ type ImportItem = {
 
 export async function POST(request: Request) {
   try {
+    // Require officer permission for importing loot
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { teamId, items } = body as { teamId: string; items: ImportItem[] };
 
@@ -18,6 +25,12 @@ export async function POST(request: Request) {
         { error: 'Missing teamId or items' },
         { status: 400 }
       );
+    }
+
+    // Verify team access
+    const hasAccess = await canAccessTeam(teamId);
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     const results = {

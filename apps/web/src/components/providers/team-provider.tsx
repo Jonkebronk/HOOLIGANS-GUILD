@@ -12,28 +12,91 @@ export type Team = {
   memberCount: number;
 };
 
+type DiscordRoleInfo = {
+  isOfficer: boolean;
+  allRoles: string[];
+};
+
 type TeamContextType = {
   teams: Team[];
   selectedTeam: Team | null;
   setSelectedTeam: (team: Team | null) => void;
   loading: boolean;
   refetchTeams: () => Promise<void>;
+  isOfficer: boolean;
+  discordRoles: string[];
 };
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
 
 const SELECTED_TEAM_KEY = 'selectedTeamId';
 
+// Team role name mappings (Discord role name pattern -> Team name)
+const TEAM_ROLE_MAPPINGS: Record<string, string> = {
+  'team sweden': 'Team Sweden',
+  'team nato': 'Team Nato',
+  'pugs': 'PuGs',
+};
+
+// Officer role patterns (case-insensitive)
+const OFFICER_ROLE_PATTERNS = ['gm', 'officer'];
+
+function checkIsOfficer(roles: string[]): boolean {
+  const lowerRoles = roles.map(r => r.toLowerCase());
+  return lowerRoles.some(role =>
+    OFFICER_ROLE_PATTERNS.some(pattern => role.includes(pattern))
+  );
+}
+
+function getAccessibleTeamNames(roles: string[]): string[] {
+  const lowerRoles = roles.map(r => r.toLowerCase());
+  const teamNames: string[] = [];
+
+  for (const [rolePattern, teamName] of Object.entries(TEAM_ROLE_MAPPINGS)) {
+    if (lowerRoles.some(role => role.includes(rolePattern))) {
+      teamNames.push(teamName.toLowerCase());
+    }
+  }
+
+  return teamNames;
+}
+
 export function TeamProvider({ children }: { children: ReactNode }) {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeamState] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOfficer, setIsOfficer] = useState(false);
+  const [discordRoles, setDiscordRoles] = useState<string[]>([]);
 
-  const fetchTeams = async () => {
+  const fetchDiscordRoles = async (): Promise<DiscordRoleInfo> => {
+    try {
+      const res = await fetch('/api/discord/user-role');
+      if (res.ok) {
+        const data = await res.json();
+        const roles = data.allRoles || [];
+        const officer = data.isGM || data.isOfficer || checkIsOfficer(roles);
+        return { isOfficer: officer, allRoles: roles };
+      }
+    } catch (error) {
+      console.error('Failed to fetch Discord roles:', error);
+    }
+    return { isOfficer: false, allRoles: [] };
+  };
+
+  const fetchTeams = async (roleInfo?: DiscordRoleInfo) => {
     try {
       const res = await fetch('/api/teams');
       if (res.ok) {
-        const data = await res.json();
+        let data: Team[] = await res.json();
+
+        // Filter teams based on Discord roles (unless officer)
+        if (roleInfo && !roleInfo.isOfficer) {
+          const accessibleNames = getAccessibleTeamNames(roleInfo.allRoles);
+          data = data.filter(team =>
+            accessibleNames.includes(team.name.toLowerCase())
+          );
+        }
+
         setTeams(data);
 
         // Restore previously selected team from localStorage
@@ -42,7 +105,15 @@ export function TeamProvider({ children }: { children: ReactNode }) {
           const savedTeam = data.find((t: Team) => t.id === savedTeamId);
           if (savedTeam) {
             setSelectedTeamState(savedTeam);
+          } else if (data.length === 1) {
+            // If saved team not accessible but only one team available, select it
+            setSelectedTeamState(data[0]);
+            localStorage.setItem(SELECTED_TEAM_KEY, data[0].id);
           }
+        } else if (data.length === 1) {
+          // Auto-select if only one team
+          setSelectedTeamState(data[0]);
+          localStorage.setItem(SELECTED_TEAM_KEY, data[0].id);
         }
       }
     } catch (error) {
@@ -53,7 +124,13 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchTeams();
+    const init = async () => {
+      const roleInfo = await fetchDiscordRoles();
+      setIsOfficer(roleInfo.isOfficer);
+      setDiscordRoles(roleInfo.allRoles);
+      await fetchTeams(roleInfo);
+    };
+    init();
   }, []);
 
   const setSelectedTeam = (team: Team | null) => {
@@ -65,6 +142,11 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refetchTeams = async () => {
+    const roleInfo = { isOfficer, allRoles: discordRoles };
+    await fetchTeams(roleInfo);
+  };
+
   return (
     <TeamContext.Provider
       value={{
@@ -72,7 +154,9 @@ export function TeamProvider({ children }: { children: ReactNode }) {
         selectedTeam,
         setSelectedTeam,
         loading,
-        refetchTeams: fetchTeams,
+        refetchTeams,
+        isOfficer,
+        discordRoles,
       }}
     >
       {children}

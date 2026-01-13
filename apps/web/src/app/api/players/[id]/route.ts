@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { canAccessPlayer, requireOfficer } from '@/lib/auth-utils';
 
 export async function GET(
   request: Request,
@@ -7,6 +8,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    // Check if user can access this player
+    const hasAccess = await canAccessPlayer(id);
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
     const player = await prisma.player.findUnique({
       where: { id },
     });
@@ -28,6 +36,13 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+
+    // Require officer permission for editing
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { name, wowClass, mainSpec, offSpec, role, roleSubtype, notes, discordId, active } = body;
 
@@ -59,6 +74,13 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+
+    // Require officer permission for deleting
+    const { authorized, error } = await requireOfficer();
+    if (!authorized) {
+      return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+    }
+
     await prisma.player.delete({
       where: { id },
     });
