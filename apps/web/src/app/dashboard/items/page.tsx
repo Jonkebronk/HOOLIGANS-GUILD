@@ -883,7 +883,7 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {RAIDS.map((r) => (
-                                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                                  <SelectItem key={r.name} value={r.name}>{r.name}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
