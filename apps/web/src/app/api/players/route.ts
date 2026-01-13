@@ -15,7 +15,11 @@ export async function GET(request: Request) {
       },
       orderBy: { name: 'asc' },
     });
-    return NextResponse.json(players);
+    return NextResponse.json(players, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error) {
     console.error('Failed to fetch players:', error);
     return NextResponse.json({ error: 'Failed to fetch players' }, { status: 500 });

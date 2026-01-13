@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma, GearSlot } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 // Map Wowhead inventory types to GearSlot enum (not currently used, using text extraction instead)
 const INVENTORY_TYPE_MAP: Record<number, GearSlot> = {
@@ -178,6 +179,12 @@ async function fetchItemDetails(itemId: number): Promise<{
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function POST(request: Request) {
+  // Require officer permission
+  const { authorized, error } = await requireOfficer();
+  if (!authorized) {
+    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+  }
+
   try {
     const { zoneId, raidName, phase } = await request.json();
 

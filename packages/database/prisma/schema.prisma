@@ -251,6 +251,7 @@ model Player {
   @@index([class])
   @@index([active])
   @@index([teamId])
+  @@index([teamId, active]) // Roster queries
 }
 
 model PlayerGear {
@@ -309,6 +310,7 @@ model Item {
   @@index([slot])
   @@index([phase])
   @@index([name])
+  @@index([raid, phase, slot]) // Filter queries
 }
 
 model ItemBisSpec {
@@ -353,6 +355,7 @@ model LootRecord {
   @@index([lootDate])
   @@index([rcSessionId])
   @@index([teamId])
+  @@index([teamId, lootDate]) // Dashboard loot queries
 }
 
 // ============================================
@@ -393,6 +396,7 @@ model PlayerBisConfiguration {
   @@unique([playerId, phase, slot])
   @@index([playerId])
   @@index([phase])
+  @@index([wowheadId]) // BiS enrichment lookups
 }
 
 model PlayerBisStatus {

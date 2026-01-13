@@ -147,7 +147,11 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json(enrichedItems);
+    return NextResponse.json(enrichedItems, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=1800',
+      },
+    });
   } catch (error) {
     console.error('Failed to fetch items:', error);
     return NextResponse.json({ error: 'Failed to fetch items' }, { status: 500 });

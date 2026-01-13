@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 export async function GET(request: Request) {
   try {
@@ -72,6 +73,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  // Require officer permission
+  const { authorized, error } = await requireOfficer();
+  if (!authorized) {
+    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
 
@@ -136,6 +143,12 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  // Require officer permission
+  const { authorized, error } = await requireOfficer();
+  if (!authorized) {
+    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const recordId = searchParams.get('id');

@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireOfficer } from '@/lib/auth-utils';
 
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
 export async function POST(request: NextRequest) {
+  // Require officer permission
+  const { authorized, error } = await requireOfficer();
+  if (!authorized) {
+    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+  }
+
   if (!DISCORD_BOT_TOKEN) {
     return NextResponse.json(
       { error: 'Discord bot not configured' },

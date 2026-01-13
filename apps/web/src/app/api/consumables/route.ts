@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 // Fetch consumable details from Wowhead tooltip API
 async function fetchConsumableDetails(wowheadId: number): Promise<{
@@ -56,6 +57,12 @@ export async function GET() {
 
 // POST - Add a new consumable by Wowhead ID
 export async function POST(request: Request) {
+  // Require officer permission
+  const { authorized, error } = await requireOfficer();
+  if (!authorized) {
+    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const { wowheadId, type } = body;

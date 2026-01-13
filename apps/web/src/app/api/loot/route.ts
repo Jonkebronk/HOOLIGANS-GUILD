@@ -132,7 +132,11 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json(enrichedRecords);
+    return NextResponse.json(enrichedRecords, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error('Failed to fetch loot records:', error);
     return NextResponse.json({ error: 'Failed to fetch loot records' }, { status: 500 });

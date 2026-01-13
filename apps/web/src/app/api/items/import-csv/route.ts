@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 // Map CSV slot names to database GearSlot enum values
 const slotMapping: Record<string, string> = {
@@ -46,6 +47,12 @@ const phaseMapping: Record<string, string> = {
 };
 
 export async function POST(request: Request) {
+  // Require officer permission
+  const { authorized, error } = await requireOfficer();
+  if (!authorized) {
+    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const { csvData } = body;

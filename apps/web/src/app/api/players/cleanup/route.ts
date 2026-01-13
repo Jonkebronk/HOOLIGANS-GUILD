@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 // DELETE /api/players/cleanup - Delete players
 // ?teamId=xxx - Filter by team
 // ?all=true - Delete ALL players (not just pending)
 export async function DELETE(request: Request) {
+  // Require officer permission
+  const { authorized, error } = await requireOfficer();
+  if (!authorized) {
+    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get('teamId');

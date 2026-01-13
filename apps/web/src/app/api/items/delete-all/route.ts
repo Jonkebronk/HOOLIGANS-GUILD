@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { requireOfficer } from '@/lib/auth-utils';
 
 // DELETE - Remove all items from database
 export async function DELETE() {
+  // Require officer permission
+  const { authorized, error } = await requireOfficer();
+  if (!authorized) {
+    return NextResponse.json({ error: error || 'Unauthorized' }, { status: 403 });
+  }
+
   try {
     // First delete all BiS configurations that reference items
     await prisma.bisConfiguration.deleteMany({});
