@@ -290,7 +290,8 @@ export default function ItemsPage() {
 
   const fetchItems = async () => {
     try {
-      const res = await fetch('/api/items');
+      const url = selectedTeam ? `/api/items?teamId=${selectedTeam.id}` : '/api/items';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setItems(data);

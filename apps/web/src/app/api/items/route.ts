@@ -35,8 +35,11 @@ export async function DELETE(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const teamId = searchParams.get('teamId');
+
     const items = await prisma.item.findMany({
       include: {
         bisSpecs: true,
@@ -67,8 +70,13 @@ export async function GET() {
       orderBy: { name: 'asc' },
     });
 
-    // Get all player BiS configurations to match against items (all phases)
+    // Get player BiS configurations filtered by team (all phases)
     const allBisConfigs = await prisma.playerBisConfiguration.findMany({
+      where: teamId ? {
+        player: {
+          teamId: teamId,
+        },
+      } : undefined,
       include: {
         player: {
           select: {

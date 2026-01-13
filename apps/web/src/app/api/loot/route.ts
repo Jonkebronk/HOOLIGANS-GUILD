@@ -56,8 +56,13 @@ export async function GET(request: Request) {
       orderBy: { lootDate: 'desc' },
     });
 
-    // Get all player BiS configurations to match against items (all phases)
+    // Get player BiS configurations filtered by team (all phases)
     const allBisConfigs = await prisma.playerBisConfiguration.findMany({
+      where: teamId ? {
+        player: {
+          teamId: teamId,
+        },
+      } : undefined,
       include: {
         player: {
           select: {
