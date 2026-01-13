@@ -300,10 +300,11 @@ model Item {
   playerGear      PlayerGear[]
   tierTokenPieces TierTokenPiece[]
 
-  @@unique([name, raid])
+  @@unique([wowheadId])
   @@index([raid])
   @@index([slot])
   @@index([phase])
+  @@index([name])
 }
 
 model ItemBisSpec {
