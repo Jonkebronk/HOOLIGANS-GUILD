@@ -81,12 +81,26 @@ export default function ItemsPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importZone, setImportZone] = useState('');
   const [importUrl, setImportUrl] = useState('');
-  const [isCsvImportDialogOpen, setIsCsvImportDialogOpen] = useState(false);
-  const [csvData, setCsvData] = useState('');
-  const [csvImportResult, setCsvImportResult] = useState<{ imported: number; skipped: number; errors: string[]; importedIds?: string[]; skippedIds?: string[] } | null>(null);
-  const [isImportingCsv, setIsImportingCsv] = useState(false);
-  const [isDeletingImport, setIsDeletingImport] = useState(false);
-  const [isDeletingExisting, setIsDeletingExisting] = useState(false);
+  // Wowhead URL import state
+  const [isWowheadImportOpen, setIsWowheadImportOpen] = useState(false);
+  const [wowheadUrls, setWowheadUrls] = useState('');
+  const [importStage, setImportStage] = useState<'input' | 'review'>('input');
+  const [fetchedItems, setFetchedItems] = useState<{
+    wowheadId: number;
+    name: string;
+    icon: string;
+    quality: number;
+    slot: string;
+    boss: string;
+    phase: string;
+    raid: string;
+    url: string;
+  }[]>([]);
+  const [fetchErrors, setFetchErrors] = useState<{ url: string; error: string }[]>([]);
+  const [isFetchingItems, setIsFetchingItems] = useState(false);
+  const [isSavingImport, setIsSavingImport] = useState(false);
+  const [importRaid, setImportRaid] = useState('');
+  const [importPhase, setImportPhase] = useState('P1');
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState('');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -293,105 +307,121 @@ export default function ItemsPage() {
     }
   };
 
-  const handleImportCsv = async () => {
-    if (!csvData.trim()) {
+  // Fetch items from Wowhead URLs
+  const handleFetchWowheadItems = async () => {
+    if (!wowheadUrls.trim() || !importRaid) {
       return;
     }
 
-    setIsImportingCsv(true);
-    setCsvImportResult(null);
+    const urls = wowheadUrls.split('\n').map(u => u.trim()).filter(u => u);
+    if (urls.length === 0) return;
+
+    setIsFetchingItems(true);
+    setFetchErrors([]);
 
     try {
-      const res = await fetch('/api/items/import-csv', {
+      const res = await fetch('/api/items/import-wowhead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ csvData }),
+        body: JSON.stringify({ urls }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        setCsvImportResult(data);
-        if (data.imported > 0) {
-          await fetchItems();
+        // Add raid/phase/boss to fetched items
+        const itemsWithDefaults = (data.items || []).map((item: { wowheadId: number; name: string; icon: string; quality: number; slot: string; url: string }) => ({
+          ...item,
+          raid: importRaid,
+          phase: importPhase,
+          boss: 'Unknown',
+        }));
+        setFetchedItems(itemsWithDefaults);
+        setFetchErrors(data.errors || []);
+        setImportStage('review');
+      } else {
+        setFetchErrors([{ url: 'API', error: data.error || 'Failed to fetch items' }]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Wowhead items:', error);
+      setFetchErrors([{ url: 'API', error: 'Failed to fetch items. Please try again.' }]);
+    } finally {
+      setIsFetchingItems(false);
+    }
+  };
+
+  // Update a fetched item field
+  const updateFetchedItem = (index: number, field: string, value: string) => {
+    setFetchedItems(prev => prev.map((item, i) =>
+      i === index ? { ...item, [field]: value } : item
+    ));
+  };
+
+  // Remove item from import list
+  const removeFetchedItem = (index: number) => {
+    setFetchedItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Save all fetched items to database
+  const handleSaveWowheadItems = async () => {
+    if (fetchedItems.length === 0) return;
+
+    setIsSavingImport(true);
+    let saved = 0;
+    const errors: string[] = [];
+
+    for (const item of fetchedItems) {
+      try {
+        const res = await fetch('/api/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: item.name,
+            wowheadId: item.wowheadId,
+            icon: item.icon,
+            quality: item.quality,
+            slot: item.slot,
+            raid: item.raid,
+            boss: item.boss,
+            phase: item.phase,
+          }),
+        });
+
+        if (res.ok) {
+          saved++;
+        } else {
+          const data = await res.json();
+          errors.push(`${item.name}: ${data.error || 'Failed to save'}`);
         }
-      } else {
-        setCsvImportResult({ imported: 0, skipped: 0, errors: [data.error || 'Failed to import CSV'] });
+      } catch (error) {
+        errors.push(`${item.name}: Network error`);
       }
-    } catch (error) {
-      console.error('Failed to import CSV:', error);
-      setCsvImportResult({ imported: 0, skipped: 0, errors: ['Failed to import CSV. Please try again.'] });
-    } finally {
-      setIsImportingCsv(false);
     }
+
+    setIsSavingImport(false);
+
+    if (errors.length > 0) {
+      alert(`Saved ${saved} items. Errors:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? `\n...and ${errors.length - 5} more` : ''}`);
+    } else {
+      alert(`Successfully imported ${saved} items!`);
+    }
+
+    // Reset and close
+    setIsWowheadImportOpen(false);
+    setWowheadUrls('');
+    setFetchedItems([]);
+    setImportStage('input');
+    await fetchItems();
   };
 
-  const handleUndoCsvImport = async () => {
-    if (!csvImportResult?.importedIds || csvImportResult.importedIds.length === 0) {
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to delete ${csvImportResult.importedIds.length} imported items?`)) {
-      return;
-    }
-
-    setIsDeletingImport(true);
-    try {
-      const res = await fetch('/api/items/delete-batch', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: csvImportResult.importedIds }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        alert(`Deleted ${data.deleted} items`);
-        setCsvImportResult(null);
-        setCsvData('');
-        setIsCsvImportDialogOpen(false);
-        await fetchItems();
-      } else {
-        alert('Failed to delete items');
-      }
-    } catch (error) {
-      console.error('Failed to undo import:', error);
-      alert('Failed to delete items. Please try again.');
-    } finally {
-      setIsDeletingImport(false);
-    }
-  };
-
-  const handleDeleteExisting = async () => {
-    if (!csvImportResult?.skippedIds || csvImportResult.skippedIds.length === 0) {
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to delete ${csvImportResult.skippedIds.length} existing items? You can then re-import the CSV to add fresh copies.`)) {
-      return;
-    }
-
-    setIsDeletingExisting(true);
-    try {
-      const res = await fetch('/api/items/delete-batch', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: csvImportResult.skippedIds }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        alert(`Deleted ${data.deleted} existing items. You can now import the CSV again.`);
-        setCsvImportResult(null);
-        await fetchItems();
-      } else {
-        alert('Failed to delete items');
-      }
-    } catch (error) {
-      console.error('Failed to delete existing items:', error);
-      alert('Failed to delete items. Please try again.');
-    } finally {
-      setIsDeletingExisting(false);
-    }
+  // Reset wowhead import dialog
+  const resetWowheadImport = () => {
+    setWowheadUrls('');
+    setFetchedItems([]);
+    setFetchErrors([]);
+    setImportStage('input');
+    setImportRaid('');
+    setImportPhase('P1');
   };
 
   const handleFixPhases = async () => {
@@ -709,107 +739,187 @@ export default function ItemsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Dialog open={isCsvImportDialogOpen} onOpenChange={(open) => {
-            setIsCsvImportDialogOpen(open);
+          <Dialog open={isWowheadImportOpen} onOpenChange={(open) => {
+            setIsWowheadImportOpen(open);
             if (!open) {
-              setCsvData('');
-              setCsvImportResult(null);
+              resetWowheadImport();
             }
           }}>
             <DialogTrigger asChild>
-              <Button variant="outline"><Upload className="h-4 w-4 mr-2" />Import CSV</Button>
+              <Button variant="outline"><Upload className="h-4 w-4 mr-2" />Import from Wowhead</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
               <DialogHeader>
-                <DialogTitle>Import Items from CSV</DialogTitle>
+                <DialogTitle>
+                  {importStage === 'input' ? 'Import from Wowhead URLs' : `Review Items (${fetchedItems.length})`}
+                </DialogTitle>
                 <DialogDescription>
-                  Paste CSV data with columns: Item Name, Slot, Location/Raid, Boss, Phase
+                  {importStage === 'input'
+                    ? 'Paste Wowhead item URLs (one per line), then review and edit before saving'
+                    : 'Review and edit each item before importing to the database'}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>CSV Data</Label>
-                  <Textarea
-                    placeholder={`Item Name,Slot,Location,Boss,Phase
-Cursed Vision of Sargeras,Head,Black Temple,Illidan Stormrage,P3
-Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
-                    value={csvData}
-                    onChange={(e) => setCsvData(e.target.value)}
-                    rows={10}
-                    className="font-mono text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Supported columns: Item Name/Name, Slot, Location/Raid, Boss/Source, Phase. First row should be headers.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Need item info? Search on{' '}
-                    <a
-                      href="https://www.wowhead.com/tbc"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:underline"
-                    >
-                      Wowhead TBC
-                    </a>
-                  </p>
-                </div>
-                {csvImportResult && (
-                  <div className="bg-muted/50 rounded-md p-3 text-sm space-y-2">
-                    <p className="text-green-500">Imported {csvImportResult.imported} items</p>
-                    {csvImportResult.skipped > 0 && (
-                      <p className="text-muted-foreground">{csvImportResult.skipped} items skipped (already exist)</p>
-                    )}
-                    {csvImportResult.errors.length > 0 && (
-                      <div className="text-red-400 mt-2">
-                        <p className="font-medium">Errors:</p>
-                        <ul className="list-disc list-inside max-h-32 overflow-y-auto">
-                          {csvImportResult.errors.slice(0, 10).map((err, idx) => (
-                            <li key={idx} className="text-xs">{err}</li>
+
+              {importStage === 'input' ? (
+                <>
+                  <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Raid</Label>
+                        <Select value={importRaid} onValueChange={setImportRaid}>
+                          <SelectTrigger><SelectValue placeholder="Select raid" /></SelectTrigger>
+                          <SelectContent>
+                            {RAIDS.map((raid) => (
+                              <SelectItem key={raid} value={raid}>{raid}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phase</Label>
+                        <Select value={importPhase} onValueChange={setImportPhase}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {PHASES.map((phase) => (
+                              <SelectItem key={phase} value={phase}>{phase}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Wowhead URLs (one per line)</Label>
+                      <Textarea
+                        placeholder={`https://www.wowhead.com/tbc/item=32837/warglaive-of-azzinoth
+https://www.wowhead.com/tbc/item=30110/amani-mask-of-death
+https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
+                        value={wowheadUrls}
+                        onChange={(e) => setWowheadUrls(e.target.value)}
+                        rows={8}
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Paste full Wowhead URLs or just item IDs (e.g., 32837)
+                      </p>
+                    </div>
+                    {fetchErrors.length > 0 && (
+                      <div className="bg-red-500/10 border border-red-500/20 rounded-md p-3 text-sm">
+                        <p className="font-medium text-red-400 mb-1">Errors:</p>
+                        <ul className="space-y-1">
+                          {fetchErrors.slice(0, 5).map((err, idx) => (
+                            <li key={idx} className="text-xs text-red-300">{err.url}: {err.error}</li>
                           ))}
-                          {csvImportResult.errors.length > 10 && (
-                            <li className="text-xs">...and {csvImportResult.errors.length - 10} more</li>
-                          )}
                         </ul>
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-              <DialogFooter className="flex-wrap gap-2">
-                <Button variant="outline" onClick={() => setIsCsvImportDialogOpen(false)} disabled={isImportingCsv || isDeletingImport || isDeletingExisting}>
-                  {csvImportResult ? 'Close' : 'Cancel'}
-                </Button>
-                {csvImportResult && csvImportResult.skippedIds && csvImportResult.skippedIds.length > 0 && (
-                  <Button variant="destructive" onClick={handleDeleteExisting} disabled={isDeletingExisting || isDeletingImport}>
-                    {isDeletingExisting ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4 mr-2" />
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsWowheadImportOpen(false)} disabled={isFetchingItems}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleFetchWowheadItems} disabled={!wowheadUrls.trim() || !importRaid || isFetchingItems}>
+                      {isFetchingItems ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Database className="h-4 w-4 mr-2" />
+                      )}
+                      {isFetchingItems ? 'Fetching...' : 'Fetch Items'}
+                    </Button>
+                  </DialogFooter>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 overflow-y-auto space-y-2 py-2 pr-2">
+                    {fetchedItems.map((item, index) => (
+                      <div key={index} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg border">
+                        <a
+                          href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          data-wh-icon-size="0"
+                        >
+                          <img
+                            src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'medium')}
+                            alt={item.name}
+                            className="w-10 h-10 rounded"
+                            style={{ borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4], borderWidth: 2, borderStyle: 'solid' }}
+                          />
+                        </a>
+                        <div className="flex-1 space-y-2 min-w-0">
+                          <a
+                            href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-wh-icon-size="0"
+                            className="font-medium text-sm hover:underline block truncate"
+                            style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                          >
+                            {item.name}
+                          </a>
+                          <div className="grid grid-cols-4 gap-2">
+                            <Select value={item.slot} onValueChange={(v) => updateFetchedItem(index, 'slot', v)}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {GEAR_SLOTS.map((slot) => (
+                                  <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              placeholder="Boss"
+                              value={item.boss}
+                              onChange={(e) => updateFetchedItem(index, 'boss', e.target.value)}
+                              className="h-8 text-xs"
+                            />
+                            <Select value={item.phase} onValueChange={(v) => updateFetchedItem(index, 'phase', v)}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {PHASES.map((p) => (
+                                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select value={item.raid} onValueChange={(v) => updateFetchedItem(index, 'raid', v)}>
+                              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {RAIDS.map((r) => (
+                                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          onClick={() => removeFetchedItem(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {fetchedItems.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No items to import. Go back and add URLs.
+                      </div>
                     )}
-                    {isDeletingExisting ? 'Deleting...' : `Delete Existing (${csvImportResult.skippedIds.length})`}
-                  </Button>
-                )}
-                {csvImportResult && csvImportResult.importedIds && csvImportResult.importedIds.length > 0 && (
-                  <Button variant="destructive" onClick={handleUndoCsvImport} disabled={isDeletingImport || isDeletingExisting}>
-                    {isDeletingImport ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-4 w-4 mr-2" />
-                    )}
-                    {isDeletingImport ? 'Deleting...' : `Undo Import (${csvImportResult.importedIds.length})`}
-                  </Button>
-                )}
-                {!csvImportResult && (
-                  <Button onClick={handleImportCsv} disabled={!csvData.trim() || isImportingCsv}>
-                    {isImportingCsv ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4 mr-2" />
-                    )}
-                    {isImportingCsv ? 'Importing...' : 'Import CSV'}
-                  </Button>
-                )}
-              </DialogFooter>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setImportStage('input')} disabled={isSavingImport}>
+                      Back
+                    </Button>
+                    <Button onClick={handleSaveWowheadItems} disabled={fetchedItems.length === 0 || isSavingImport}>
+                      {isSavingImport ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4 mr-2" />
+                      )}
+                      {isSavingImport ? 'Saving...' : `Save ${fetchedItems.length} Items`}
+                    </Button>
+                  </DialogFooter>
+                </>
+              )}
             </DialogContent>
           </Dialog>
           <Dialog open={isImportBossDialogOpen} onOpenChange={setIsImportBossDialogOpen}>
