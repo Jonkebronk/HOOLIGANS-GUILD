@@ -103,7 +103,24 @@ const TIER_TOKENS = {
 export async function POST() {
   try {
     let created = 0;
-    let skipped = 0;
+    let updated = 0;
+    let deleted = 0;
+
+    // First, clean up T6 tokens with wrong token types (Fallen instead of Forgotten)
+    const wrongT6Tokens = await prisma.tierToken.findMany({
+      where: {
+        tier: 'T6',
+        tokenType: {
+          in: ['Fallen Defender', 'Fallen Hero', 'Fallen Champion'],
+        },
+      },
+    });
+
+    for (const token of wrongT6Tokens) {
+      await prisma.tierTokenPiece.deleteMany({ where: { tokenId: token.id } });
+      await prisma.tierToken.delete({ where: { id: token.id } });
+      deleted++;
+    }
 
     for (const [tier, tierData] of Object.entries(TIER_TOKENS)) {
       for (const tokenInfo of tierData.tokens) {
@@ -168,7 +185,7 @@ export async function POST() {
               })),
             });
 
-            skipped++;
+            updated++;
             continue;
           }
 
@@ -201,8 +218,9 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       created,
-      skipped,
-      message: `Created ${created} tokens, skipped ${skipped} existing`,
+      updated,
+      deleted,
+      message: `Created ${created} tokens, updated ${updated} existing, deleted ${deleted} invalid T6 tokens`,
     });
   } catch (error) {
     console.error('Failed to seed tier tokens:', error);
