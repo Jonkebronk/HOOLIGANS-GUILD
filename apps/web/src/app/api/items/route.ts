@@ -67,11 +67,8 @@ export async function GET() {
       orderBy: { name: 'asc' },
     });
 
-    // Get player BiS configurations for current phases (P1-P3)
+    // Get all player BiS configurations to match against items (all phases)
     const allBisConfigs = await prisma.playerBisConfiguration.findMany({
-      where: {
-        phase: { in: ['P1', 'P2', 'P3'] },
-      },
       include: {
         player: {
           select: {
