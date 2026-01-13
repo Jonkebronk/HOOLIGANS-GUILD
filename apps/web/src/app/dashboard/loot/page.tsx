@@ -54,6 +54,12 @@ type TokenRedemption = {
   };
 };
 
+type BisPlayer = {
+  id: string;
+  name: string;
+  class: string;
+};
+
 type LootItem = {
   id: string;
   itemId?: string;
@@ -70,6 +76,7 @@ type LootItem = {
   lootPrio?: string;
   bisPlayers?: string[];
   bisNextPhasePlayers?: string[];
+  bisPlayersFromList?: BisPlayer[];
   tokenRedemptions?: TokenRedemption[];
 };
 
@@ -166,6 +173,7 @@ export default function DropsPage() {
           player?: { id: string; name: string; class: string };
           response?: string;
           lootDate?: string;
+          bisPlayersFromList?: BisPlayer[];
         }) => {
           // Parse comma-separated player names into arrays
           const parsePlayerList = (str: string | null | undefined): string[] => {
@@ -189,6 +197,7 @@ export default function DropsPage() {
             lootPrio: record.item?.lootPriority || record.lootPrio,
             bisPlayers: parsePlayerList(record.item?.bisFor),
             bisNextPhasePlayers: parsePlayerList(record.item?.bisNextPhase),
+            bisPlayersFromList: record.bisPlayersFromList,
             tokenRedemptions: record.item?.tokenRedemptions,
           };
         });

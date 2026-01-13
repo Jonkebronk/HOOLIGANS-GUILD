@@ -35,6 +35,12 @@ type TokenRedemption = {
   };
 };
 
+type BisPlayer = {
+  id: string;
+  name: string;
+  class: string;
+};
+
 type LootItem = {
   id: string;
   itemId?: string;
@@ -51,6 +57,7 @@ type LootItem = {
   lootPrio?: string;
   bisPlayers?: string[];
   bisNextPhasePlayers?: string[];
+  bisPlayersFromList?: BisPlayer[];
   tokenRedemptions?: TokenRedemption[];
 };
 
@@ -148,18 +155,8 @@ export function ItemsTable({
             const tokenType = getTokenType(item.itemName);
             const tokenClasses = tokenType ? TOKEN_CLASS_MAP[tokenType] : [];
 
-            // Aggregate BiS specs from all redemption items for tokens
-            const tokenBisSpecs: string[] = hasRedemptions
-              ? [...new Set(
-                  (item.tokenRedemptions || [])
-                    .flatMap(r => r.redemptionItem.bisFor?.split(',').map(s => s.trim()).filter(Boolean) || [])
-                )]
-              : [];
-
-            // Use token BiS specs if available, otherwise use regular bisPlayers
-            const displayBisPlayers = hasRedemptions && tokenBisSpecs.length > 0
-              ? tokenBisSpecs
-              : item.bisPlayers || [];
+            // Use bisPlayersFromList (players who have item/redemption items in their BiS list)
+            const displayBisPlayers = item.bisPlayersFromList || [];
 
             return (
               <>
@@ -294,12 +291,13 @@ export function ItemsTable({
               </td>
               <td className="py-1.5 px-2">
                 <div className="flex flex-wrap gap-1">
-                  {displayBisPlayers.slice(0, 2).map((name) => (
+                  {displayBisPlayers.slice(0, 2).map((player) => (
                     <span
-                      key={name}
-                      className="px-1.5 py-0.5 text-xs font-medium rounded bg-purple-500/30 text-purple-300 border border-purple-500/50"
+                      key={player.id}
+                      className="px-1.5 py-0.5 text-xs font-medium rounded bg-purple-500/30 border border-purple-500/50"
+                      style={{ color: CLASS_COLORS[player.class] || '#a855f7' }}
                     >
-                      {name}
+                      {player.name}
                     </span>
                   ))}
                   {displayBisPlayers.length > 2 && (

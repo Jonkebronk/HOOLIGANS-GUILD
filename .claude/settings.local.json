@@ -73,7 +73,9 @@
       "Bash(git status:*)",
       "Bash(npm run db:push:*)",
       "Bash(ls -la \"C:\\\\Users\\\\johnn\\\\HOOLIGANS Guild\\\\apps\\\\web\\\\public\\\\icons\\\\roles\"\" 2>/dev/null || dir \"C:UsersjohnnHOOLIGANS Guildappswebpubliciconsroles \")",
-      "WebFetch(domain:www.wowhead.com)"
+      "WebFetch(domain:www.wowhead.com)",
+      "Bash(railway run npx prisma migrate deploy:*)",
+      "Bash($env:DATABASE_URL=\"postgresql://postgres:jNVXoyktblSPdMELeAFhFfDZLtVIfBJx@mainline.proxy.rlwy.net:22404/railway\")"
     ]
   }
 }
