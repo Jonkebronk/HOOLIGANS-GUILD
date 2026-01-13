@@ -41,6 +41,19 @@ type LootRecord = {
   } | null;
 };
 
+type TokenRedemption = {
+  id: string;
+  className: string;
+  redemptionItem: {
+    id: string;
+    name: string;
+    wowheadId: number;
+    icon?: string;
+    quality: number;
+    lootRecords?: LootRecord[];
+  };
+};
+
 type Item = {
   id: string;
   name: string;
@@ -56,6 +69,33 @@ type Item = {
   bisNextPhase?: string | null;
   bisSpecs: { id: string; spec: string }[];
   lootRecords?: LootRecord[];
+  tokenRedemptions?: TokenRedemption[];
+};
+
+// Token type mappings
+const TOKEN_CLASS_MAP: Record<string, string[]> = {
+  'Fallen Defender': ['Druid', 'Priest', 'Warrior'],
+  'Fallen Hero': ['Hunter', 'Mage', 'Warlock'],
+  'Fallen Champion': ['Paladin', 'Rogue', 'Shaman'],
+  'Forgotten Conqueror': ['Paladin', 'Priest', 'Warlock'],
+  'Forgotten Protector': ['Hunter', 'Shaman', 'Warrior'],
+  'Forgotten Vanquisher': ['Druid', 'Mage', 'Rogue'],
+};
+
+// Detect token type from item name
+const getTokenType = (name: string): string | null => {
+  for (const tokenType of Object.keys(TOKEN_CLASS_MAP)) {
+    if (name.includes(tokenType)) {
+      return tokenType;
+    }
+  }
+  return null;
+};
+
+// Check if item is a tier token
+const isTokenItem = (item: Item | null): boolean => {
+  if (!item) return false;
+  return item.slot === 'Misc' && getTokenType(item.name) !== null;
 };
 
 const PHASES = ['P1', 'P2', 'P3', 'P4', 'P5'];
@@ -126,6 +166,12 @@ export default function ItemsPage() {
   const [loadingItemDetails, setLoadingItemDetails] = useState(false);
   const [isRefreshingIcon, setIsRefreshingIcon] = useState(false);
   const [players, setPlayers] = useState<{ id: string; name: string; class: string }[]>([]);
+  // Redemption items state
+  const [redemptionSearch, setRedemptionSearch] = useState('');
+  const [redemptionSearchResults, setRedemptionSearchResults] = useState<Item[]>([]);
+  const [isSearchingRedemption, setIsSearchingRedemption] = useState(false);
+  const [addingRedemptionClass, setAddingRedemptionClass] = useState<string | null>(null);
+  const [isAddingRedemption, setIsAddingRedemption] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     slot: '',
@@ -559,6 +605,10 @@ export default function ItemsPage() {
 
   const handleOpenEditDialog = async (item: Item) => {
     setEditingItem(item);
+    // Reset redemption state
+    setRedemptionSearch('');
+    setRedemptionSearchResults([]);
+    setAddingRedemptionClass(null);
     setEditForm({
       name: item.name || '',
       wowheadId: item.wowheadId?.toString() || '',
@@ -682,6 +732,85 @@ export default function ItemsPage() {
       alert('Failed to refresh icon. Please try again.');
     } finally {
       setIsRefreshingIcon(false);
+    }
+  };
+
+  // Search for items to add as redemptions
+  const handleRedemptionSearch = async (query: string) => {
+    setRedemptionSearch(query);
+    if (query.length < 2) {
+      setRedemptionSearchResults([]);
+      return;
+    }
+    setIsSearchingRedemption(true);
+    try {
+      // Search in local items
+      const results = items.filter(i =>
+        i.name.toLowerCase().includes(query.toLowerCase()) &&
+        i.id !== editingItem?.id // Exclude current item
+      ).slice(0, 10);
+      setRedemptionSearchResults(results);
+    } finally {
+      setIsSearchingRedemption(false);
+    }
+  };
+
+  // Add redemption item
+  const handleAddRedemption = async (redemptionItem: Item, className: string) => {
+    if (!editingItem) return;
+    setIsAddingRedemption(true);
+    try {
+      const res = await fetch(`/api/items/${editingItem.id}/redemptions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          redemptionItemId: redemptionItem.id,
+          className,
+        }),
+      });
+      if (res.ok) {
+        const newRedemption = await res.json();
+        // Update editingItem with new redemption
+        setEditingItem({
+          ...editingItem,
+          tokenRedemptions: [...(editingItem.tokenRedemptions || []), newRedemption],
+        });
+        // Reset search
+        setRedemptionSearch('');
+        setRedemptionSearchResults([]);
+        setAddingRedemptionClass(null);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to add redemption item');
+      }
+    } catch (error) {
+      console.error('Failed to add redemption:', error);
+      alert('Failed to add redemption item');
+    } finally {
+      setIsAddingRedemption(false);
+    }
+  };
+
+  // Remove redemption item
+  const handleRemoveRedemption = async (redemptionId: string) => {
+    if (!editingItem) return;
+    try {
+      const res = await fetch(`/api/items/${editingItem.id}/redemptions?redemptionId=${redemptionId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        // Update editingItem
+        setEditingItem({
+          ...editingItem,
+          tokenRedemptions: (editingItem.tokenRedemptions || []).filter(r => r.id !== redemptionId),
+        });
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to remove redemption item');
+      }
+    } catch (error) {
+      console.error('Failed to remove redemption:', error);
+      alert('Failed to remove redemption item');
     }
   };
 
@@ -1662,6 +1791,167 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                   </p>
                 )}
               </div>
+
+              {/* Token Redemption Items Section */}
+              {isTokenItem(editingItem) && editingItem && (
+                <div className="space-y-3 pb-3 border-b">
+                  <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Redemption Items</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Items that can be obtained by exchanging this token.
+                  </p>
+                  {(() => {
+                    const tokenType = getTokenType(editingItem.name);
+                    const classes = tokenType ? TOKEN_CLASS_MAP[tokenType] : [];
+
+                    return (
+                      <div className="space-y-3">
+                        {classes.map((className) => {
+                          const classRedemptions = (editingItem.tokenRedemptions || []).filter(
+                            r => r.className === className
+                          );
+
+                          return (
+                            <div key={className} className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium" style={{ color: CLASS_COLORS[className] }}>
+                                  {className}
+                                </span>
+                                {addingRedemptionClass !== className ? (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-xs"
+                                    onClick={() => {
+                                      setAddingRedemptionClass(className);
+                                      setRedemptionSearch('');
+                                      setRedemptionSearchResults([]);
+                                    }}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" /> Add
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 text-xs"
+                                    onClick={() => setAddingRedemptionClass(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                )}
+                              </div>
+
+                              {/* Show existing redemptions */}
+                              {classRedemptions.length > 0 && (
+                                <div className="space-y-1 ml-2">
+                                  {classRedemptions.map((redemption) => (
+                                    <div key={redemption.id} className="flex items-center gap-2 group">
+                                      <a
+                                        href={`https://www.wowhead.com/tbc/item=${redemption.redemptionItem.wowheadId}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        data-wh-icon-size="0"
+                                        className="flex items-center gap-2"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <img
+                                          src={getItemIconUrl(redemption.redemptionItem.icon || 'inv_misc_questionmark', 'small')}
+                                          alt={redemption.redemptionItem.name}
+                                          className="w-6 h-6 rounded"
+                                          style={{
+                                            borderWidth: 1,
+                                            borderStyle: 'solid',
+                                            borderColor: ITEM_QUALITY_COLORS[redemption.redemptionItem.quality] || ITEM_QUALITY_COLORS[4]
+                                          }}
+                                        />
+                                        <span
+                                          className="text-sm hover:underline"
+                                          style={{ color: ITEM_QUALITY_COLORS[redemption.redemptionItem.quality] || ITEM_QUALITY_COLORS[4] }}
+                                        >
+                                          {redemption.redemptionItem.name}
+                                        </span>
+                                      </a>
+                                      {/* Show loot info */}
+                                      {redemption.redemptionItem.lootRecords && redemption.redemptionItem.lootRecords.length > 0 && (
+                                        <span className="text-xs text-muted-foreground">
+                                          ({redemption.redemptionItem.lootRecords.filter(r => r.player).map(r => r.player!.name).join(', ')})
+                                        </span>
+                                      )}
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300"
+                                        onClick={() => handleRemoveRedemption(redemption.id)}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Add new redemption search */}
+                              {addingRedemptionClass === className && (
+                                <div className="ml-2 space-y-2">
+                                  <Input
+                                    placeholder="Search for item..."
+                                    value={redemptionSearch}
+                                    onChange={(e) => handleRedemptionSearch(e.target.value)}
+                                    className="h-8 text-sm"
+                                    autoFocus
+                                  />
+                                  {redemptionSearchResults.length > 0 && (
+                                    <div className="bg-muted rounded-md p-2 max-h-40 overflow-y-auto space-y-1">
+                                      {redemptionSearchResults.map((item) => (
+                                        <button
+                                          key={item.id}
+                                          type="button"
+                                          className="flex items-center gap-2 w-full text-left hover:bg-muted-foreground/10 rounded p-1"
+                                          onClick={() => handleAddRedemption(item, className)}
+                                          disabled={isAddingRedemption}
+                                        >
+                                          <img
+                                            src={getItemIconUrl(item.icon || 'inv_misc_questionmark', 'small')}
+                                            alt={item.name}
+                                            className="w-5 h-5 rounded"
+                                            style={{
+                                              borderWidth: 1,
+                                              borderStyle: 'solid',
+                                              borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4]
+                                            }}
+                                          />
+                                          <span
+                                            className="text-sm truncate"
+                                            style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
+                                          >
+                                            {item.name}
+                                          </span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {isSearchingRedemption && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      <Loader2 className="h-3 w-3 animate-spin" /> Searching...
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {classRedemptions.length === 0 && addingRedemptionClass !== className && (
+                                <p className="text-xs text-muted-foreground ml-2">No items linked yet</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Looted By Section */}
               <div className="space-y-2">

@@ -25,6 +25,28 @@ export async function GET(
           orderBy: { lootDate: 'desc' },
           take: 20,
         },
+        tokenRedemptions: {
+          include: {
+            redemptionItem: {
+              include: {
+                lootRecords: {
+                  include: {
+                    player: {
+                      select: {
+                        id: true,
+                        name: true,
+                        class: true,
+                      },
+                    },
+                  },
+                  orderBy: { lootDate: 'desc' },
+                  take: 5,
+                },
+              },
+            },
+          },
+          orderBy: { className: 'asc' },
+        },
       },
     });
 

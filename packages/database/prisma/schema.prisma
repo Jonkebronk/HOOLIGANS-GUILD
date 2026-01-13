@@ -300,6 +300,10 @@ model Item {
   playerGear      PlayerGear[]
   tierTokenPieces TierTokenPiece[]
 
+  // Token redemption relations
+  tokenRedemptions    TokenRedemption[] @relation("TokenRedemptions")  // Items this token gives
+  redemptionFromToken TokenRedemption[] @relation("RedemptionItems")   // Tokens that give this item
+
   @@unique([wowheadId])
   @@index([raid])
   @@index([slot])
@@ -702,4 +706,25 @@ model SunmoteUpgrade {
   @@unique([baseItemName])
   @@index([slot])
   @@index([armorType])
+}
+
+// ============================================
+// TOKEN REDEMPTIONS
+// ============================================
+
+model TokenRedemption {
+  id               String   @id @default(cuid())
+  tokenItemId      String   // The token item (e.g., "Gloves of the Fallen Champion")
+  tokenItem        Item     @relation("TokenRedemptions", fields: [tokenItemId], references: [id], onDelete: Cascade)
+
+  redemptionItemId String   // The item you get (e.g., "Crystalforge Gauntlets")
+  redemptionItem   Item     @relation("RedemptionItems", fields: [redemptionItemId], references: [id], onDelete: Cascade)
+
+  className        String   // "Paladin", "Rogue", "Shaman"
+
+  createdAt        DateTime @default(now())
+
+  @@unique([tokenItemId, redemptionItemId])
+  @@index([tokenItemId])
+  @@index([className])
 }
