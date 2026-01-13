@@ -461,7 +461,7 @@ export default function ConsumablesPage() {
               <div className="space-y-2">
                 <Label>Select Consumable</Label>
                 <Select
-                  value={selectedConsumable?.id || ''}
+                  value=""
                   onValueChange={(id) => setSelectedConsumable(consumables.find((c) => c.id === id) || null)}
                 >
                   <SelectTrigger className="bg-[#111] border-gray-600">
