@@ -94,10 +94,17 @@ export const RAIDS = [
 ];
 
 // Token Types for Tier Sets
+// T4/T5 use Fallen Defender/Hero/Champion
+// T6 uses Forgotten Conqueror/Protector/Vanquisher (different class assignments!)
 export const TOKEN_TYPES: Record<string, string[]> = {
+  // T4 and T5 tokens
   'Fallen Defender': ['Druid', 'Priest', 'Warrior'],
   'Fallen Hero': ['Hunter', 'Mage', 'Warlock'],
   'Fallen Champion': ['Paladin', 'Rogue', 'Shaman'],
+  // T6 tokens (different class assignments!)
+  'Forgotten Conqueror': ['Paladin', 'Priest', 'Warlock'],
+  'Forgotten Protector': ['Hunter', 'Shaman', 'Warrior'],
+  'Forgotten Vanquisher': ['Druid', 'Mage', 'Rogue'],
 };
 
 // Gear Slots for Items - simplified slots (not BiS character slots)

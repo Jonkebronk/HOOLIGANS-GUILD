@@ -1,6 +1,5 @@
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { ExternalLink } from 'lucide-react';
 
 const TIER_ASSIGNMENTS = [
@@ -38,35 +37,29 @@ export default function AssignmentsPage() {
         <p className="text-muted-foreground">Raid encounter assignments by tier</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-2 max-w-2xl">
         {TIER_ASSIGNMENTS.map((tier) => (
           <a
             key={tier.tier}
             href={tier.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="block group"
+            className="flex items-center justify-between p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-muted/30 transition-all group"
           >
-            <Card className="h-full transition-all hover:shadow-lg hover:border-primary/50 cursor-pointer">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2
-                      className="text-xl font-bold mb-2"
-                      style={{ color: tier.color }}
-                    >
-                      {tier.tier}
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      {tier.raids}
-                    </p>
-                  </div>
-                  <ExternalLink
-                    className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-center gap-4">
+              <span
+                className="text-lg font-bold min-w-[80px]"
+                style={{ color: tier.color }}
+              >
+                {tier.tier}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {tier.raids}
+              </span>
+            </div>
+            <ExternalLink
+              className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors"
+            />
           </a>
         ))}
       </div>

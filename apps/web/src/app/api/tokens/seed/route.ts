@@ -5,7 +5,7 @@ import { TOKEN_TYPES } from '@hooligans/shared';
 // Icon names for tier tokens (from wowhead)
 const TOKEN_ICONS: Record<number, string> = {
   // T4 - Fallen tokens
-  29761: 'inv_gauntlets_27', 29759: 'inv_gauntlets_27', 29760: 'inv_gauntlets_27', // Head
+  29761: 'inv_helmet_24', 29759: 'inv_helmet_24', 29760: 'inv_helmet_24', // Head (Defender, Hero, Champion)
   29764: 'inv_shoulder_22', 29762: 'inv_shoulder_22', 29763: 'inv_shoulder_22', // Shoulder
   29753: 'inv_chest_chain_03', 29754: 'inv_chest_chain_03', 29755: 'inv_chest_chain_03', // Chest
   29758: 'inv_gauntlets_27', 29756: 'inv_gauntlets_27', 29757: 'inv_gauntlets_27', // Hands
@@ -16,12 +16,16 @@ const TOKEN_ICONS: Record<number, string> = {
   30237: 'inv_chest_chain_15', 30238: 'inv_chest_chain_15', 30236: 'inv_chest_chain_15', // Chest
   30240: 'inv_gauntlets_25', 30241: 'inv_gauntlets_25', 30239: 'inv_gauntlets_25', // Hands
   30246: 'inv_pants_mail_15', 30247: 'inv_pants_mail_15', 30245: 'inv_pants_mail_15', // Legs
-  // T6 - Forgotten tokens
-  31097: 'inv_helmet_30', 31095: 'inv_helmet_30', 31096: 'inv_helmet_30', // Head
+  // T6 - Forgotten tokens (Head, Shoulder, Chest, Hands, Legs from BT/Hyjal)
+  31097: 'inv_helmet_30', 31095: 'inv_helmet_30', 31096: 'inv_helmet_30', // Head (Conqueror, Protector, Vanquisher)
   31101: 'inv_shoulder_25', 31102: 'inv_shoulder_25', 31103: 'inv_shoulder_25', // Shoulder
   31089: 'inv_chest_plate04', 31090: 'inv_chest_plate04', 31091: 'inv_chest_plate04', // Chest
   31092: 'inv_gauntlets_26', 31093: 'inv_gauntlets_26', 31094: 'inv_gauntlets_26', // Hands
   31098: 'inv_pants_plate_12', 31099: 'inv_pants_plate_12', 31100: 'inv_pants_plate_12', // Legs
+  // T6 - Forgotten tokens (Wrist, Waist, Feet from Sunwell)
+  34848: 'inv_bracer_02', 34851: 'inv_bracer_02', 34852: 'inv_bracer_02', // Wrist
+  34853: 'inv_belt_13', 34854: 'inv_belt_13', 34855: 'inv_belt_13', // Waist
+  34856: 'inv_boots_chain_01', 34857: 'inv_boots_chain_01', 34858: 'inv_boots_chain_01', // Feet
 };
 
 // TBC Tier Token Data
@@ -71,22 +75,27 @@ const TIER_TOKENS = {
   T6: {
     phase: 'P3',
     tokens: [
-      { slot: 'Head', namePattern: 'Helm of the Forgotten', boss: 'Archimonde', raid: 'Mount Hyjal', wowheadIds: { 'Fallen Defender': 31097, 'Fallen Hero': 31095, 'Fallen Champion': 31096 } },
-      { slot: 'Shoulder', namePattern: 'Pauldrons of the Forgotten', boss: 'Mother Shahraz', raid: 'Black Temple', wowheadIds: { 'Fallen Defender': 31101, 'Fallen Hero': 31102, 'Fallen Champion': 31103 } },
-      { slot: 'Chest', namePattern: 'Chestguard of the Forgotten', boss: 'Illidan Stormrage', raid: 'Black Temple', wowheadIds: { 'Fallen Defender': 31089, 'Fallen Hero': 31090, 'Fallen Champion': 31091 } },
-      { slot: 'Hands', namePattern: 'Gloves of the Forgotten', boss: 'Azgalor', raid: 'Mount Hyjal', wowheadIds: { 'Fallen Defender': 31092, 'Fallen Hero': 31093, 'Fallen Champion': 31094 } },
-      { slot: 'Legs', namePattern: 'Leggings of the Forgotten', boss: 'The Illidari Council', raid: 'Black Temple', wowheadIds: { 'Fallen Defender': 31098, 'Fallen Hero': 31099, 'Fallen Champion': 31100 } },
+      // T6 uses Forgotten Conqueror/Protector/Vanquisher (different class distribution!)
+      { slot: 'Head', namePattern: 'Helm of the Forgotten', boss: 'Archimonde', raid: 'Mount Hyjal', wowheadIds: { 'Forgotten Conqueror': 31097, 'Forgotten Protector': 31095, 'Forgotten Vanquisher': 31096 } },
+      { slot: 'Shoulder', namePattern: 'Pauldrons of the Forgotten', boss: 'Mother Shahraz', raid: 'Black Temple', wowheadIds: { 'Forgotten Conqueror': 31101, 'Forgotten Protector': 31102, 'Forgotten Vanquisher': 31103 } },
+      { slot: 'Chest', namePattern: 'Chestguard of the Forgotten', boss: 'Illidan Stormrage', raid: 'Black Temple', wowheadIds: { 'Forgotten Conqueror': 31089, 'Forgotten Protector': 31090, 'Forgotten Vanquisher': 31091 } },
+      { slot: 'Hands', namePattern: 'Gloves of the Forgotten', boss: 'Azgalor', raid: 'Mount Hyjal', wowheadIds: { 'Forgotten Conqueror': 31092, 'Forgotten Protector': 31093, 'Forgotten Vanquisher': 31094 } },
+      { slot: 'Legs', namePattern: 'Leggings of the Forgotten', boss: 'The Illidari Council', raid: 'Black Temple', wowheadIds: { 'Forgotten Conqueror': 31098, 'Forgotten Protector': 31099, 'Forgotten Vanquisher': 31100 } },
+      // Sunwell tokens (P5)
+      { slot: 'Wrist', namePattern: 'Bracers of the Forgotten', boss: 'Kalecgos', raid: 'Sunwell Plateau', wowheadIds: { 'Forgotten Conqueror': 34848, 'Forgotten Protector': 34851, 'Forgotten Vanquisher': 34852 } },
+      { slot: 'Waist', namePattern: 'Belt of the Forgotten', boss: 'Brutallus', raid: 'Sunwell Plateau', wowheadIds: { 'Forgotten Conqueror': 34853, 'Forgotten Protector': 34854, 'Forgotten Vanquisher': 34855 } },
+      { slot: 'Feet', namePattern: 'Boots of the Forgotten', boss: 'Felmyst', raid: 'Sunwell Plateau', wowheadIds: { 'Forgotten Conqueror': 34856, 'Forgotten Protector': 34857, 'Forgotten Vanquisher': 34858 } },
     ],
     pieces: {
-      Druid: { Head: 'Thunderheart Cover', Shoulder: 'Thunderheart Pauldrons', Chest: 'Thunderheart Tunic', Hands: 'Thunderheart Gloves', Legs: 'Thunderheart Leggings' },
-      Priest: { Head: 'Cowl of Absolution', Shoulder: 'Shoulderpads of Absolution', Chest: 'Vestments of Absolution', Hands: 'Handguards of Absolution', Legs: 'Breeches of Absolution' },
-      Warrior: { Head: 'Onslaught Greathelm', Shoulder: 'Onslaught Shoulderguards', Chest: 'Onslaught Breastplate', Hands: 'Onslaught Handguards', Legs: 'Onslaught Legguards' },
-      Hunter: { Head: 'Gronnstalker\'s Helmet', Shoulder: 'Gronnstalker\'s Spaulders', Chest: 'Gronnstalker\'s Chestguard', Hands: 'Gronnstalker\'s Gloves', Legs: 'Gronnstalker\'s Leggings' },
-      Mage: { Head: 'Cowl of the Tempest', Shoulder: 'Mantle of the Tempest', Chest: 'Robes of the Tempest', Hands: 'Gloves of the Tempest', Legs: 'Leggings of the Tempest' },
-      Warlock: { Head: 'Hood of the Malefic', Shoulder: 'Mantle of the Malefic', Chest: 'Robe of the Malefic', Hands: 'Gloves of the Malefic', Legs: 'Leggings of the Malefic' },
-      Paladin: { Head: 'Lightbringer Greathelm', Shoulder: 'Lightbringer Shoulderguards', Chest: 'Lightbringer Chestguard', Hands: 'Lightbringer Handguards', Legs: 'Lightbringer Legguards' },
-      Rogue: { Head: 'Slayer\'s Helm', Shoulder: 'Slayer\'s Shoulderpads', Chest: 'Slayer\'s Chestguard', Hands: 'Slayer\'s Handguards', Legs: 'Slayer\'s Legguards' },
-      Shaman: { Head: 'Skyshatter Cover', Shoulder: 'Skyshatter Pauldrons', Chest: 'Skyshatter Tunic', Hands: 'Skyshatter Gloves', Legs: 'Skyshatter Leggings' },
+      Druid: { Head: 'Thunderheart Cover', Shoulder: 'Thunderheart Pauldrons', Chest: 'Thunderheart Tunic', Hands: 'Thunderheart Gloves', Legs: 'Thunderheart Leggings', Wrist: 'Thunderheart Wristguards', Waist: 'Thunderheart Belt', Feet: 'Thunderheart Boots' },
+      Priest: { Head: 'Cowl of Absolution', Shoulder: 'Shoulderpads of Absolution', Chest: 'Vestments of Absolution', Hands: 'Handguards of Absolution', Legs: 'Breeches of Absolution', Wrist: 'Cuffs of Absolution', Waist: 'Belt of Absolution', Feet: 'Boots of Absolution' },
+      Warrior: { Head: 'Onslaught Greathelm', Shoulder: 'Onslaught Shoulderguards', Chest: 'Onslaught Breastplate', Hands: 'Onslaught Handguards', Legs: 'Onslaught Legguards', Wrist: 'Onslaught Wristguards', Waist: 'Onslaught Belt', Feet: 'Onslaught Boots' },
+      Hunter: { Head: 'Gronnstalker\'s Helmet', Shoulder: 'Gronnstalker\'s Spaulders', Chest: 'Gronnstalker\'s Chestguard', Hands: 'Gronnstalker\'s Gloves', Legs: 'Gronnstalker\'s Leggings', Wrist: 'Gronnstalker\'s Bracers', Waist: 'Gronnstalker\'s Belt', Feet: 'Gronnstalker\'s Boots' },
+      Mage: { Head: 'Cowl of the Tempest', Shoulder: 'Mantle of the Tempest', Chest: 'Robes of the Tempest', Hands: 'Gloves of the Tempest', Legs: 'Leggings of the Tempest', Wrist: 'Bracers of the Tempest', Waist: 'Belt of the Tempest', Feet: 'Boots of the Tempest' },
+      Warlock: { Head: 'Hood of the Malefic', Shoulder: 'Mantle of the Malefic', Chest: 'Robe of the Malefic', Hands: 'Gloves of the Malefic', Legs: 'Leggings of the Malefic', Wrist: 'Bracers of the Malefic', Waist: 'Belt of the Malefic', Feet: 'Boots of the Malefic' },
+      Paladin: { Head: 'Lightbringer Greathelm', Shoulder: 'Lightbringer Shoulderguards', Chest: 'Lightbringer Chestguard', Hands: 'Lightbringer Handguards', Legs: 'Lightbringer Legguards', Wrist: 'Lightbringer Wristguards', Waist: 'Lightbringer Belt', Feet: 'Lightbringer Boots' },
+      Rogue: { Head: 'Slayer\'s Helm', Shoulder: 'Slayer\'s Shoulderpads', Chest: 'Slayer\'s Chestguard', Hands: 'Slayer\'s Handguards', Legs: 'Slayer\'s Legguards', Wrist: 'Slayer\'s Bracers', Waist: 'Slayer\'s Belt', Feet: 'Slayer\'s Boots' },
+      Shaman: { Head: 'Skyshatter Cover', Shoulder: 'Skyshatter Pauldrons', Chest: 'Skyshatter Tunic', Hands: 'Skyshatter Gloves', Legs: 'Skyshatter Leggings', Wrist: 'Skyshatter Wristguards', Waist: 'Skyshatter Belt', Feet: 'Skyshatter Boots' },
     },
   },
 };
