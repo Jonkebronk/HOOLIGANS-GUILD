@@ -17,15 +17,15 @@ const TOKEN_ICONS: Record<number, string> = {
   30240: 'inv_gauntlets_25', 30241: 'inv_gauntlets_25', 30239: 'inv_gauntlets_25', // Hands
   30246: 'inv_pants_mail_15', 30247: 'inv_pants_mail_15', 30245: 'inv_pants_mail_15', // Legs
   // T6 - Forgotten tokens (Head, Shoulder, Chest, Hands, Legs from BT/Hyjal)
-  31097: 'inv_helmet_30', 31095: 'inv_helmet_30', 31096: 'inv_helmet_30', // Head (Conqueror, Protector, Vanquisher)
-  31101: 'inv_shoulder_25', 31102: 'inv_shoulder_25', 31103: 'inv_shoulder_25', // Shoulder
-  31089: 'inv_chest_plate04', 31090: 'inv_chest_plate04', 31091: 'inv_chest_plate04', // Chest
-  31092: 'inv_gauntlets_26', 31093: 'inv_gauntlets_26', 31094: 'inv_gauntlets_26', // Hands
-  31098: 'inv_pants_plate_12', 31099: 'inv_pants_plate_12', 31100: 'inv_pants_plate_12', // Legs
+  31097: 'inv_helmet_24', 31095: 'inv_helmet_24', 31096: 'inv_helmet_24', // Head (Conqueror, Protector, Vanquisher)
+  31101: 'inv_shoulder_22', 31102: 'inv_shoulder_22', 31103: 'inv_shoulder_22', // Shoulder
+  31089: 'inv_chest_chain_03', 31090: 'inv_chest_chain_03', 31091: 'inv_chest_chain_03', // Chest
+  31092: 'inv_gauntlets_27', 31093: 'inv_gauntlets_27', 31094: 'inv_gauntlets_27', // Hands
+  31098: 'inv_pants_plate_17', 31099: 'inv_pants_plate_17', 31100: 'inv_pants_plate_17', // Legs
   // T6 - Forgotten tokens (Wrist, Waist, Feet from Sunwell)
-  34848: 'inv_bracer_02', 34851: 'inv_bracer_02', 34852: 'inv_bracer_02', // Wrist
-  34853: 'inv_belt_13', 34854: 'inv_belt_13', 34855: 'inv_belt_13', // Waist
-  34856: 'inv_boots_chain_01', 34857: 'inv_boots_chain_01', 34858: 'inv_boots_chain_01', // Feet
+  34848: 'inv_bracer_16', 34851: 'inv_bracer_16', 34852: 'inv_bracer_16', // Wrist
+  34853: 'inv_belt_31', 34854: 'inv_belt_31', 34855: 'inv_belt_31', // Waist
+  34856: 'inv_boots_plate_06', 34857: 'inv_boots_plate_06', 34858: 'inv_boots_plate_06', // Feet
 };
 
 // TBC Tier Token Data
