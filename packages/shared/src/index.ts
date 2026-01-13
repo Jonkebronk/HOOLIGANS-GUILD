@@ -107,6 +107,19 @@ export const GEAR_SLOTS = [
   'MainHand', 'OffHand', 'Ranged'
 ] as const;
 
+// Item Source Types
+export const ITEM_SOURCES = [
+  'Raid',
+  'Dungeon',
+  'Heroic',
+  'Vendor',
+  'Quest',
+  'Crafted',
+  'Badge of Justice',
+  'World Drop',
+  'Reputation',
+] as const;
+
 // Format spec name for display
 export function formatSpecName(spec: string): string {
   // DruidBalance -> Balance Druid

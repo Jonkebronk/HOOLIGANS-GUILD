@@ -17,14 +17,16 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check, Users, RefreshCw } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RAIDS, GEAR_SLOTS, CLASS_COLORS } from '@hooligans/shared';
+import { RAIDS, GEAR_SLOTS, CLASS_COLORS, ITEM_SOURCES } from '@hooligans/shared';
 import { getItemIconUrl, refreshWowheadTooltips, TBC_RAIDS, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { useTeam } from '@/components/providers/team-provider';
 import { getSpecShortNameColor } from '@/lib/specs';
@@ -93,7 +95,18 @@ export default function ItemsPage() {
   const [isSyncingBis, setIsSyncingBis] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
-  const [editForm, setEditForm] = useState({ boss: '', raid: '', lootPriority: '', bisFor: [] as string[], bisNextPhase: [] as string[] });
+  const [editForm, setEditForm] = useState({
+    name: '',
+    wowheadId: '',
+    slot: '',
+    phase: '',
+    quality: '4',
+    boss: '',
+    raid: '',
+    lootPriority: '',
+    bisFor: [] as string[],
+    bisNextPhase: [] as string[]
+  });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [loadingItemDetails, setLoadingItemDetails] = useState(false);
   const [players, setPlayers] = useState<{ id: string; name: string; class: string }[]>([]);
@@ -512,6 +525,11 @@ export default function ItemsPage() {
   const handleOpenEditDialog = async (item: Item) => {
     setEditingItem(item);
     setEditForm({
+      name: item.name || '',
+      wowheadId: item.wowheadId?.toString() || '',
+      slot: item.slot || '',
+      phase: item.phase || '',
+      quality: item.quality?.toString() || '4',
       boss: item.boss || '',
       raid: item.raid || '',
       lootPriority: item.lootPriority || '',
@@ -533,6 +551,11 @@ export default function ItemsPage() {
         const fullItem = await res.json();
         setEditingItem(fullItem);
         setEditForm({
+          name: fullItem.name || '',
+          wowheadId: fullItem.wowheadId?.toString() || '',
+          slot: fullItem.slot || '',
+          phase: fullItem.phase || '',
+          quality: fullItem.quality?.toString() || '4',
           boss: fullItem.boss || '',
           raid: fullItem.raid || '',
           lootPriority: fullItem.lootPriority || '',
@@ -554,6 +577,11 @@ export default function ItemsPage() {
     try {
       // Convert arrays to comma-separated strings for storage
       const dataToSave = {
+        name: editForm.name,
+        wowheadId: editForm.wowheadId ? parseInt(editForm.wowheadId) : null,
+        slot: editForm.slot,
+        phase: editForm.phase,
+        quality: parseInt(editForm.quality),
         boss: editForm.boss,
         raid: editForm.raid,
         lootPriority: editForm.lootPriority,
@@ -568,14 +596,13 @@ export default function ItemsPage() {
       });
 
       if (res.ok) {
-        // Update local state
-        setItems(items.map(item =>
-          item.id === editingItem.id
-            ? { ...item, ...dataToSave }
-            : item
-        ));
+        // Update local state - refresh items to get updated data
+        await fetchItems();
         setIsEditDialogOpen(false);
         setEditingItem(null);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to save item');
       }
     } catch (error) {
       console.error('Failed to save item:', error);
@@ -710,6 +737,17 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
                   />
                   <p className="text-xs text-muted-foreground">
                     Supported columns: Item Name/Name, Slot, Location/Raid, Boss/Source, Phase. First row should be headers.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Need item info? Search on{' '}
+                    <a
+                      href="https://www.wowhead.com/tbc"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:underline"
+                    >
+                      Wowhead TBC
+                    </a>
                   </p>
                 </div>
                 {csvImportResult && (
@@ -905,13 +943,22 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="raid">Raid</Label>
+                    <Label htmlFor="raid">Source</Label>
                     <Select value={newItem.raid} onValueChange={(value) => setNewItem({ ...newItem, raid: value })}>
-                      <SelectTrigger><SelectValue placeholder="Select raid" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Select source" /></SelectTrigger>
                       <SelectContent>
-                        {RAIDS.map((raid) => (
-                          <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
-                        ))}
+                        <SelectGroup>
+                          <SelectLabel>Raids</SelectLabel>
+                          {RAIDS.map((raid) => (
+                            <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
+                          ))}
+                        </SelectGroup>
+                        <SelectGroup>
+                          <SelectLabel>Other Sources</SelectLabel>
+                          {ITEM_SOURCES.filter(s => s !== 'Raid').map((source) => (
+                            <SelectItem key={source} value={source}>{source}</SelectItem>
+                          ))}
+                        </SelectGroup>
                       </SelectContent>
                     </Select>
                   </div>
@@ -994,13 +1041,22 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
             <Select value={raidFilter} onValueChange={setRaidFilter}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Raid" />
+                <SelectValue placeholder="Source" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Raids</SelectItem>
-                {RAIDS.map((raid) => (
-                  <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
-                ))}
+                <SelectItem value="all">All Sources</SelectItem>
+                <SelectGroup>
+                  <SelectLabel>Raids</SelectLabel>
+                  {RAIDS.map((raid) => (
+                    <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectGroup>
+                  <SelectLabel>Other Sources</SelectLabel>
+                  {ITEM_SOURCES.filter(s => s !== 'Raid').map((source) => (
+                    <SelectItem key={source} value={source}>{source}</SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
             <Select value={slotFilter} onValueChange={setSlotFilter}>
@@ -1237,7 +1293,7 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
               )}
             </DialogTitle>
             <DialogDescription>
-              Edit loot council information for this item.
+              Edit item details and loot council information.
             </DialogDescription>
           </DialogHeader>
 
@@ -1246,7 +1302,74 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
+              {/* Item Details Section */}
+              <div className="space-y-3 pb-3 border-b">
+                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Item Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Item Name</Label>
+                    <Input
+                      placeholder="e.g., Warglaive of Azzinoth"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Wowhead ID</Label>
+                    <Input
+                      placeholder="e.g., 32837"
+                      value={editForm.wowheadId}
+                      onChange={(e) => setEditForm({ ...editForm, wowheadId: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Slot</Label>
+                    <Select value={editForm.slot} onValueChange={(value) => setEditForm({ ...editForm, slot: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select slot" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GEAR_SLOTS.map((slot) => (
+                          <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Phase</Label>
+                    <Select value={editForm.phase} onValueChange={(value) => setEditForm({ ...editForm, phase: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Phase" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PHASES.map((phase) => (
+                          <SelectItem key={phase} value={phase}>{phase}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Quality</Label>
+                    <Select value={editForm.quality} onValueChange={(value) => setEditForm({ ...editForm, quality: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Quality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {QUALITIES.map((q) => (
+                          <SelectItem key={q.value} value={q.value}>
+                            <span style={{ color: q.color }}>{q.label}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Source Section */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Boss</Label>
@@ -1257,15 +1380,24 @@ Warglaive of Azzinoth,MainHand,Black Temple,Illidan Stormrage,P3`}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Raid</Label>
+                  <Label>Source</Label>
                   <Select value={editForm.raid} onValueChange={(value) => setEditForm({ ...editForm, raid: value })}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select raid" />
+                      <SelectValue placeholder="Select source" />
                     </SelectTrigger>
                     <SelectContent>
-                      {RAIDS.map((raid) => (
-                        <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
-                      ))}
+                      <SelectGroup>
+                        <SelectLabel>Raids</SelectLabel>
+                        {RAIDS.map((raid) => (
+                          <SelectItem key={raid.name} value={raid.name}>{raid.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Other Sources</SelectLabel>
+                        {ITEM_SOURCES.filter(s => s !== 'Raid').map((source) => (
+                          <SelectItem key={source} value={source}>{source}</SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>

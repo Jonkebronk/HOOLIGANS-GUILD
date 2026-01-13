@@ -39,7 +39,7 @@ export async function GET(
   }
 }
 
-// PATCH - Update item loot council info
+// PATCH - Update item (all fields)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -48,17 +48,24 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
-    const { boss, raid, lootPriority, bisFor, bisNextPhase } = body;
+    const { name, wowheadId, slot, phase, quality, boss, raid, lootPriority, bisFor, bisNextPhase } = body;
+
+    // Build update data object with only provided fields
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (wowheadId !== undefined) updateData.wowheadId = typeof wowheadId === 'string' ? parseInt(wowheadId) : wowheadId;
+    if (slot !== undefined) updateData.slot = slot;
+    if (phase !== undefined) updateData.phase = phase;
+    if (quality !== undefined) updateData.quality = typeof quality === 'string' ? parseInt(quality) : quality;
+    if (boss !== undefined) updateData.boss = boss;
+    if (raid !== undefined) updateData.raid = raid;
+    if (lootPriority !== undefined) updateData.lootPriority = lootPriority;
+    if (bisFor !== undefined) updateData.bisFor = bisFor;
+    if (bisNextPhase !== undefined) updateData.bisNextPhase = bisNextPhase;
 
     const item = await prisma.item.update({
       where: { id },
-      data: {
-        boss,
-        raid,
-        lootPriority,
-        bisFor,
-        bisNextPhase,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(item);

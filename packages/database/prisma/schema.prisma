@@ -603,3 +603,36 @@ model Application {
   @@index([class])
   @@index([discordId])
 }
+
+// ============================================
+// CONSUMABLES
+// ============================================
+
+model Consumable {
+  id          String   @id @default(cuid())
+  name        String
+  wowheadId   Int      @unique
+  icon        String?
+  type        String   // "flask", "elixir", "food", "potion", "weaponBuff", "misc"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  specConfigs ConsumableSpecConfig[]
+
+  @@index([type])
+}
+
+model ConsumableSpecConfig {
+  id           String     @id @default(cuid())
+  consumableId String
+  consumable   Consumable @relation(fields: [consumableId], references: [id], onDelete: Cascade)
+  spec         String     // e.g., "DruidGuardian", "PaladinProtection"
+  category     String     // "flasks", "food", "potions", "weaponBuffs", "misc"
+  priority     String     // "best" or "alternative"
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  @@unique([consumableId, spec, category])
+  @@index([spec])
+  @@index([category])
+}

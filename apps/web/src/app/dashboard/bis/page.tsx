@@ -58,6 +58,7 @@ type Player = {
   name: string;
   class: string;
   mainSpec: string;
+  notes?: string | null;
 };
 
 type BisItem = {
@@ -513,6 +514,11 @@ export default function BisListsPage() {
                         <div className="text-xs text-muted-foreground">
                           {player.mainSpec?.replace(player.class, '')}
                         </div>
+                        {player.notes && (
+                          <div className="text-xs text-yellow-500/80 truncate mt-0.5" title={player.notes}>
+                            {player.notes}
+                          </div>
+                        )}
                       </div>
                     </button>
                   ))
@@ -534,7 +540,7 @@ export default function BisListsPage() {
                           className="w-14 h-14 rounded-lg"
                           style={{ borderColor: CLASS_COLORS[selectedPlayer.class], borderWidth: 3 }}
                         />
-                        <div>
+                        <div className="flex-1 min-w-0">
                           <h2
                             className="text-xl font-bold"
                             style={{ color: CLASS_COLORS[selectedPlayer.class] }}
@@ -544,6 +550,11 @@ export default function BisListsPage() {
                           <p className="text-sm text-muted-foreground">
                             {selectedPlayer.mainSpec?.replace(selectedPlayer.class, '')} {selectedPlayer.class}
                           </p>
+                          {selectedPlayer.notes && (
+                            <p className="text-sm text-yellow-500 mt-1">
+                              {selectedPlayer.notes}
+                            </p>
+                          )}
                         </div>
                         <div className="ml-auto">
                           <Button variant="outline" size="sm" onClick={handleCopyFromPreset}>

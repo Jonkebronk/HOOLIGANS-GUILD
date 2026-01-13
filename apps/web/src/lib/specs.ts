@@ -103,7 +103,7 @@ export const CLASS_SPECS: ClassDefinition[] = [
     name: 'Warrior',
     color: '#C69B6D',
     specs: [
-      { id: 'WarriorArms', name: 'Arms', class: 'Warrior', role: 'Melee DPS' },
+      { id: 'WarriorArms', name: 'Kebab', class: 'Warrior', role: 'Melee DPS' },
       { id: 'WarriorFury', name: 'Fury', class: 'Warrior', role: 'Melee DPS' },
       { id: 'WarriorProtection', name: 'Protection', class: 'Warrior', role: 'Tank' },
     ],
@@ -165,7 +165,7 @@ export const SPEC_SHORT_NAMES: Record<string, string> = {
   'WarlockAffliction': 'Affli',
   'WarlockDemonology': 'Demo',
   'WarlockDestruction': 'Destro',
-  'WarriorArms': 'Arms',
+  'WarriorArms': 'Kebab',
   'WarriorFury': 'Fury',
   'WarriorProtection': 'Prot War',
 };
@@ -202,7 +202,7 @@ export const SPEC_SHORT_NAME_TO_CLASS: Record<string, WowClass> = {
   'Affli': 'Warlock',
   'Demo': 'Warlock',
   'Destro': 'Warlock',
-  'Arms': 'Warrior',
+  'Kebab': 'Warrior',
   'Fury': 'Warrior',
   'Prot War': 'Warrior',
 };
