@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Sword, Calendar, TrendingUp, Loader2, ExternalLink } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Users, Sword, Calendar, TrendingUp, Loader2, ExternalLink, Eye } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getItemIconUrl, getClassIconUrl, ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
 
@@ -288,6 +290,76 @@ export default function DashboardPage() {
                 <span className="text-sm font-medium flex-1">Sixty Upgrades</span>
                 <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group w-full text-left">
+                    <div className="w-6 h-6 rounded bg-green-600 flex items-center justify-center">
+                      <Eye className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span className="text-sm font-medium flex-1 text-green-400">Zoom Hack</span>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Eye className="w-5 h-5 text-green-500" />
+                      Improve your UI!
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 text-sm">
+                    <p className="text-muted-foreground">
+                      To improve your gameplay, it&apos;s essential to review your settings, especially Camera FoV and Zoom.
+                    </p>
+                    <p className="text-muted-foreground">
+                      Increasing your max zoom distance makes it much easier to avoid unnecessary damage from projectiles and reduces the chance of messing up tricky movement or skips.
+                    </p>
+                    <p className="text-muted-foreground">
+                      This console tweak boosts your zoom-out distance by up to 37%, letting you see harmful mechanics much earlier and respond more accurately.
+                    </p>
+
+                    <div className="space-y-3 pt-2">
+                      <h4 className="font-semibold text-foreground">Recommended Console Commands</h4>
+
+                      <div className="space-y-1">
+                        <p className="font-medium text-green-400">Zoom Hack:</p>
+                        <code className="block bg-secondary px-3 py-2 rounded text-xs font-mono">
+                          /console cameraDistanceMaxZoomFactor 2.6
+                        </code>
+                        <p className="text-xs text-muted-foreground">(Can have higher than 2.6, some use 4)</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="font-medium text-green-400">Zoom Smoothing:</p>
+                        <code className="block bg-secondary px-3 py-2 rounded text-xs font-mono">
+                          /console CameraReduceUnexpectedMovement 1
+                        </code>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="font-medium text-green-400">Sharpening Filter:</p>
+                        <code className="block bg-secondary px-3 py-2 rounded text-xs font-mono">
+                          /console set ResampleAlwaysSharpen 1
+                        </code>
+                      </div>
+                    </div>
+
+                    <a
+                      href="https://www.youtube.com/watch?v=OFpHIAe_MS4"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 mt-4 text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      <div className="w-5 h-5 rounded bg-red-600 flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium">Watch Video Guide</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
