@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Target, Lock, Plus, Settings } from 'lucide-react';
+import { Loader2, Target, Lock, Plus, Settings, Pencil, Check, X } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl, getItemIconUrl, refreshWowheadTooltips, ITEM_QUALITY_COLORS } from '@/lib/wowhead';
 import { ItemPickerModal } from '@/components/bis/item-picker-modal';
@@ -100,6 +101,10 @@ export default function BisListsPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [pickerContext, setPickerContext] = useState<'spec' | 'player'>('spec');
+
+  // Notes editing state
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesValue, setNotesValue] = useState('');
 
   // Load current phase from localStorage
   useEffect(() => {
@@ -203,6 +208,12 @@ export default function BisListsPage() {
       fetchPlayerBis(selectedPlayer.id, playerPhase);
     }
   }, [selectedPlayer, playerPhase, fetchPlayerBis]);
+
+  // Reset notes editing when player changes
+  useEffect(() => {
+    setEditingNotes(false);
+    setNotesValue('');
+  }, [selectedPlayer?.id]);
 
   // Refresh Wowhead tooltips
   useEffect(() => {
@@ -318,6 +329,42 @@ export default function BisListsPage() {
     }
 
     fetchPlayerBis(selectedPlayer.id, playerPhase);
+  };
+
+  // Start editing notes
+  const handleStartEditNotes = () => {
+    setNotesValue(selectedPlayer?.notes || '');
+    setEditingNotes(true);
+  };
+
+  // Save player notes
+  const handleSaveNotes = async () => {
+    if (!selectedPlayer) return;
+
+    try {
+      const res = await fetch(`/api/players/${selectedPlayer.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: notesValue }),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setSelectedPlayer({ ...selectedPlayer, notes: notesValue });
+        setPlayers(players.map(p =>
+          p.id === selectedPlayer.id ? { ...p, notes: notesValue } : p
+        ));
+        setEditingNotes(false);
+      }
+    } catch (error) {
+      console.error('Failed to save notes:', error);
+    }
+  };
+
+  // Cancel editing notes
+  const handleCancelNotes = () => {
+    setEditingNotes(false);
+    setNotesValue('');
   };
 
   const specData = getSpecById(selectedSpec);
@@ -550,11 +597,62 @@ export default function BisListsPage() {
                           <p className="text-sm text-muted-foreground">
                             {selectedPlayer.mainSpec?.replace(selectedPlayer.class, '')} {selectedPlayer.class}
                           </p>
-                          {selectedPlayer.notes && (
-                            <p className="text-sm text-yellow-500 mt-1">
-                              {selectedPlayer.notes}
-                            </p>
-                          )}
+                          {/* Player Notes - Editable */}
+                          <div className="mt-2">
+                            {editingNotes ? (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  value={notesValue}
+                                  onChange={(e) => setNotesValue(e.target.value)}
+                                  placeholder="Add loot council notes..."
+                                  className="h-8 text-sm max-w-md"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSaveNotes();
+                                    if (e.key === 'Escape') handleCancelNotes();
+                                  }}
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 text-green-500 hover:text-green-400"
+                                  onClick={handleSaveNotes}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
+                                  onClick={handleCancelNotes}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 group">
+                                {selectedPlayer.notes ? (
+                                  <p className="text-sm text-yellow-500">
+                                    {selectedPlayer.notes}
+                                  </p>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground italic">
+                                    No notes
+                                  </p>
+                                )}
+                                {isOfficer && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={handleStartEditNotes}
+                                  >
+                                    <Pencil className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="ml-auto">
                           <Button variant="outline" size="sm" onClick={handleCopyFromPreset}>
