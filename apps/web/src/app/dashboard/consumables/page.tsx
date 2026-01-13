@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Loader2, X, Pencil } from 'lucide-react';
+import { Plus, Loader2, X, Pencil, ChevronDown, ChevronRight } from 'lucide-react';
 import { refreshWowheadTooltips, getItemIconUrl } from '@/lib/wowhead';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getSpecIconUrl } from '@/lib/wowhead';
@@ -53,6 +53,13 @@ export default function ConsumablesPage() {
   const [assigning, setAssigning] = useState(false);
   const [wowheadUrl, setWowheadUrl] = useState('');
   const [assignType, setAssignType] = useState('');
+
+  // Collapsible state - default all collapsed
+  const [expandedRoles, setExpandedRoles] = useState<Record<string, boolean>>({});
+
+  const toggleRole = (roleId: string) => {
+    setExpandedRoles((prev) => ({ ...prev, [roleId]: !prev[roleId] }));
+  };
 
   useEffect(() => {
     fetchConsumables();
@@ -268,17 +275,25 @@ export default function ConsumablesPage() {
 
       {/* Role Sections */}
       {Object.entries(CONSUMABLE_ROLES).map(([roleId, role]) => {
+        const isExpanded = expandedRoles[roleId] || false;
         return (
           <Card key={roleId} className="bg-[#111] border-[#333]">
             <CardHeader
-              className="py-3"
+              className="py-3 cursor-pointer select-none"
               style={{ backgroundColor: role.color + '20', borderBottom: `2px solid ${role.color}` }}
+              onClick={() => toggleRole(roleId)}
             >
               <CardTitle className="flex items-center gap-2 text-lg" style={{ color: role.color }}>
+                {isExpanded ? (
+                  <ChevronDown className="h-5 w-5" />
+                ) : (
+                  <ChevronRight className="h-5 w-5" />
+                )}
                 <img src={role.icon} alt={role.name} className="h-5 w-5" />
                 {role.name}
               </CardTitle>
             </CardHeader>
+            {isExpanded && (
             <CardContent className="pt-4">
               <div className="flex gap-4 overflow-x-auto pb-2">
                 {role.specs.map((specId) => {
@@ -391,6 +406,7 @@ export default function ConsumablesPage() {
                 })}
               </div>
             </CardContent>
+            )}
           </Card>
         );
       })}
