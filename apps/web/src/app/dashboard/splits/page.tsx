@@ -201,8 +201,16 @@ export default function RaidSplitsPage() {
       if (raidNamesRes.ok) {
         const savedRaids = await raidNamesRes.json();
         if (Array.isArray(savedRaids) && savedRaids.length > 0) {
+          // Map frontend raid IDs to raid numbers
+          const raidNumberMap: Record<string, number> = {
+            'main-25': 0,
+            'split-10-1': 1,
+            'split-10-2': 2,
+            'split-10-3': 3,
+          };
           setRaids(prevRaids => prevRaids.map(raid => {
-            const savedRaid = savedRaids.find((sr: { id: string }) => sr.id === raid.id);
+            const raidNum = raidNumberMap[raid.id];
+            const savedRaid = savedRaids.find((sr: { raidNumber: number }) => sr.raidNumber === raidNum);
             return savedRaid ? { ...raid, name: savedRaid.name } : raid;
           }));
         }

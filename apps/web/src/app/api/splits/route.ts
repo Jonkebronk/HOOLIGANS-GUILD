@@ -84,6 +84,14 @@ export async function PUT(request: Request) {
   }
 }
 
+// Map raid IDs to raid numbers
+const RAID_NUMBER_MAP: Record<string, number> = {
+  'main-25': 0,
+  'split-10-1': 1,
+  'split-10-2': 2,
+  'split-10-3': 3,
+};
+
 // PATCH - Update raid name
 export async function PATCH(request: Request) {
   try {
@@ -94,35 +102,26 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'raidId and name are required' }, { status: 400 });
     }
 
-    // Check if this raid config exists for the team
-    let raidConfig = await prisma.raidSplit.findFirst({
+    const raidNumber = RAID_NUMBER_MAP[raidId] ?? 0;
+
+    // Use upsert to handle both create and update
+    const raidConfig = await prisma.raidSplit.upsert({
       where: {
-        id: raidId,
-        teamId: teamId || null,
+        raidNumber_teamId: {
+          raidNumber,
+          teamId: teamId,
+        },
+      },
+      update: {
+        name,
+      },
+      create: {
+        id: `${teamId}-${raidId}`,
+        name,
+        raidNumber,
+        teamId,
       },
     });
-
-    if (raidConfig) {
-      // Update existing
-      raidConfig = await prisma.raidSplit.update({
-        where: { id: raidConfig.id },
-        data: { name },
-      });
-    } else {
-      // Try to find by raidNumber pattern (for legacy support)
-      const raidNumberMatch = raidId.match(/(\d+)$/);
-      const raidNumber = raidNumberMatch ? parseInt(raidNumberMatch[1]) : 1;
-
-      // Create new raid config
-      raidConfig = await prisma.raidSplit.create({
-        data: {
-          id: raidId,
-          name,
-          raidNumber,
-          teamId: teamId || null,
-        },
-      });
-    }
 
     return NextResponse.json(raidConfig);
   } catch (error) {
