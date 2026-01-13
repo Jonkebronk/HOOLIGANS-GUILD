@@ -146,20 +146,15 @@ export async function POST() {
           });
 
           if (existing) {
-            // Update existing token - fix name, icon, and linked pieces
+            // Update existing token - fix name, icon, wowheadId
             const updateData: { name?: string; icon?: string; wowheadId?: number } = {};
 
-            // Fix name
             if (existing.name !== tokenName) {
               updateData.name = tokenName;
             }
-
-            // Fix icon
             if (TOKEN_ICONS[wowheadId] && existing.icon !== TOKEN_ICONS[wowheadId]) {
               updateData.icon = TOKEN_ICONS[wowheadId];
             }
-
-            // Fix wowheadId
             if (existing.wowheadId !== wowheadId) {
               updateData.wowheadId = wowheadId;
             }
@@ -171,19 +166,43 @@ export async function POST() {
               });
             }
 
-            // Delete existing linked pieces and recreate with correct classes
-            await prisma.tierTokenPiece.deleteMany({
+            // Get existing pieces to preserve itemId links
+            const existingPieces = await prisma.tierTokenPiece.findMany({
               where: { tokenId: existing.id },
             });
 
-            // Recreate linked pieces with correct classes
-            await prisma.tierTokenPiece.createMany({
-              data: classes.map((className) => ({
-                tokenId: existing.id,
-                className,
-                pieceName: tierData.pieces[className as keyof typeof tierData.pieces]?.[tokenInfo.slot as keyof (typeof tierData.pieces)['Druid']] || 'Unknown',
-              })),
-            });
+            // Delete pieces with wrong classes (not in expected classes list)
+            const wrongPieces = existingPieces.filter(p => !classes.includes(p.className));
+            if (wrongPieces.length > 0) {
+              await prisma.tierTokenPiece.deleteMany({
+                where: { id: { in: wrongPieces.map(p => p.id) } },
+              });
+            }
+
+            // Update or create pieces for each expected class
+            for (const className of classes) {
+              const expectedPieceName = tierData.pieces[className as keyof typeof tierData.pieces]?.[tokenInfo.slot as keyof (typeof tierData.pieces)['Druid']] || 'Unknown';
+              const existingPiece = existingPieces.find(p => p.className === className);
+
+              if (existingPiece) {
+                // Update pieceName if different, preserve itemId
+                if (existingPiece.pieceName !== expectedPieceName) {
+                  await prisma.tierTokenPiece.update({
+                    where: { id: existingPiece.id },
+                    data: { pieceName: expectedPieceName },
+                  });
+                }
+              } else {
+                // Create new piece for this class
+                await prisma.tierTokenPiece.create({
+                  data: {
+                    tokenId: existing.id,
+                    className,
+                    pieceName: expectedPieceName,
+                  },
+                });
+              }
+            }
 
             updated++;
             continue;
