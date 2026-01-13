@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check, Users, RefreshCw } from 'lucide-react';
+import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check, Users, RefreshCw, Download } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RAIDS, GEAR_SLOTS, CLASS_COLORS, ITEM_SOURCES } from '@hooligans/shared';
@@ -724,6 +724,12 @@ export default function ItemsPage() {
           <p className="text-muted-foreground">Manage raid items and BiS assignments</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => window.open('/api/items/export', '_blank')}
+          >
+            <Download className="h-4 w-4 mr-2" />Export CSV
+          </Button>
           <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline"><Upload className="h-4 w-4 mr-2" />Import Zone</Button>
