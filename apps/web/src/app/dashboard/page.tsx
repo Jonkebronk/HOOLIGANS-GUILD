@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Users, Sword, Calendar, TrendingUp, Loader2, ExternalLink, Eye, Zap } from 'lucide-react';
+import { ExternalLink, Eye, Zap } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
-import { getItemIconUrl, getClassIconUrl, ITEM_QUALITY_COLORS, refreshWowheadTooltips } from '@/lib/wowhead';
+import { getClassIconUrl } from '@/lib/wowhead';
+
+import { useTeam } from '@/components/providers/team-provider';
 
 // Class Discord server links
 const CLASS_DISCORDS: { name: string; url: string }[] = [
@@ -36,115 +36,9 @@ const WEAKAURA_LINKS: { name: string; url: string; isClass?: boolean }[] = [
   { name: 'Warrior', url: 'https://wago.io/search/imports/wow/tbc-weakaura?q=Warrior', isClass: true },
 ];
 
-import { useTeam } from '@/components/providers/team-provider';
-
-type LootRecord = {
-  id: string;
-  lootDate: string;
-  response: string;
-  item: {
-    id: string;
-    name: string;
-    wowheadId: number;
-    icon?: string;
-    quality: number;
-  };
-  player: {
-    id: string;
-    name: string;
-    class: string;
-  };
-};
-
-type Player = {
-  id: string;
-  name: string;
-  class: string;
-};
-
-const RESPONSE_LABELS: Record<string, string> = {
-  BiS: 'BiS',
-  GreaterUpgrade: 'Greater Upgrade',
-  MinorUpgrade: 'Minor Upgrade',
-  Offspec: 'Offspec',
-  PvP: 'PvP',
-  Disenchant: 'Disenchant',
-};
-
 export default function DashboardPage() {
   const { selectedTeam } = useTeam();
-  const [recentLoot, setRecentLoot] = useState<LootRecord[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (selectedTeam) {
-      setLoading(true);
-      Promise.all([fetchRecentLoot(), fetchPlayers()]).finally(() => setLoading(false));
-    }
-  }, [selectedTeam]);
-
-  useEffect(() => {
-    refreshWowheadTooltips();
-  }, [recentLoot]);
-
-  const fetchRecentLoot = async () => {
-    if (!selectedTeam) return;
-    try {
-      const res = await fetch(`/api/loot?teamId=${selectedTeam.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        // Get the 5 most recent
-        setRecentLoot(data.slice(0, 5));
-      }
-    } catch (error) {
-      console.error('Failed to fetch loot:', error);
-    }
-  };
-
-  const fetchPlayers = async () => {
-    if (!selectedTeam) return;
-    try {
-      const res = await fetch(`/api/players?teamId=${selectedTeam.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPlayers(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch players:', error);
-    }
-  };
-
-  const stats = [
-    {
-      name: 'Active Raiders',
-      value: players.length.toString(),
-      description: 'on roster',
-      icon: Users,
-      color: 'text-primary',
-    },
-    {
-      name: 'Items Distributed',
-      value: recentLoot.length > 0 ? recentLoot.length.toString() : '0',
-      description: 'recent items',
-      icon: Sword,
-      color: 'text-quality-epic',
-    },
-    {
-      name: 'Avg Attendance',
-      value: '0%',
-      description: 'Last 30 days',
-      icon: Calendar,
-      color: 'text-accent',
-    },
-    {
-      name: 'BiS Completion',
-      value: '0%',
-      description: 'Guild average',
-      icon: TrendingUp,
-      color: 'text-wow-hunter',
-    },
-  ];
+  const isPuG = selectedTeam?.name?.toLowerCase().includes('pug');
 
   return (
     <div
@@ -161,61 +55,9 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Welcome back! Here is your guild overview.</p>
       </div>
 
+      {/* Main Grid - Resources, WeakAuras, Class Discords */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.name}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.name}
-              </CardTitle>
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Class Discords</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              {CLASS_DISCORDS.map((cls) => (
-                <a
-                  key={cls.name}
-                  href={cls.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group"
-                >
-                  <img
-                    src={getClassIconUrl(cls.name)}
-                    alt={cls.name}
-                    className="w-6 h-6 rounded"
-                    style={{
-                      borderWidth: 1,
-                      borderStyle: 'solid',
-                      borderColor: CLASS_COLORS[cls.name] || '#888',
-                    }}
-                  />
-                  <span
-                    className="text-sm font-medium flex-1"
-                    style={{ color: CLASS_COLORS[cls.name] }}
-                  >
-                    {cls.name}
-                  </span>
-                  <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </a>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
+        {/* Resources Card */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Resources</CardTitle>
@@ -231,23 +73,9 @@ export default function DashboardPage() {
                 <img
                   src="https://www.wowsims.com/tbc/assets/img/logo.png"
                   alt="WoWSims"
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                 />
                 <span className="text-sm font-medium flex-1">WoWSims TBC</span>
-                <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </a>
-              <a
-                href="https://www.youtube.com/watch?v=5wYOVq0s9wY"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group"
-              >
-                <div className="w-6 h-6 rounded bg-red-600 flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                </div>
-                <span className="text-sm font-medium flex-1">How to Sim Guide</span>
                 <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
               <a
@@ -259,7 +87,7 @@ export default function DashboardPage() {
                 <img
                   src="https://wow.zamimg.com/images/logos/wh-mark-80x80.png"
                   alt="Wowhead"
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                 />
                 <span className="text-sm font-medium flex-1">Wowhead TBC</span>
                 <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -273,7 +101,7 @@ export default function DashboardPage() {
                 <img
                   src="https://assets.rpglogs.com/img/warcraft/favicon.png"
                   alt="Warcraft Logs"
-                  className="w-6 h-6"
+                  className="w-5 h-5"
                 />
                 <span className="text-sm font-medium flex-1">Warcraft Logs</span>
                 <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -284,17 +112,42 @@ export default function DashboardPage() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group"
               >
-                <div className="w-6 h-6 rounded bg-amber-600 flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">60</span>
+                <div className="w-5 h-5 rounded bg-amber-600 flex items-center justify-center">
+                  <span className="text-white text-[10px] font-bold">60</span>
                 </div>
                 <span className="text-sm font-medium flex-1">Sixty Upgrades</span>
+                <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Guides Card */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Guides</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              <a
+                href="https://www.youtube.com/watch?v=5wYOVq0s9wY"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group"
+              >
+                <div className="w-5 h-5 rounded bg-red-600 flex items-center justify-center">
+                  <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+                <span className="text-sm font-medium flex-1">How to Sim</span>
                 <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
               <Dialog>
                 <DialogTrigger asChild>
                   <button className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group w-full text-left">
-                    <div className="w-6 h-6 rounded bg-green-600 flex items-center justify-center">
-                      <Eye className="w-3.5 h-3.5 text-white" />
+                    <div className="w-5 h-5 rounded bg-green-600 flex items-center justify-center">
+                      <Eye className="w-3 h-3 text-white" />
                     </div>
                     <span className="text-sm font-medium flex-1 text-green-400">Zoom Hack</span>
                   </button>
@@ -308,33 +161,23 @@ export default function DashboardPage() {
                   </DialogHeader>
                   <div className="space-y-4 text-sm">
                     <p className="text-muted-foreground">
-                      To improve your gameplay, it&apos;s essential to review your settings, especially Camera FoV and Zoom.
+                      Increasing your max zoom distance makes it much easier to avoid damage from projectiles and reduces the chance of messing up tricky movement or skips.
                     </p>
-                    <p className="text-muted-foreground">
-                      Increasing your max zoom distance makes it much easier to avoid unnecessary damage from projectiles and reduces the chance of messing up tricky movement or skips.
-                    </p>
-                    <p className="text-muted-foreground">
-                      This console tweak boosts your zoom-out distance by up to 37%, letting you see harmful mechanics much earlier and respond more accurately.
-                    </p>
-
                     <div className="space-y-3 pt-2">
-                      <h4 className="font-semibold text-foreground">Recommended Console Commands</h4>
-
+                      <h4 className="font-semibold text-foreground">Console Commands</h4>
                       <div className="space-y-1">
                         <p className="font-medium text-green-400">Zoom Hack:</p>
                         <code className="block bg-secondary px-3 py-2 rounded text-xs font-mono">
                           /console cameraDistanceMaxZoomFactor 2.6
                         </code>
-                        <p className="text-xs text-muted-foreground">(Can have higher than 2.6, some use 4)</p>
+                        <p className="text-xs text-muted-foreground">(Can use higher than 2.6)</p>
                       </div>
-
                       <div className="space-y-1">
                         <p className="font-medium text-green-400">Zoom Smoothing:</p>
                         <code className="block bg-secondary px-3 py-2 rounded text-xs font-mono">
                           /console CameraReduceUnexpectedMovement 1
                         </code>
                       </div>
-
                       <div className="space-y-1">
                         <p className="font-medium text-green-400">Sharpening Filter:</p>
                         <code className="block bg-secondary px-3 py-2 rounded text-xs font-mono">
@@ -342,7 +185,6 @@ export default function DashboardPage() {
                         </code>
                       </div>
                     </div>
-
                     <a
                       href="https://www.youtube.com/watch?v=OFpHIAe_MS4"
                       target="_blank"
@@ -363,8 +205,8 @@ export default function DashboardPage() {
               <Dialog>
                 <DialogTrigger asChild>
                   <button className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group w-full text-left">
-                    <div className="w-6 h-6 rounded bg-yellow-600 flex items-center justify-center">
-                      <Zap className="w-3.5 h-3.5 text-white" />
+                    <div className="w-5 h-5 rounded bg-yellow-600 flex items-center justify-center">
+                      <Zap className="w-3 h-3 text-white" />
                     </div>
                     <span className="text-sm font-medium flex-1 text-yellow-400">Skip Bar</span>
                   </button>
@@ -378,41 +220,23 @@ export default function DashboardPage() {
                   </DialogHeader>
                   <div className="space-y-4 text-sm">
                     <p className="text-muted-foreground">
-                      We&apos;ll be using skips in T5, T6 and T6.5 to save time and stay competitive for top progression rankings during content releases.
+                      We use skips in T5, T6 and T6.5 to save time and stay competitive for top progression rankings.
                     </p>
-                    <p className="text-muted-foreground">
-                      In other raids, skips will be applied strategically, clearing trash when it helps us better position for boss encounters and optimize parsing performance.
-                    </p>
-                    <p className="text-muted-foreground">
-                      To succeed and minimize mistakes, we&apos;re all following the same setup.
-                    </p>
-
                     <div className="bg-secondary/50 border border-yellow-600/30 rounded-lg p-4">
-                      <p className="font-medium text-yellow-400 mb-2">Please follow this guide:</p>
+                      <p className="font-medium text-yellow-400 mb-2">Setup Guide:</p>
                       <a
                         href="https://docs.google.com/spreadsheets/d/1sXsIHAvNk8gkW0ezYBKVnJPwnqcF0g3LmkJqTMP3MEY/edit?gid=1407277678#gid=1407277678"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
                       >
-                        <div className="w-5 h-5 rounded bg-green-600 flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1.99 6H13V7h4.01v2zm0 4H13v-2h4.01v2zm-6 4H7v-2h4.01v2zm0-4H7v-2h4.01v2zm0-4H7V7h4.01v2zm6 8H13v-2h4.01v2z"/>
-                          </svg>
-                        </div>
                         <span className="font-medium">How to set up Skip Bar</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
-
-                    <div className="bg-red-950/30 border border-red-600/30 rounded-lg p-4">
-                      <p className="text-red-400 font-medium">
-                        Don&apos;t be the one who shows up unprepared on raid day.
-                      </p>
-                      <p className="text-muted-foreground mt-2 text-xs">
-                        Get everything set up ahead of time and watch the skip videos in the playbook to see exactly how it&apos;s done.
-                      </p>
-                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Get set up ahead of time and watch the skip videos in the playbook.
+                    </p>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -420,13 +244,14 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* WeakAuras Card */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">WeakAuras</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-1">
-              {WEAKAURA_LINKS.map((link) => (
+              {WEAKAURA_LINKS.slice(0, 2).map((link) => (
                 <a
                   key={link.name}
                   href={link.url}
@@ -434,22 +259,70 @@ export default function DashboardPage() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 p-1.5 rounded hover:bg-secondary/50 transition-colors group"
                 >
-                  {link.isClass ? (
+                  <div className="w-5 h-5 rounded bg-purple-600 flex items-center justify-center">
+                    <span className="text-white text-[10px] font-bold">W</span>
+                  </div>
+                  <span className="text-sm font-medium flex-1">{link.name}</span>
+                  <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </a>
+              ))}
+              <div className="pt-1 border-t border-border mt-1">
+                {WEAKAURA_LINKS.slice(2).map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 p-1 rounded hover:bg-secondary/50 transition-colors group"
+                  >
                     <img
                       src={getClassIconUrl(link.name)}
                       alt={link.name}
-                      className="w-5 h-5 rounded"
+                      className="w-4 h-4 rounded"
                     />
-                  ) : (
-                    <div className="w-5 h-5 rounded bg-purple-600 flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">W</span>
-                    </div>
-                  )}
+                    <span
+                      className="text-xs font-medium flex-1"
+                      style={{ color: CLASS_COLORS[link.name] }}
+                    >
+                      {link.name}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Class Discords Card */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Class Discords</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              {CLASS_DISCORDS.map((cls) => (
+                <a
+                  key={cls.name}
+                  href={cls.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-1 rounded hover:bg-secondary/50 transition-colors group"
+                >
+                  <img
+                    src={getClassIconUrl(cls.name)}
+                    alt={cls.name}
+                    className="w-5 h-5 rounded"
+                    style={{
+                      borderWidth: 1,
+                      borderStyle: 'solid',
+                      borderColor: CLASS_COLORS[cls.name] || '#888',
+                    }}
+                  />
                   <span
                     className="text-sm font-medium flex-1"
-                    style={{ color: link.isClass ? CLASS_COLORS[link.name] : undefined }}
+                    style={{ color: CLASS_COLORS[cls.name] }}
                   >
-                    {link.name}
+                    {cls.name}
                   </span>
                   <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
@@ -459,106 +332,43 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Loot Council Criteria - Only show for non-PuG teams */}
+      {!isPuG && (
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Loot</CardTitle>
-            <CardDescription>Latest items distributed by the loot council</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : recentLoot.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No loot recorded yet
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {recentLoot.map((loot) => (
-                  <div
-                    key={loot.id}
-                    className="flex items-center gap-3 py-2 border-b border-border last:border-0"
-                  >
-                    {/* Item Icon */}
-                    <a
-                      href={`https://www.wowhead.com/tbc/item=${loot.item.wowheadId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-wowhead={`item=${loot.item.wowheadId}&domain=tbc`}
-                    >
-                      <img
-                        src={getItemIconUrl(loot.item.icon || 'inv_misc_questionmark', 'medium')}
-                        alt={loot.item.name}
-                        className="w-9 h-9 rounded"
-                        style={{
-                          borderWidth: 2,
-                          borderStyle: 'solid',
-                          borderColor: ITEM_QUALITY_COLORS[loot.item.quality] || ITEM_QUALITY_COLORS[4]
-                        }}
-                      />
-                    </a>
-                    <div className="flex-1 min-w-0">
-                      <a
-                        href={`https://www.wowhead.com/tbc/item=${loot.item.wowheadId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-wowhead={`item=${loot.item.wowheadId}&domain=tbc`}
-                        className="font-medium hover:underline block truncate"
-                        style={{ color: ITEM_QUALITY_COLORS[loot.item.quality] || ITEM_QUALITY_COLORS[4] }}
-                      >
-                        {loot.item.name}
-                      </a>
-                      <p className="text-sm">
-                        <span style={{ color: CLASS_COLORS[loot.player?.class] }}>{loot.player?.name}</span>
-                        <span className="text-muted-foreground"> - {RESPONSE_LABELS[loot.response] || loot.response}</span>
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(loot.lootDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle>Loot Council Criteria</CardTitle>
             <CardDescription>How we evaluate loot distribution</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <CriteriaItem
-                title="Engagement"
-                description="Active participation in raids, strategy discussions, and consistent effort to improve."
-              />
-              <CriteriaItem
-                title="Attendance / Reliability"
-                description="Maintaining high presence and being prepared before raids start."
-              />
-              <CriteriaItem
-                title="Performance"
-                description="DPS/HPS output, teamwork, following strategies, and handling boss mechanics."
-              />
-              <CriteriaItem
-                title="Magnitude of Upgrade"
-                description="How much the item improves the character. BiS items are prioritized."
-              />
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="border-l-2 border-primary pl-3">
+                <h4 className="font-medium text-foreground text-sm">Engagement</h4>
+                <p className="text-xs text-muted-foreground">Active participation and effort to improve.</p>
+              </div>
+              <div className="border-l-2 border-primary pl-3">
+                <h4 className="font-medium text-foreground text-sm">Attendance</h4>
+                <p className="text-xs text-muted-foreground">High presence and being prepared for raids.</p>
+              </div>
+              <div className="border-l-2 border-primary pl-3">
+                <h4 className="font-medium text-foreground text-sm">Performance</h4>
+                <p className="text-xs text-muted-foreground">DPS/HPS, teamwork, and handling mechanics.</p>
+              </div>
+              <div className="border-l-2 border-primary pl-3">
+                <h4 className="font-medium text-foreground text-sm">Upgrade Value</h4>
+                <p className="text-xs text-muted-foreground">How much the item improves your character.</p>
+              </div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
 
+      {/* Leadership */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle>Leadership</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3">
             <LeadershipBadge name="Johnnypapa" role="Guildmaster" />
             <LeadershipBadge name="Shredd" role="Officer" />
             <LeadershipBadge name="Viktorin" role="Officer" />
@@ -571,24 +381,15 @@ export default function DashboardPage() {
   );
 }
 
-function CriteriaItem({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="border-l-2 border-primary pl-4">
-      <h4 className="font-medium text-foreground">{title}</h4>
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </div>
-  );
-}
-
 function LeadershipBadge({ name, role }: { name: string; role: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg bg-secondary px-4 py-2">
-      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-        <span className="text-sm font-medium text-primary">{name.slice(0, 2)}</span>
+    <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5">
+      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
+        <span className="text-xs font-medium text-primary">{name.slice(0, 2)}</span>
       </div>
       <div>
-        <p className="font-medium text-sm">{name}</p>
-        <p className="text-xs text-muted-foreground">{role}</p>
+        <p className="font-medium text-xs">{name}</p>
+        <p className="text-[10px] text-muted-foreground">{role}</p>
       </div>
     </div>
   );
