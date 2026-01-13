@@ -16,7 +16,7 @@ export const CLASS_COLORS: Record<string, string> = {
 
 // Class Specs
 export const CLASS_SPECS: Record<string, string[]> = {
-  Druid: ['DruidBalance', 'DruidRestoration', 'DruidFeral', 'DruidGuardian'],
+  Druid: ['DruidBalance', 'DruidRestoration', 'DruidDreamstate', 'DruidFeral', 'DruidGuardian'],
   Hunter: ['HunterMarksmanship', 'HunterSurvival', 'HunterBeastMastery'],
   Mage: ['MageArcane', 'MageFire', 'MageFrost'],
   Paladin: ['PaladinProtection', 'PaladinHoly', 'PaladinRetribution'],
@@ -37,6 +37,7 @@ export const SPEC_ROLES: Record<string, { role: string; subtype: string }> = {
 
   // Healers
   DruidRestoration: { role: 'Heal', subtype: 'Heal' },
+  DruidDreamstate: { role: 'Heal', subtype: 'Heal' },
   PaladinHoly: { role: 'Heal', subtype: 'Heal' },
   PriestDiscipline: { role: 'Heal', subtype: 'Heal' },
   PriestHoly: { role: 'Heal', subtype: 'Heal' },

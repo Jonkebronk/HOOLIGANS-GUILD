@@ -73,7 +73,7 @@ export function normalizeSpecName(spec: string, playerClass?: string): string {
   const normalizedClass = playerClass ? capitalizeClass(playerClass) : undefined;
 
   // Already in correct format
-  if (spec.match(/^(Druid|Hunter|Mage|Paladin|Priest|Rogue|Shaman|Warlock|Warrior)(Balance|Feral|Guardian|Restoration|Dreamstate|BeastMastery|Marksmanship|Survival|Arcane|Fire|Frost|Holy|Protection|Retribution|Discipline|Shadow|Assassination|Combat|Subtlety|Elemental|Enhancement|Affliction|Demonology|Destruction|Arms|Fury)$/)) {
+  if (spec.match(/^(Druid|Hunter|Mage|Paladin|Priest|Rogue|Shaman|Warlock|Warrior)(Balance|Feral|Guardian|Restoration|Dreamstate|BeastMastery|Marksmanship|Survival|Arcane|Fire|Frost|Holy|Protection|Retribution|Discipline|Shadow|Assassination|Combat|Subtlety|Elemental|Enhancement|Affliction|Demonology|Destruction|Arms|Fury|Kebab)$/)) {
     return spec;
   }
 
@@ -127,11 +127,11 @@ export function normalizeSpecName(spec: string, playerClass?: string): string {
     'mut': 'Assassination',
     'assassination': 'Assassination',
     'arms': 'Arms',
+    'kebab': 'Arms',  // Kebab is same as Arms
     'fury': 'Fury',
     'arcane': 'Arcane',
     'fire': 'Fire',
     'frost': 'Frost',
-    // Dreamstate is its own spec
     'dreamstate': 'Dreamstate',
   };
 
@@ -159,7 +159,7 @@ export function normalizeSpecName(spec: string, playerClass?: string): string {
     const validSpecs = ['Balance', 'Feral', 'Guardian', 'Restoration', 'Dreamstate', 'BeastMastery', 'Marksmanship', 'Survival',
                         'Arcane', 'Fire', 'Frost', 'Holy', 'Protection', 'Retribution', 'Discipline', 'Shadow',
                         'Assassination', 'Combat', 'Subtlety', 'Elemental', 'Enhancement', 'Affliction',
-                        'Demonology', 'Destruction', 'Arms', 'Fury'];
+                        'Demonology', 'Destruction', 'Arms', 'Fury', 'Kebab'];
 
     for (const validSpec of validSpecs) {
       if (spec.toLowerCase() === validSpec.toLowerCase()) {
@@ -212,6 +212,7 @@ export function getSpecIconUrl(spec: string, playerClass?: string) {
     WarlockDestruction: 'spell_shadow_rainoffire',
     // Warrior
     WarriorArms: 'ability_warrior_savageblow',
+    WarriorKebab: 'ability_warrior_savageblow',
     WarriorFury: 'ability_warrior_innerrage',
     WarriorProtection: 'ability_warrior_defensivestance',
   };

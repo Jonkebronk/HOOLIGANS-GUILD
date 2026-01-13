@@ -8,6 +8,7 @@ const SPEC_TO_WOWSIMS: Record<string, { classDir: string; specFile: string }> = 
   DruidFeral: { classDir: 'feral_druid', specFile: 'feral' },
   DruidGuardian: { classDir: 'feral_tank_druid', specFile: 'feral' },
   DruidRestoration: { classDir: 'balance_druid', specFile: 'balance' }, // No resto sim
+  DruidDreamstate: { classDir: 'balance_druid', specFile: 'balance' }, // Same as Resto (no sim)
 
   // Hunter
   HunterBeastMastery: { classDir: 'hunter', specFile: 'bm' },
@@ -46,6 +47,7 @@ const SPEC_TO_WOWSIMS: Record<string, { classDir: string; specFile: string }> = 
 
   // Warrior
   WarriorArms: { classDir: 'warrior', specFile: 'arms' },
+  WarriorKebab: { classDir: 'warrior', specFile: 'arms' },  // Same as Arms
   WarriorFury: { classDir: 'warrior', specFile: 'fury' },
   WarriorProtection: { classDir: 'protection_warrior', specFile: 'prot' },
 };

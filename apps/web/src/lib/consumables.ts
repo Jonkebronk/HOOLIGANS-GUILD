@@ -10,7 +10,7 @@ export const CONSUMABLE_ROLES = {
     name: 'Healers',
     icon: '/icons/roles/healer.png',
     color: '#22c55e', // green
-    specs: ['DruidRestoration', 'PaladinHoly', 'PriestHoly', 'ShamanRestoration'],
+    specs: ['DruidRestoration', 'DruidDreamstate', 'PaladinHoly', 'PriestHoly', 'ShamanRestoration'],
   },
   physicalDps: {
     name: 'Melee DPS',
@@ -22,6 +22,7 @@ export const CONSUMABLE_ROLES = {
       'RogueCombat',
       'ShamanEnhancement',
       'WarriorArms',
+      'WarriorKebab',
       'WarriorFury',
     ],
   },
@@ -70,6 +71,7 @@ export const SPEC_DISPLAY_NAMES: Record<string, string> = {
   DruidFeral: 'Feral',
   DruidGuardian: 'Guardian',
   DruidRestoration: 'Restoration',
+  DruidDreamstate: 'Dreamstate',
   // Hunter
   HunterBeastMastery: 'Beast Mastery',
   HunterMarksmanship: 'Marksmanship',
@@ -100,6 +102,7 @@ export const SPEC_DISPLAY_NAMES: Record<string, string> = {
   WarlockDestruction: 'Destruction',
   // Warrior
   WarriorArms: 'Arms',
+  WarriorKebab: 'Kebab',
   WarriorFury: 'Fury',
   WarriorProtection: 'Protection',
 };
