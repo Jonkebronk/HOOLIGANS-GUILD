@@ -54,6 +54,12 @@ type TokenRedemption = {
   };
 };
 
+type BisPlayer = {
+  id: string;
+  name: string;
+  class: string;
+};
+
 type Item = {
   id: string;
   name: string;
@@ -70,6 +76,7 @@ type Item = {
   bisSpecs: { id: string; spec: string }[];
   lootRecords?: LootRecord[];
   tokenRedemptions?: TokenRedemption[];
+  bisPlayersFromList?: BisPlayer[];
 };
 
 // Token type mappings
@@ -1492,7 +1499,7 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                       </Button>
                     </div>
                     {/* Bottom Row: Loot Council Info */}
-                    {(item.lootPriority || item.bisFor || item.bisNextPhase || (item.lootRecords && item.lootRecords.length > 0)) && (
+                    {(item.lootPriority || (item.bisPlayersFromList && item.bisPlayersFromList.length > 0) || item.bisNextPhase || (item.lootRecords && item.lootRecords.length > 0)) && (
                       <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2 ml-13 pl-[52px] text-xs">
                         {item.lootPriority && (
                           <div>
@@ -1500,22 +1507,19 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                             <span className="text-yellow-500">{item.lootPriority}</span>
                           </div>
                         )}
-                        {item.bisFor && (
+                        {item.bisPlayersFromList && item.bisPlayersFromList.length > 0 && (
                           <div className="flex items-center gap-1">
                             <span className="text-muted-foreground">BiS: </span>
                             <div className="flex flex-wrap gap-1">
-                              {item.bisFor.split(', ').map((spec) => {
-                                const color = getSpecShortNameColor(spec);
-                                return (
-                                  <span
-                                    key={spec}
-                                    className="px-1.5 py-0.5 rounded text-xs"
-                                    style={{ backgroundColor: `${color}20`, color }}
-                                  >
-                                    {spec}
-                                  </span>
-                                );
-                              })}
+                              {item.bisPlayersFromList.map((player) => (
+                                <span
+                                  key={player.id}
+                                  className="px-1.5 py-0.5 rounded text-xs"
+                                  style={{ backgroundColor: `${CLASS_COLORS[player.class]}20`, color: CLASS_COLORS[player.class] }}
+                                >
+                                  {player.name}
+                                </span>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -1723,75 +1727,30 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
               </div>
 
               <div className="space-y-2">
-                <Label>BiS For (Current Phase)</Label>
-                <div className="bg-muted/50 rounded-md p-3 max-h-40 overflow-y-auto">
-                  {players.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      {players.map((player) => (
-                        <label
+                <Label>BiS For (From Player Lists)</Label>
+                <div className="bg-muted/50 rounded-md p-3">
+                  {editingItem?.bisPlayersFromList && editingItem.bisPlayersFromList.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {editingItem.bisPlayersFromList.map((player) => (
+                        <span
                           key={player.id}
-                          className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded p-1"
+                          className="px-2 py-1 rounded text-sm"
+                          style={{ backgroundColor: `${CLASS_COLORS[player.class]}20`, color: CLASS_COLORS[player.class] }}
                         >
-                          <Checkbox
-                            checked={editForm.bisFor.includes(player.name)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setEditForm({ ...editForm, bisFor: [...editForm.bisFor, player.name] });
-                              } else {
-                                setEditForm({ ...editForm, bisFor: editForm.bisFor.filter(n => n !== player.name) });
-                              }
-                            }}
-                          />
-                          <span style={{ color: CLASS_COLORS[player.class] }}>{player.name}</span>
-                        </label>
+                          {player.name}
+                        </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">Loading players...</p>
+                    <p className="text-sm text-muted-foreground">No players have this item as BiS</p>
                   )}
                 </div>
-                {editForm.bisFor.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {editForm.bisFor.join(', ')}
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  Auto-populated from Player BiS Lists
+                </p>
               </div>
 
-              <div className="space-y-2">
-                <Label>BiS Next Phase</Label>
-                <div className="bg-muted/50 rounded-md p-3 max-h-40 overflow-y-auto">
-                  {players.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      {players.map((player) => (
-                        <label
-                          key={player.id}
-                          className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded p-1"
-                        >
-                          <Checkbox
-                            checked={editForm.bisNextPhase.includes(player.name)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setEditForm({ ...editForm, bisNextPhase: [...editForm.bisNextPhase, player.name] });
-                              } else {
-                                setEditForm({ ...editForm, bisNextPhase: editForm.bisNextPhase.filter(n => n !== player.name) });
-                              }
-                            }}
-                          />
-                          <span style={{ color: CLASS_COLORS[player.class] }}>{player.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Loading players...</p>
-                  )}
-                </div>
-                {editForm.bisNextPhase.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {editForm.bisNextPhase.join(', ')}
-                  </p>
-                )}
-              </div>
-
+              
               {/* Token Redemption Items Section */}
               {isTokenItem(editingItem) && editingItem && (
                 <div className="space-y-3 pb-3 border-b">

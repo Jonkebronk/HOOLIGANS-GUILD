@@ -53,10 +53,77 @@ export async function GET() {
           orderBy: { lootDate: 'desc' },
           take: 5,
         },
+        tokenRedemptions: {
+          include: {
+            redemptionItem: {
+              select: {
+                id: true,
+                wowheadId: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { name: 'asc' },
     });
-    return NextResponse.json(items);
+
+    // Get all player BiS configurations to match against items
+    const allBisConfigs = await prisma.playerBisConfiguration.findMany({
+      where: { phase: 'P5' }, // Current phase
+      include: {
+        player: {
+          select: {
+            id: true,
+            name: true,
+            class: true,
+          },
+        },
+      },
+    });
+
+    // Create a map of wowheadId -> players who have it as BiS
+    const bisPlayersByWowheadId = new Map<number, { id: string; name: string; class: string }[]>();
+    for (const config of allBisConfigs) {
+      if (config.wowheadId && config.player) {
+        const existing = bisPlayersByWowheadId.get(config.wowheadId) || [];
+        if (!existing.find(p => p.id === config.player.id)) {
+          existing.push(config.player);
+        }
+        bisPlayersByWowheadId.set(config.wowheadId, existing);
+      }
+    }
+
+    // Enrich items with BiS player info
+    const enrichedItems = items.map(item => {
+      const bisPlayersFromList: { id: string; name: string; class: string }[] = [];
+
+      // Check if item itself is BiS for any players
+      if (item.wowheadId) {
+        const players = bisPlayersByWowheadId.get(item.wowheadId) || [];
+        bisPlayersFromList.push(...players);
+      }
+
+      // For tokens, also check redemption items
+      if (item.tokenRedemptions && item.tokenRedemptions.length > 0) {
+        for (const redemption of item.tokenRedemptions) {
+          if (redemption.redemptionItem.wowheadId) {
+            const players = bisPlayersByWowheadId.get(redemption.redemptionItem.wowheadId) || [];
+            for (const player of players) {
+              if (!bisPlayersFromList.find(p => p.id === player.id)) {
+                bisPlayersFromList.push(player);
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        ...item,
+        bisPlayersFromList,
+      };
+    });
+
+    return NextResponse.json(enrichedItems);
   } catch (error) {
     console.error('Failed to fetch items:', error);
     return NextResponse.json({ error: 'Failed to fetch items' }, { status: 500 });

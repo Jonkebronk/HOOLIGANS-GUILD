@@ -353,9 +353,6 @@ export function ItemsTable({
                                       const lootedBy = redemption.redemptionItem.lootRecords
                                         ?.filter(r => r.player)
                                         .map(r => r.player!);
-                                      const bisPlayers = redemption.redemptionItem.bisFor
-                                        ? redemption.redemptionItem.bisFor.split(',').map(s => s.trim()).filter(Boolean)
-                                        : [];
 
                                       return (
                                         <div key={redemption.id} className="flex items-center gap-2 flex-wrap">
@@ -394,19 +391,6 @@ export function ItemsTable({
                                                 </span>
                                               ))}
                                               )
-                                            </span>
-                                          )}
-                                          {bisPlayers.length > 0 && (
-                                            <span className="text-xs">
-                                              <span className="text-muted-foreground">BiS:</span>{' '}
-                                              {bisPlayers.slice(0, 2).map((name, i) => (
-                                                <span key={name} className="text-purple-400">
-                                                  {i > 0 && ', '}{name}
-                                                </span>
-                                              ))}
-                                              {bisPlayers.length > 2 && (
-                                                <span className="text-muted-foreground"> +{bisPlayers.length - 2}</span>
-                                              )}
                                             </span>
                                           )}
                                         </div>
