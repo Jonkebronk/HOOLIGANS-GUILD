@@ -74,47 +74,60 @@ export async function GET(request: Request) {
       },
     });
 
-    // Create a map of wowheadId -> players who have it as BiS
+    // Create separate maps for current phase (P1) and next phases (P2+)
     const bisPlayersByWowheadId = new Map<number, { id: string; name: string; class: string }[]>();
+    const bisNextPlayersByWowheadId = new Map<number, { id: string; name: string; class: string }[]>();
+
     for (const config of allBisConfigs) {
       if (config.wowheadId && config.player) {
-        const existing = bisPlayersByWowheadId.get(config.wowheadId) || [];
+        // P1 goes to current BiS, P2+ goes to next BiS
+        const targetMap = config.phase === 'P1' ? bisPlayersByWowheadId : bisNextPlayersByWowheadId;
+        const existing = targetMap.get(config.wowheadId) || [];
         if (!existing.find(p => p.id === config.player.id)) {
           existing.push(config.player);
         }
-        bisPlayersByWowheadId.set(config.wowheadId, existing);
+        targetMap.set(config.wowheadId, existing);
       }
     }
 
-    // Enrich loot records with BiS player info
-    const enrichedRecords = lootRecords.map(record => {
-      const bisPlayers: { id: string; name: string; class: string }[] = [];
+    // Helper to get players from a map for an item
+    const getPlayersForItem = (
+      item: typeof lootRecords[0]['item'],
+      playerMap: Map<number, { id: string; name: string; class: string }[]>
+    ) => {
+      const players: { id: string; name: string; class: string }[] = [];
 
-      if (record.item) {
-        // Check if item itself is BiS for any players
-        if (record.item.wowheadId) {
-          const players = bisPlayersByWowheadId.get(record.item.wowheadId) || [];
-          bisPlayers.push(...players);
-        }
+      if (!item) return players;
 
-        // For tokens, also check redemption items
-        if (record.item.tokenRedemptions && record.item.tokenRedemptions.length > 0) {
-          for (const redemption of record.item.tokenRedemptions) {
-            if (redemption.redemptionItem.wowheadId) {
-              const players = bisPlayersByWowheadId.get(redemption.redemptionItem.wowheadId) || [];
-              for (const player of players) {
-                if (!bisPlayers.find(p => p.id === player.id)) {
-                  bisPlayers.push(player);
-                }
+      // Check if item itself is BiS for any players
+      if (item.wowheadId) {
+        const itemPlayers = playerMap.get(item.wowheadId) || [];
+        players.push(...itemPlayers);
+      }
+
+      // For tokens, also check redemption items
+      if (item.tokenRedemptions && item.tokenRedemptions.length > 0) {
+        for (const redemption of item.tokenRedemptions) {
+          if (redemption.redemptionItem.wowheadId) {
+            const redemptionPlayers = playerMap.get(redemption.redemptionItem.wowheadId) || [];
+            for (const player of redemptionPlayers) {
+              if (!players.find(p => p.id === player.id)) {
+                players.push(player);
               }
             }
           }
         }
       }
 
+      return players;
+    };
+
+    // Enrich loot records with BiS player info
+    const enrichedRecords = lootRecords.map(record => {
       return {
         ...record,
-        bisPlayersFromList: bisPlayers,
+        bisPlayersFromList: getPlayersForItem(record.item, bisPlayersByWowheadId),
+        bisNextPlayersFromList: getPlayersForItem(record.item, bisNextPlayersByWowheadId),
       };
     });
 

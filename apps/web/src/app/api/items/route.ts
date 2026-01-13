@@ -88,45 +88,55 @@ export async function GET(request: Request) {
       },
     });
 
-    // Create a map of wowheadId -> players who have it as BiS
+    // Create separate maps for current phase (P1) and next phases (P2+)
     const bisPlayersByWowheadId = new Map<number, { id: string; name: string; class: string }[]>();
+    const bisNextPlayersByWowheadId = new Map<number, { id: string; name: string; class: string }[]>();
+
     for (const config of allBisConfigs) {
       if (config.wowheadId && config.player) {
-        const existing = bisPlayersByWowheadId.get(config.wowheadId) || [];
+        const targetMap = config.phase === 'P1' ? bisPlayersByWowheadId : bisNextPlayersByWowheadId;
+        const existing = targetMap.get(config.wowheadId) || [];
         if (!existing.find(p => p.id === config.player.id)) {
           existing.push(config.player);
         }
-        bisPlayersByWowheadId.set(config.wowheadId, existing);
+        targetMap.set(config.wowheadId, existing);
       }
     }
 
-    // Enrich items with BiS player info
-    const enrichedItems = items.map(item => {
-      const bisPlayersFromList: { id: string; name: string; class: string }[] = [];
+    // Helper to get players from a map for an item
+    const getPlayersForItem = (
+      item: typeof items[0],
+      playerMap: Map<number, { id: string; name: string; class: string }[]>
+    ) => {
+      const players: { id: string; name: string; class: string }[] = [];
 
-      // Check if item itself is BiS for any players
       if (item.wowheadId) {
-        const players = bisPlayersByWowheadId.get(item.wowheadId) || [];
-        bisPlayersFromList.push(...players);
+        const itemPlayers = playerMap.get(item.wowheadId) || [];
+        players.push(...itemPlayers);
       }
 
-      // For tokens, also check redemption items
       if (item.tokenRedemptions && item.tokenRedemptions.length > 0) {
         for (const redemption of item.tokenRedemptions) {
           if (redemption.redemptionItem.wowheadId) {
-            const players = bisPlayersByWowheadId.get(redemption.redemptionItem.wowheadId) || [];
-            for (const player of players) {
-              if (!bisPlayersFromList.find(p => p.id === player.id)) {
-                bisPlayersFromList.push(player);
+            const redemptionPlayers = playerMap.get(redemption.redemptionItem.wowheadId) || [];
+            for (const player of redemptionPlayers) {
+              if (!players.find(p => p.id === player.id)) {
+                players.push(player);
               }
             }
           }
         }
       }
 
+      return players;
+    };
+
+    // Enrich items with BiS player info
+    const enrichedItems = items.map(item => {
       return {
         ...item,
-        bisPlayersFromList,
+        bisPlayersFromList: getPlayersForItem(item, bisPlayersByWowheadId),
+        bisNextPlayersFromList: getPlayersForItem(item, bisNextPlayersByWowheadId),
       };
     });
 

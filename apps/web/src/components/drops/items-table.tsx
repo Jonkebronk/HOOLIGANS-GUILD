@@ -58,6 +58,7 @@ type LootItem = {
   bisPlayers?: string[];
   bisNextPhasePlayers?: string[];
   bisPlayersFromList?: BisPlayer[];
+  bisNextPlayersFromList?: BisPlayer[];
   tokenRedemptions?: TokenRedemption[];
 };
 
@@ -309,17 +310,18 @@ export function ItemsTable({
               </td>
               <td className="py-1.5 px-2">
                 <div className="flex flex-wrap gap-1">
-                  {item.bisNextPhasePlayers?.slice(0, 2).map((name) => (
+                  {(item.bisNextPlayersFromList || []).slice(0, 2).map((player) => (
                     <span
-                      key={name}
-                      className="px-1.5 py-0.5 text-xs font-medium rounded bg-blue-500/30 text-blue-300 border border-blue-500/50"
+                      key={player.id}
+                      className="px-1.5 py-0.5 text-xs font-medium rounded bg-blue-500/30 border border-blue-500/50"
+                      style={{ color: CLASS_COLORS[player.class] || '#60a5fa' }}
                     >
-                      {name}
+                      {player.name}
                     </span>
                   ))}
-                  {(item.bisNextPhasePlayers?.length || 0) > 2 && (
+                  {(item.bisNextPlayersFromList?.length || 0) > 2 && (
                     <span className="px-1.5 py-0.5 text-xs rounded bg-muted text-muted-foreground">
-                      +{(item.bisNextPhasePlayers?.length || 0) - 2}
+                      +{(item.bisNextPlayersFromList?.length || 0) - 2}
                     </span>
                   )}
                 </div>
