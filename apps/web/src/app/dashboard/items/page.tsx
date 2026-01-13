@@ -60,6 +60,9 @@ type Item = {
 
 const PHASES = ['P1', 'P2', 'P3', 'P4', 'P5'];
 const QUALITIES = [
+  { value: '0', label: 'Poor (Gray)', color: ITEM_QUALITY_COLORS[0] },
+  { value: '1', label: 'Common (White)', color: ITEM_QUALITY_COLORS[1] },
+  { value: '2', label: 'Uncommon (Green)', color: ITEM_QUALITY_COLORS[2] },
   { value: '3', label: 'Rare (Blue)', color: ITEM_QUALITY_COLORS[3] },
   { value: '4', label: 'Epic (Purple)', color: ITEM_QUALITY_COLORS[4] },
   { value: '5', label: 'Legendary (Orange)', color: ITEM_QUALITY_COLORS[5] },
