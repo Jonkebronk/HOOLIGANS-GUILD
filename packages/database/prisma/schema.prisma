@@ -75,6 +75,7 @@ enum GearSlot {
   OneHand     // Can go in main or off-hand
   OffHand     // Shields, held in off-hand items
   Ranged      // Bows, guns, wands, relics, totems, etc.
+  Misc        // Fallback for unknown slots
 }
 
 enum UserRole {

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Package, Sparkles, RefreshCw, ArrowDown, Sun, Upload, Link, X } from 'lucide-react';
+import { Loader2, Package, Sparkles, RefreshCw, ArrowDown, Sun, Upload, Link, X, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -100,6 +100,12 @@ export default function TokensPage() {
   const [importClassName, setImportClassName] = useState<string>('');
   const [importUrls, setImportUrls] = useState<string[]>(['', '', '']);
   const [isImporting, setIsImporting] = useState(false);
+
+  // Sunmote edit dialog state
+  const [isSunmoteEditOpen, setIsSunmoteEditOpen] = useState(false);
+  const [sunmoteEditType, setSunmoteEditType] = useState<'base' | 'upgraded'>('base');
+  const [sunmoteEditUrl, setSunmoteEditUrl] = useState('');
+  const [isSunmoteEditing, setIsSunmoteEditing] = useState(false);
 
   // Fetch tier tokens
   const fetchTokens = async () => {
@@ -200,6 +206,51 @@ export default function TokensPage() {
     setImportClassName(className);
     setImportUrls(['', '', '']);
     setIsImportDialogOpen(true);
+  };
+
+  // Open sunmote edit dialog
+  const openSunmoteEditDialog = (type: 'base' | 'upgraded') => {
+    setSunmoteEditType(type);
+    setSunmoteEditUrl('');
+    setIsSunmoteEditOpen(true);
+  };
+
+  // Handle sunmote item edit
+  const handleSunmoteEdit = async () => {
+    if (!selectedUpgrade || !sunmoteEditUrl.trim()) {
+      alert('Please enter a Wowhead URL');
+      return;
+    }
+
+    setIsSunmoteEditing(true);
+    try {
+      const res = await fetch('/api/sunmotes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          upgradeId: selectedUpgrade.id,
+          type: sunmoteEditType,
+          wowheadUrl: sunmoteEditUrl,
+        }),
+      });
+
+      if (res.ok) {
+        const updated = await res.json();
+        // Update the selected upgrade locally
+        setSelectedUpgrade(updated);
+        // Refresh the upgrades list
+        await fetchUpgrades();
+        setIsSunmoteEditOpen(false);
+      } else {
+        const error = await res.json();
+        alert(error.error || 'Failed to update item');
+      }
+    } catch (error) {
+      console.error('Failed to update sunmote item:', error);
+      alert('Failed to update item');
+    } finally {
+      setIsSunmoteEditing(false);
+    }
   };
 
   // Handle import for a class
@@ -712,7 +763,18 @@ export default function TokensPage() {
                       <div className="flex flex-col items-center text-center space-y-4">
                         {/* Base Item */}
                         <div className="flex flex-col items-center">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Base Item</p>
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Base Item</p>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0"
+                              onClick={() => openSunmoteEditDialog('base')}
+                              title="Edit base item"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </div>
                           <a
                             href={selectedUpgrade.baseWowheadId ? `https://www.wowhead.com/tbc/item=${selectedUpgrade.baseWowheadId}` : '#'}
                             target="_blank"
@@ -765,7 +827,18 @@ export default function TokensPage() {
 
                         {/* Upgraded Item */}
                         <div className="flex flex-col items-center">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Upgraded Item</p>
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">Upgraded Item</p>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0"
+                              onClick={() => openSunmoteEditDialog('upgraded')}
+                              title="Edit upgraded item"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </div>
                           <a
                             href={selectedUpgrade.upgradedWowheadId ? `https://www.wowhead.com/tbc/item=${selectedUpgrade.upgradedWowheadId}` : '#'}
                             target="_blank"
@@ -852,6 +925,44 @@ export default function TokensPage() {
                 <Upload className="h-4 w-4 mr-2" />
               )}
               {isImporting ? 'Importing...' : 'Import'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sunmote Edit Dialog */}
+      <Dialog open={isSunmoteEditOpen} onOpenChange={setIsSunmoteEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Edit {sunmoteEditType === 'base' ? 'Base' : 'Upgraded'} Item
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Paste a Wowhead URL to update the {sunmoteEditType === 'base' ? 'base' : 'upgraded'} item.
+            </p>
+            <div className="space-y-2">
+              <Label className="text-sm">Wowhead URL</Label>
+              <Input
+                placeholder="https://www.wowhead.com/tbc/item=..."
+                value={sunmoteEditUrl}
+                onChange={(e) => setSunmoteEditUrl(e.target.value)}
+                className="text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSunmoteEditOpen(false)} disabled={isSunmoteEditing}>
+              Cancel
+            </Button>
+            <Button onClick={handleSunmoteEdit} disabled={isSunmoteEditing}>
+              {isSunmoteEditing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Pencil className="h-4 w-4 mr-2" />
+              )}
+              {isSunmoteEditing ? 'Updating...' : 'Update'}
             </Button>
           </DialogFooter>
         </DialogContent>
