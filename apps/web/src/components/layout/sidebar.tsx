@@ -20,6 +20,7 @@ import {
   History,
   FlaskConical,
   Layers,
+  ClipboardList,
 } from 'lucide-react';
 
 type NavItem = {
@@ -35,6 +36,7 @@ const navigation: NavItem[] = [
   { name: 'Raid Splits', href: '/dashboard/splits', icon: Users2 },
   { name: 'Performance', href: '/dashboard/performance', icon: Activity },
   { name: 'Consumables', href: '/dashboard/consumables', icon: FlaskConical },
+  { name: 'Assignments', href: '/dashboard/assignments', icon: ClipboardList },
   {
     name: 'Loot Council',
     icon: Sword,
