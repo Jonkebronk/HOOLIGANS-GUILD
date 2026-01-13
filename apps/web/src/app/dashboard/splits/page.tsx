@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, DragEvent } from 'react';
+import { useState, useEffect, useRef, DragEvent, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -186,13 +186,26 @@ export default function RaidSplitsPage() {
   const fetchPlayersAndAssignments = async () => {
     if (!selectedTeam) return;
     try {
-      // Only fetch players - splits are session-only, not persisted
-      const playersRes = await fetch(`/api/players?teamId=${selectedTeam.id}`);
+      // Fetch players and saved raid names in parallel
+      const [playersRes, raidNamesRes] = await Promise.all([
+        fetch(`/api/players?teamId=${selectedTeam.id}`),
+        fetch(`/api/splits?teamId=${selectedTeam.id}`),
+      ]);
 
       if (playersRes.ok) {
         const playersData = await playersRes.json();
         setPlayers(playersData);
-        // Don't load roster assignments - splits page is independent
+      }
+
+      // Load saved raid names
+      if (raidNamesRes.ok) {
+        const savedRaids = await raidNamesRes.json();
+        if (Array.isArray(savedRaids) && savedRaids.length > 0) {
+          setRaids(prevRaids => prevRaids.map(raid => {
+            const savedRaid = savedRaids.find((sr: { id: string }) => sr.id === raid.id);
+            return savedRaid ? { ...raid, name: savedRaid.name } : raid;
+          }));
+        }
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -572,11 +585,41 @@ export default function RaidSplitsPage() {
     });
   };
 
-  // Update raid name
+  // Debounce refs for saving raid names
+  const raidNameTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+
+  // Save raid name to database
+  const saveRaidName = useCallback(async (raidId: string, name: string) => {
+    if (!selectedTeam) return;
+    try {
+      await fetch('/api/splits', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          raidId,
+          name,
+          teamId: selectedTeam.id,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save raid name:', error);
+    }
+  }, [selectedTeam]);
+
+  // Update raid name (with debounced save)
   const updateRaidName = (raidId: string, name: string) => {
+    // Update local state immediately
     setRaids(prevRaids => prevRaids.map(raid =>
       raid.id === raidId ? { ...raid, name } : raid
     ));
+
+    // Debounce the save to database
+    if (raidNameTimeouts.current[raidId]) {
+      clearTimeout(raidNameTimeouts.current[raidId]);
+    }
+    raidNameTimeouts.current[raidId] = setTimeout(() => {
+      saveRaidName(raidId, name);
+    }, 500);
   };
 
   // Get raid stats
