@@ -1,9 +1,9 @@
-// WoW role icon URLs
+// WoW LFG role icon URLs
 export const ROLE_ICON_URLS = {
-  tank: 'https://wow.zamimg.com/images/wow/icons/medium/role_tank.jpg',
-  healer: 'https://wow.zamimg.com/images/wow/icons/medium/role_healer.jpg',
-  melee: 'https://wow.zamimg.com/images/wow/icons/medium/role_dps_melee.jpg',
-  ranged: 'https://wow.zamimg.com/images/wow/icons/medium/role_dps_ranged.jpg',
+  tank: 'https://wow.zamimg.com/images/wow/icons/medium/ui-lfg-roleicon-tank.jpg',
+  healer: 'https://wow.zamimg.com/images/wow/icons/medium/ui-lfg-roleicon-healer.jpg',
+  melee: 'https://wow.zamimg.com/images/wow/icons/medium/ui-lfg-roleicon-dps.jpg',
+  ranged: 'https://wow.zamimg.com/images/wow/icons/medium/ui-lfg-roleicon-dps.jpg',
 };
 
 // Consumable roles and specs organization
