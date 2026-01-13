@@ -766,13 +766,13 @@ export default function TokensPage() {
                           <div className="flex items-center gap-2 mb-2">
                             <p className="text-xs text-muted-foreground uppercase tracking-wide">Base Item</p>
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              className="h-5 w-5 p-0"
+                              className="h-6 px-2 text-xs"
                               onClick={() => openSunmoteEditDialog('base')}
-                              title="Edit base item"
                             >
-                              <Pencil className="h-3 w-3" />
+                              <Pencil className="h-3 w-3 mr-1" />
+                              Edit
                             </Button>
                           </div>
                           <a
@@ -830,13 +830,13 @@ export default function TokensPage() {
                           <div className="flex items-center gap-2 mb-2">
                             <p className="text-xs text-muted-foreground uppercase tracking-wide">Upgraded Item</p>
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
-                              className="h-5 w-5 p-0"
+                              className="h-6 px-2 text-xs"
                               onClick={() => openSunmoteEditDialog('upgraded')}
-                              title="Edit upgraded item"
                             >
-                              <Pencil className="h-3 w-3" />
+                              <Pencil className="h-3 w-3 mr-1" />
+                              Edit
                             </Button>
                           </div>
                           <a
