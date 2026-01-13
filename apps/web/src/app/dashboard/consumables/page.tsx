@@ -28,7 +28,6 @@ import {
   CONSUMABLE_CATEGORIES,
   CONSUMABLE_TYPES,
   SPEC_DISPLAY_NAMES,
-  ROLE_ICON_URLS,
   getClassFromSpec,
   getConsumablesForSpecCategory,
   type ConsumableType,
@@ -269,7 +268,6 @@ export default function ConsumablesPage() {
 
       {/* Role Sections */}
       {Object.entries(CONSUMABLE_ROLES).map(([roleId, role]) => {
-        const roleIconUrl = ROLE_ICON_URLS[role.icon as keyof typeof ROLE_ICON_URLS];
         return (
           <Card key={roleId} className="bg-[#111] border-[#333]">
             <CardHeader
@@ -277,9 +275,7 @@ export default function ConsumablesPage() {
               style={{ backgroundColor: role.color + '20', borderBottom: `2px solid ${role.color}` }}
             >
               <CardTitle className="flex items-center gap-2 text-lg" style={{ color: role.color }}>
-                {roleIconUrl && (
-                  <img src={roleIconUrl} alt={role.name} className="h-6 w-6 rounded" />
-                )}
+                <img src={role.icon} alt={role.name} className="h-5 w-5" />
                 {role.name}
               </CardTitle>
             </CardHeader>

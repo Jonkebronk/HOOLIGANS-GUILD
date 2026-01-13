@@ -1,28 +1,20 @@
-// WoW LFG role icon URLs
-export const ROLE_ICON_URLS = {
-  tank: 'https://wow.zamimg.com/images/wow/icons/medium/ui-lfg-roleicon-tank.jpg',
-  healer: 'https://wow.zamimg.com/images/wow/icons/medium/ui-lfg-roleicon-healer.jpg',
-  melee: 'https://wow.zamimg.com/images/wow/icons/medium/ui-lfg-roleicon-dps.jpg',
-  ranged: 'https://wow.zamimg.com/images/wow/icons/medium/ui-lfg-roleicon-dps.jpg',
-};
-
 // Consumable roles and specs organization
 export const CONSUMABLE_ROLES = {
   tanks: {
     name: 'Tanks',
-    icon: 'tank',
+    icon: '/icons/roles/tank.png',
     color: '#3b82f6', // blue
     specs: ['DruidGuardian', 'PaladinProtection', 'WarriorProtection'],
   },
   healers: {
     name: 'Healers',
-    icon: 'healer',
+    icon: '/icons/roles/healer.png',
     color: '#22c55e', // green
     specs: ['DruidRestoration', 'PaladinHoly', 'PriestHoly', 'ShamanRestoration'],
   },
   physicalDps: {
     name: 'Melee DPS',
-    icon: 'melee',
+    icon: '/icons/roles/melee.png',
     color: '#ef4444', // red
     specs: [
       'DruidFeral',
@@ -35,7 +27,7 @@ export const CONSUMABLE_ROLES = {
   },
   rangedDps: {
     name: 'Ranged DPS',
-    icon: 'ranged',
+    icon: '/icons/roles/ranged.png',
     color: '#a855f7', // purple
     specs: [
       'HunterBeastMastery',
