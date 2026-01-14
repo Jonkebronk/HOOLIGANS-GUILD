@@ -244,14 +244,29 @@ export async function GET(request: Request) {
       return players;
     };
 
-    // Enrich loot records with BiS player info (excluding players who already have the item or related items)
+    // Also track players assigned in current session (not yet finalized)
+    // If a player is assigned to get an item in current drops, hide them from BiS for that item
+    const currentSessionAssignments = new Map<string, Set<string>>(); // itemId -> playerIds assigned
+    for (const record of lootRecords) {
+      if (record.item?.id && record.playerId && !record.finalized) {
+        if (!currentSessionAssignments.has(record.item.id)) {
+          currentSessionAssignments.set(record.item.id, new Set());
+        }
+        currentSessionAssignments.get(record.item.id)!.add(record.playerId);
+      }
+    }
+
+    // Enrich loot records with BiS player info (excluding players who already have the item or are assigned)
     const enrichedRecords = lootRecords.map(record => {
       const lootedPlayerIds = record.item?.id ? getPlayersWithRelatedItems(record.item.id) : new Set<string>();
 
+      // Also add players assigned in current session
+      const assignedPlayerIds = record.item?.id ? currentSessionAssignments.get(record.item.id) : undefined;
+
       const bisPlayers = getPlayersForItem(record.item, bisPlayersByWowheadId)
-        .filter(player => !lootedPlayerIds.has(player.id));
+        .filter(player => !lootedPlayerIds.has(player.id) && !assignedPlayerIds?.has(player.id));
       const bisNextPlayers = getPlayersForItem(record.item, bisNextPlayersByWowheadId)
-        .filter(player => !lootedPlayerIds.has(player.id));
+        .filter(player => !lootedPlayerIds.has(player.id) && !assignedPlayerIds?.has(player.id));
 
       return {
         ...record,
