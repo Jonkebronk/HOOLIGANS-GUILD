@@ -91,7 +91,7 @@ export default function DashboardPage() {
       {/* Ready to Pump Card */}
       <Card className="overflow-hidden">
         <div className="p-6">
-          {/* Top section: Arnold + Title + Tier 4 Playbook + What We Expect */}
+          {/* Top row: Arnold + Title + Tier 4 Playbook */}
           <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
             {/* Arnold */}
             <img
@@ -100,55 +100,33 @@ export default function DashboardPage() {
               className="h-20 md:h-24 object-contain flex-shrink-0"
             />
 
-            {/* Title + Buttons row */}
-            <div className="flex flex-col md:flex-row items-center gap-4 flex-1">
-              <div className="text-center md:text-left">
-                <h2 className="text-xl font-bold text-foreground">READY TO PUMP</h2>
-                <p className="text-xs text-muted-foreground">Assignments & preparation</p>
-              </div>
+            {/* Title */}
+            <div className="text-center md:text-left">
+              <h2 className="text-xl font-bold text-foreground">READY TO PUMP</h2>
+              <p className="text-xs text-muted-foreground">Assignments & preparation</p>
+            </div>
 
-              {/* Tier 4 Playbook Button */}
-              <a
-                href={CURRENT_TIER.playbookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium text-sm"
-              >
-                <span className="font-bold">{CURRENT_TIER.tier} Playbook</span>
-                <span className="text-cyan-100 hidden sm:inline">{CURRENT_TIER.raids.join(', ')}</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
+            {/* Tier 4 Playbook Button */}
+            <a
+              href={CURRENT_TIER.playbookUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium text-sm"
+            >
+              <span className="font-bold">{CURRENT_TIER.tier} Playbook</span>
+              <span className="text-cyan-100 hidden sm:inline">{CURRENT_TIER.raids.join(', ')}</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
 
-              {/* What We Expect Dropdown */}
-              <details className="group">
-                <summary className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors cursor-pointer text-sm font-medium list-none">
-                  <span>What We Expect</span>
-                  <Eye className="w-4 h-4 group-open:rotate-180 transition-transform" />
-                </summary>
-                <div className="absolute mt-2 bg-popover border border-border rounded-lg p-4 shadow-lg z-10 max-w-md">
-                  <ul className="space-y-2 text-xs text-muted-foreground">
-                    <li className="flex items-start gap-1.5">
-                      <span className="text-cyan-400 mt-0.5">•</span>
-                      <span>Know the fights inside out</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <span className="text-cyan-400 mt-0.5">•</span>
-                      <span>Study your assignments and routes</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <span className="text-cyan-400 mt-0.5">•</span>
-                      <span>Come prepared with everything you need to perform and any situational speed items. Check the tab in sheet for consumes and items for your class and spec.</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <span className="text-cyan-400 mt-0.5">•</span>
-                      <span>Engage with feedback and improvement discussions in Discord</span>
-                    </li>
-                  </ul>
-                  <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
-                    Detailed assignments and optimized routes for all TBC content. Preparation outside the game is what makes dominance inside the game possible.
-                  </p>
-                </div>
-              </details>
+            {/* What We Expect - visible box */}
+            <div className="bg-secondary/30 rounded-lg px-4 py-2 max-w-lg">
+              <h3 className="font-semibold text-xs text-foreground mb-1">What We Expect</h3>
+              <ul className="text-xs text-muted-foreground space-y-0.5">
+                <li>• Know the fights inside out</li>
+                <li>• Study your assignments and routes</li>
+                <li>• Come prepared with consumes/items (check sheet for your class)</li>
+                <li>• Engage with feedback in Discord</li>
+              </ul>
             </div>
           </div>
 
