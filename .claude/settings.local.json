@@ -79,7 +79,8 @@
       "Bash(pnpm prisma generate:*)",
       "Bash(pnpm prisma migrate dev:*)",
       "Bash(npx dotenv:*)",
-      "Bash(dir /s /b \"C:\\\\Users\\\\johnn\\\\HOOLIGANS Guild\\\\apps\\\\web\\\\src\\\\app\\\\dashboard\")"
+      "Bash(dir /s /b \"C:\\\\Users\\\\johnn\\\\HOOLIGANS Guild\\\\apps\\\\web\\\\src\\\\app\\\\dashboard\")",
+      "Bash(git revert:*)"
     ]
   }
 }
