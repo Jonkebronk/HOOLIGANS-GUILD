@@ -692,9 +692,9 @@ export default function DropsPage() {
       </div>
 
       {/* Two-column layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_auto] gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_380px] gap-4">
         {/* Items Table (Left) */}
-        <Card>
+        <Card className="min-w-0">
           <CardHeader className="py-3">
             <CardTitle className="text-base">Items ({filteredItems.length})</CardTitle>
           </CardHeader>
@@ -711,7 +711,7 @@ export default function DropsPage() {
         </Card>
 
         {/* Raiders Table (Right) */}
-        <Card className="xl:w-[420px]">
+        <Card>
           <CardHeader className="py-3">
             <CardTitle className="text-base">Raiders ({raiders.length})</CardTitle>
           </CardHeader>

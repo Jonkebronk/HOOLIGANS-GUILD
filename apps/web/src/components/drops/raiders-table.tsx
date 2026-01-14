@@ -91,69 +91,69 @@ export function RaidersTable({ raiders }: RaidersTableProps) {
       : <ArrowDown className="h-3 w-3" />;
   };
 
-  const headerClass = "py-2 px-2 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none";
+  const headerClass = "py-1.5 px-1 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none text-xs";
 
   return (
     <div className="overflow-auto max-h-[calc(100vh-200px)]">
-      <table className="w-full text-sm">
+      <table className="w-full text-xs">
         <thead className="sticky top-0 bg-card z-10">
           <tr className="border-b border-border">
-            <th className="text-left py-2 px-2 font-medium text-muted-foreground w-8">#</th>
+            <th className="text-left py-1.5 px-1 font-medium text-muted-foreground w-6">#</th>
             <th
-              className={`text-left ${headerClass} min-w-[120px]`}
+              className={`text-left ${headerClass} min-w-[90px]`}
               onClick={() => handleSort('name')}
             >
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 Raiders
                 <SortIcon field="name" />
               </div>
             </th>
             <th
-              className={`text-center ${headerClass} w-16`}
+              className={`text-center ${headerClass} w-10`}
               onClick={() => handleSort('lootThisRaid')}
               title="Loot this raid"
             >
-              <div className="flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-0.5">
                 LtR
                 <SortIcon field="lootThisRaid" />
               </div>
             </th>
             <th
-              className={`text-center ${headerClass} w-16`}
+              className={`text-center ${headerClass} w-10`}
               onClick={() => handleSort('totalLootCurrentPhase')}
               title="Total Loot Current Phase"
             >
-              <div className="flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-0.5">
                 TLC
                 <SortIcon field="totalLootCurrentPhase" />
               </div>
             </th>
             <th
-              className={`text-center ${headerClass} w-16`}
+              className={`text-center ${headerClass} w-12`}
               onClick={() => handleSort('bisPercent')}
               title="BiS %"
             >
-              <div className="flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-0.5">
                 BiS%
                 <SortIcon field="bisPercent" />
               </div>
             </th>
             <th
-              className={`text-center ${headerClass} w-16`}
+              className={`text-center ${headerClass} w-12`}
               onClick={() => handleSort('totalItems')}
               title="Total Items"
             >
-              <div className="flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-0.5">
                 Items
                 <SortIcon field="totalItems" />
               </div>
             </th>
             <th
-              className={`text-center ${headerClass} w-20`}
+              className={`text-center ${headerClass} w-12`}
               onClick={() => handleSort('daysSinceLastItem')}
               title="Days Since Last Item"
             >
-              <div className="flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-0.5">
                 Days
                 <SortIcon field="daysSinceLastItem" />
               </div>
@@ -169,20 +169,20 @@ export function RaidersTable({ raiders }: RaidersTableProps) {
                 className="border-b border-border/50 hover:bg-muted/50 transition-colors"
                 style={{ backgroundColor: `${roleColor}10` }}
               >
-                <td className="py-1.5 px-2 text-muted-foreground">{index + 1}</td>
-                <td className="py-1.5 px-2">
+                <td className="py-1 px-1 text-muted-foreground">{index + 1}</td>
+                <td className="py-1 px-1">
                   <span
-                    className="font-medium truncate block"
+                    className="font-medium truncate block max-w-[90px]"
                     style={{ color: CLASS_COLORS[raider.class] }}
                   >
                     {raider.name}
                   </span>
                 </td>
-                <td className="py-1.5 px-2 text-center">{raider.lootThisRaid}</td>
-                <td className="py-1.5 px-2 text-center">{raider.totalLootCurrentPhase}</td>
-                <td className="py-1.5 px-2 text-center">{raider.bisPercent.toFixed(0)}%</td>
-                <td className="py-1.5 px-2 text-center">{raider.totalItems}</td>
-                <td className="py-1.5 px-2 text-center text-muted-foreground">
+                <td className="py-1 px-1 text-center">{raider.lootThisRaid}</td>
+                <td className="py-1 px-1 text-center">{raider.totalLootCurrentPhase}</td>
+                <td className="py-1 px-1 text-center">{raider.bisPercent.toFixed(0)}%</td>
+                <td className="py-1 px-1 text-center">{raider.totalItems}</td>
+                <td className="py-1 px-1 text-center text-muted-foreground">
                   {raider.daysSinceLastItem}
                 </td>
               </tr>
