@@ -39,88 +39,7 @@ type KarazhanOverviewProps = {
   isPuG?: boolean;
 };
 
-// Role colors for PuG view
-const ROLE_COLORS: Record<string, string> = {
-  Tank: '#c79c6e', // Warrior brown
-  Healer: '#f58cba', // Paladin pink
-  'Melee DPS': '#fff569', // Rogue yellow
-  'Ranged DPS': '#9482c9', // Warlock purple
-};
-
-// Spec presets for PuG mode - which specs could use items from each slot
-// These are the typical Karazhan BiS contenders by slot type
-const SLOT_SPECS: Record<string, { spec: string; class: string; role: string }[]> = {
-  // Cloth armor
-  Head: [
-    { spec: 'Shadow', class: 'Priest', role: 'Ranged DPS' },
-    { spec: 'Fire', class: 'Mage', role: 'Ranged DPS' },
-    { spec: 'Affliction', class: 'Warlock', role: 'Ranged DPS' },
-    { spec: 'Holy', class: 'Priest', role: 'Healer' },
-    { spec: 'Resto', class: 'Shaman', role: 'Healer' },
-    { spec: 'Balance', class: 'Druid', role: 'Ranged DPS' },
-    { spec: 'Feral', class: 'Druid', role: 'Tank' },
-    { spec: 'Prot', class: 'Warrior', role: 'Tank' },
-    { spec: 'Prot', class: 'Paladin', role: 'Tank' },
-    { spec: 'Ret', class: 'Paladin', role: 'Melee DPS' },
-    { spec: 'Fury', class: 'Warrior', role: 'Melee DPS' },
-    { spec: 'Combat', class: 'Rogue', role: 'Melee DPS' },
-    { spec: 'BM', class: 'Hunter', role: 'Ranged DPS' },
-    { spec: 'Enhance', class: 'Shaman', role: 'Melee DPS' },
-  ],
-  // Weapons
-  MainHand: [
-    { spec: 'Prot', class: 'Warrior', role: 'Tank' },
-    { spec: 'Fury', class: 'Warrior', role: 'Melee DPS' },
-    { spec: 'Combat', class: 'Rogue', role: 'Melee DPS' },
-    { spec: 'Feral', class: 'Druid', role: 'Tank' },
-    { spec: 'Ret', class: 'Paladin', role: 'Melee DPS' },
-    { spec: 'Enhance', class: 'Shaman', role: 'Melee DPS' },
-  ],
-  OffHand: [
-    { spec: 'Combat', class: 'Rogue', role: 'Melee DPS' },
-    { spec: 'Fury', class: 'Warrior', role: 'Melee DPS' },
-    { spec: 'Shadow', class: 'Priest', role: 'Ranged DPS' },
-    { spec: 'Fire', class: 'Mage', role: 'Ranged DPS' },
-    { spec: 'Affliction', class: 'Warlock', role: 'Ranged DPS' },
-    { spec: 'Holy', class: 'Paladin', role: 'Healer' },
-    { spec: 'Resto', class: 'Shaman', role: 'Healer' },
-  ],
-  TwoHand: [
-    { spec: 'Ret', class: 'Paladin', role: 'Melee DPS' },
-    { spec: 'Arms', class: 'Warrior', role: 'Melee DPS' },
-    { spec: 'Feral', class: 'Druid', role: 'Tank' },
-    { spec: 'Enhance', class: 'Shaman', role: 'Melee DPS' },
-    { spec: 'BM', class: 'Hunter', role: 'Ranged DPS' },
-  ],
-  Ranged: [
-    { spec: 'BM', class: 'Hunter', role: 'Ranged DPS' },
-    { spec: 'Marks', class: 'Hunter', role: 'Ranged DPS' },
-    { spec: 'Survival', class: 'Hunter', role: 'Ranged DPS' },
-    { spec: 'Fury', class: 'Warrior', role: 'Melee DPS' },
-    { spec: 'Combat', class: 'Rogue', role: 'Melee DPS' },
-  ],
-  // Jewelry
-  Trinket: [
-    { spec: 'All DPS', class: 'All', role: 'Ranged DPS' },
-    { spec: 'All Healers', class: 'All', role: 'Healer' },
-    { spec: 'All Tanks', class: 'All', role: 'Tank' },
-  ],
-  Finger: [
-    { spec: 'All DPS', class: 'All', role: 'Ranged DPS' },
-    { spec: 'All Healers', class: 'All', role: 'Healer' },
-    { spec: 'All Tanks', class: 'All', role: 'Tank' },
-  ],
-  Neck: [
-    { spec: 'All DPS', class: 'All', role: 'Ranged DPS' },
-    { spec: 'All Healers', class: 'All', role: 'Healer' },
-    { spec: 'All Tanks', class: 'All', role: 'Tank' },
-  ],
-  Back: [
-    { spec: 'All DPS', class: 'All', role: 'Ranged DPS' },
-    { spec: 'All Healers', class: 'All', role: 'Healer' },
-    { spec: 'All Tanks', class: 'All', role: 'Tank' },
-  ],
-};
+// Role colors for PuG view - not used in simplified view
 
 export function KarazhanOverview({ teamId, isPuG = false }: KarazhanOverviewProps) {
   const [items, setItems] = useState<KarazhanItem[]>([]);
@@ -284,13 +203,7 @@ export function KarazhanOverview({ teamId, isPuG = false }: KarazhanOverviewProp
           {/* Legend */}
           <div className="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex flex-wrap items-center gap-4">
             {isPuG ? (
-              <>
-                <span>Specs colored by role:</span>
-                <span style={{ color: ROLE_COLORS.Tank }}>Tank</span>
-                <span style={{ color: ROLE_COLORS.Healer }}>Healer</span>
-                <span style={{ color: ROLE_COLORS['Melee DPS'] }}>Melee DPS</span>
-                <span style={{ color: ROLE_COLORS['Ranged DPS'] }}>Ranged DPS</span>
-              </>
+              <span>Click items to view on Wowhead. Use soft-res to reserve loot.</span>
             ) : (
               <>
                 <span className="flex items-center gap-1">
@@ -322,11 +235,8 @@ function ItemRow({ item, isPuG = false }: { item: KarazhanItem; isPuG?: boolean 
     return a.name.localeCompare(b.name);
   });
 
-  // Get specs for this slot in PuG mode
-  const slotSpecs = SLOT_SPECS[item.slot] || SLOT_SPECS.Head;
-
   return (
-    <div className="flex items-start gap-3 py-2 px-2 rounded hover:bg-muted/30">
+    <div className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-muted/30">
       {/* Item icon */}
       <a
         href={item.wowheadId ? `https://www.wowhead.com/tbc/item=${item.wowheadId}` : '#'}
@@ -347,7 +257,7 @@ function ItemRow({ item, isPuG = false }: { item: KarazhanItem; isPuG?: boolean 
         />
       </a>
 
-      {/* Item name and needers/specs */}
+      {/* Item name and needers */}
       <div className="flex-1 min-w-0">
         <a
           href={item.wowheadId ? `https://www.wowhead.com/tbc/item=${item.wowheadId}` : '#'}
@@ -359,22 +269,10 @@ function ItemRow({ item, isPuG = false }: { item: KarazhanItem; isPuG?: boolean 
         >
           {item.name}
         </a>
-        <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
-          {isPuG ? (
-            // PuG mode: show specs that could use this item
-            slotSpecs.map((specInfo, idx) => (
-              <span
-                key={`${specInfo.spec}-${specInfo.class}-${idx}`}
-                className="text-xs"
-                style={{ color: ROLE_COLORS[specInfo.role] || '#888' }}
-                title={`${specInfo.spec} ${specInfo.class}`}
-              >
-                {specInfo.class === 'All' ? specInfo.spec : `${specInfo.spec} ${specInfo.class}`}
-              </span>
-            ))
-          ) : (
-            // Team mode: show player needers
-            sortedNeeders.map((needer, idx) => (
+        {/* Only show needers for team mode */}
+        {!isPuG && sortedNeeders.length > 0 && (
+          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
+            {sortedNeeders.map((needer, idx) => (
               <span
                 key={`${needer.name}-${idx}`}
                 className={`text-xs flex items-center gap-0.5 ${
@@ -392,9 +290,9 @@ function ItemRow({ item, isPuG = false }: { item: KarazhanItem; isPuG?: boolean 
                 )}
                 {needer.name}
               </span>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Slot badge */}
