@@ -73,6 +73,12 @@ export async function GET(request: Request) {
             },
           },
         },
+        redemptionFromToken: {
+          select: {
+            id: true,
+          },
+          take: 1, // Just need to know if any exist
+        },
         sunmoteRedemption: {
           include: {
             upgradedItem: {

@@ -89,6 +89,7 @@ type Item = {
   bisSpecs: { id: string; spec: string }[];
   lootRecords?: LootRecord[];
   tokenRedemptions?: TokenRedemption[];
+  redemptionFromToken?: { id: string }[]; // This item comes from a token
   sunmoteRedemption?: SunmoteRedemption;
   bisPlayersFromList?: BisPlayer[];
   bisNextPlayersFromList?: BisPlayer[];
@@ -1552,7 +1553,7 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                         >
                           {item.name}
                         </a>
-                        {isTokenItem(item) && (
+                        {(isTokenItem(item) || (item.redemptionFromToken && item.redemptionFromToken.length > 0)) && (
                           <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
                             Token
                           </span>
