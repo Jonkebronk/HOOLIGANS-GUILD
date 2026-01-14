@@ -135,7 +135,7 @@ export default function DashboardPage() {
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-cyan-400 mt-0.5">•</span>
-                <span>Come prepared with everything you need to perform and any situational speed items</span>
+                <span>Come prepared with everything you need to perform and any situational speed items. Check the tab in sheet for your class and spec.</span>
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-cyan-400 mt-0.5">•</span>
