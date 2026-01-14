@@ -44,7 +44,7 @@ const navigation: NavItem[] = [
       { name: 'Tokens', href: '/dashboard/tokens', icon: Layers },
       { name: 'BiS Lists', href: '/dashboard/bis', icon: Scroll },
       { name: 'Attendance', href: '/dashboard/attendance', icon: Calendar },
-      { name: 'Loot History', href: '/dashboard/reports', icon: History },
+      { name: 'Loot History', href: '/dashboard/loot-history', icon: History },
     ]
   },
 ];
