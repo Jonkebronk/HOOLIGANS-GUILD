@@ -154,12 +154,25 @@ export async function GET(request: Request) {
       return players;
     };
 
-    // Enrich items with BiS player info
+    // Enrich items with BiS player info (excluding players who already have the item)
     const enrichedItems = items.map(item => {
+      // Get IDs of players who have already looted this item
+      const lootedPlayerIds = new Set(
+        (item.lootRecords || [])
+          .filter(record => record.player)
+          .map(record => record.player!.id)
+      );
+
+      // Filter out players who already have the item
+      const bisPlayers = getPlayersForItem(item, bisPlayersByWowheadId)
+        .filter(player => !lootedPlayerIds.has(player.id));
+      const bisNextPlayers = getPlayersForItem(item, bisNextPlayersByWowheadId)
+        .filter(player => !lootedPlayerIds.has(player.id));
+
       return {
         ...item,
-        bisPlayersFromList: getPlayersForItem(item, bisPlayersByWowheadId),
-        bisNextPlayersFromList: getPlayersForItem(item, bisNextPlayersByWowheadId),
+        bisPlayersFromList: bisPlayers,
+        bisNextPlayersFromList: bisNextPlayers,
       };
     });
 

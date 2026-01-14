@@ -168,12 +168,47 @@ export async function GET(request: Request) {
       return players;
     };
 
-    // Enrich loot records with BiS player info
+    // Get all item IDs from current records to fetch finalized loot
+    const itemIds = [...new Set(lootRecords.map(r => r.item?.id).filter(Boolean))] as string[];
+
+    // Fetch all finalized loot records for these items (players who already have them)
+    const finalizedLoot = await prisma.lootRecord.findMany({
+      where: {
+        itemId: { in: itemIds },
+        finalized: true,
+        playerId: { not: null },
+        ...(teamId ? { teamId } : {}),
+      },
+      select: {
+        itemId: true,
+        playerId: true,
+      },
+    });
+
+    // Create a map of itemId -> Set of playerIds who already have this item
+    const lootedPlayersMap = new Map<string, Set<string>>();
+    for (const record of finalizedLoot) {
+      if (record.itemId && record.playerId) {
+        if (!lootedPlayersMap.has(record.itemId)) {
+          lootedPlayersMap.set(record.itemId, new Set());
+        }
+        lootedPlayersMap.get(record.itemId)!.add(record.playerId);
+      }
+    }
+
+    // Enrich loot records with BiS player info (excluding players who already have the item)
     const enrichedRecords = lootRecords.map(record => {
+      const lootedPlayerIds = record.item?.id ? lootedPlayersMap.get(record.item.id) : undefined;
+
+      const bisPlayers = getPlayersForItem(record.item, bisPlayersByWowheadId)
+        .filter(player => !lootedPlayerIds?.has(player.id));
+      const bisNextPlayers = getPlayersForItem(record.item, bisNextPlayersByWowheadId)
+        .filter(player => !lootedPlayerIds?.has(player.id));
+
       return {
         ...record,
-        bisPlayersFromList: getPlayersForItem(record.item, bisPlayersByWowheadId),
-        bisNextPlayersFromList: getPlayersForItem(record.item, bisNextPlayersByWowheadId),
+        bisPlayersFromList: bisPlayers,
+        bisNextPlayersFromList: bisNextPlayers,
       };
     });
 
