@@ -36,6 +36,22 @@ type TokenRedemption = {
   };
 };
 
+type SunmoteRedemption = {
+  id: string;
+  sunmotesRequired: number;
+  upgradedItem: {
+    id: string;
+    name: string;
+    wowheadId: number;
+    icon?: string;
+    quality: number;
+    lootRecords?: {
+      id: string;
+      player: { id: string; name: string; class: string } | null;
+    }[];
+  };
+};
+
 type BisPlayer = {
   id: string;
   name: string;
@@ -61,6 +77,7 @@ type LootItem = {
   bisPlayersFromList?: BisPlayer[];
   bisNextPlayersFromList?: BisPlayer[];
   tokenRedemptions?: TokenRedemption[];
+  sunmoteRedemption?: SunmoteRedemption;
 };
 
 // Token type mappings
@@ -86,6 +103,11 @@ const getTokenType = (name: string): string | null => {
 // Check if item is a tier token
 const isTokenItem = (item: LootItem): boolean => {
   return item.slot === 'Misc' && getTokenType(item.itemName) !== null;
+};
+
+// Check if item has a sunmote upgrade
+const hasSunmoteUpgrade = (item: LootItem): boolean => {
+  return !!item.sunmoteRedemption?.upgradedItem;
 };
 
 type ItemsTableProps = {
@@ -158,6 +180,8 @@ export function ItemsTable({
         <tbody>
           {items.map((item, index) => {
             const hasRedemptions = isTokenItem(item) && item.tokenRedemptions && item.tokenRedemptions.length > 0;
+            const hasSunmote = hasSunmoteUpgrade(item);
+            const isExpandable = hasRedemptions || hasSunmote;
             const isExpanded = expandedItems.has(item.id);
             const tokenType = getTokenType(item.itemName);
             const tokenClasses = tokenType ? TOKEN_CLASS_MAP[tokenType] : [];
@@ -169,12 +193,12 @@ export function ItemsTable({
               <>
                 <tr
                   key={item.id}
-                  className={`border-b border-border/50 hover:bg-muted/50 transition-colors ${getRowColor(item)} ${hasRedemptions ? 'cursor-pointer' : ''}`}
-                  onClick={hasRedemptions ? () => toggleExpand(item.id) : undefined}
+                  className={`border-b border-border/50 hover:bg-muted/50 transition-colors ${getRowColor(item)} ${isExpandable ? 'cursor-pointer' : ''}`}
+                  onClick={isExpandable ? () => toggleExpand(item.id) : undefined}
                 >
                   <td className="py-1.5 px-2 text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      {hasRedemptions && (
+                      {isExpandable && (
                         isExpanded ? (
                           <ChevronDown className="h-3 w-3 text-primary" />
                         ) : (
@@ -222,6 +246,11 @@ export function ItemsTable({
                       {hasRedemptions && (
                         <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                           Token
+                        </span>
+                      )}
+                      {hasSunmote && (
+                        <span className="text-xs text-amber-300 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">
+                          Sunmote
                         </span>
                       )}
                     </div>
@@ -441,6 +470,75 @@ export function ItemsTable({
                               </div>
                             );
                           })}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {/* Expanded sunmote upgrade row */}
+                {hasSunmote && isExpanded && item.sunmoteRedemption && (
+                  <tr key={`${item.id}-sunmote`} className="bg-amber-900/10">
+                    <td colSpan={isOfficer && onDeleteItem ? 9 : 8} className="py-3 px-4">
+                      <div className="space-y-2">
+                        <div className="text-xs font-medium text-amber-300 uppercase tracking-wide mb-2">
+                          Sunmote Upgrade
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                            <span>+1</span>
+                            <img
+                              src={getItemIconUrl('inv_misc_sunwell_neck', 'small')}
+                              alt="Sunmote"
+                              className="w-5 h-5 rounded"
+                              style={{
+                                borderWidth: 1,
+                                borderStyle: 'solid',
+                                borderColor: ITEM_QUALITY_COLORS[5]
+                              }}
+                            />
+                            <span className="text-amber-300">Sunmote</span>
+                            <span>=</span>
+                          </div>
+                          <a
+                            href={`https://www.wowhead.com/tbc/item=${item.sunmoteRedemption.upgradedItem.wowheadId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            data-wh-icon-size="0"
+                            className="flex items-center gap-1.5"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <img
+                              src={getItemIconUrl(item.sunmoteRedemption.upgradedItem.icon || 'inv_misc_questionmark', 'small')}
+                              alt=""
+                              className="w-5 h-5 rounded"
+                              style={{
+                                borderWidth: 1,
+                                borderStyle: 'solid',
+                                borderColor: ITEM_QUALITY_COLORS[item.sunmoteRedemption.upgradedItem.quality] || ITEM_QUALITY_COLORS[5]
+                              }}
+                            />
+                            <span
+                              className="text-sm hover:underline"
+                              style={{ color: ITEM_QUALITY_COLORS[item.sunmoteRedemption.upgradedItem.quality] || ITEM_QUALITY_COLORS[5] }}
+                            >
+                              {item.sunmoteRedemption.upgradedItem.name}
+                            </span>
+                          </a>
+                          {item.sunmoteRedemption.upgradedItem.lootRecords &&
+                           item.sunmoteRedemption.upgradedItem.lootRecords.length > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              (Has:{' '}
+                              {item.sunmoteRedemption.upgradedItem.lootRecords
+                                .filter(r => r.player)
+                                .map((r, i) => (
+                                  <span key={r.id}>
+                                    {i > 0 && ', '}
+                                    <span style={{ color: CLASS_COLORS[r.player!.class] }}>{r.player!.name}</span>
+                                  </span>
+                                ))}
+                              )
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>

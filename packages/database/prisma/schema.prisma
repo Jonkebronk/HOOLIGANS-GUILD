@@ -306,6 +306,10 @@ model Item {
   tokenRedemptions    TokenRedemption[] @relation("TokenRedemptions")  // Items this token gives
   redemptionFromToken TokenRedemption[] @relation("RedemptionItems")   // Tokens that give this item
 
+  // Sunmote redemption relations
+  sunmoteRedemption       SunmoteRedemption?  @relation("SunmoteBaseItems")    // Upgrade from this base item
+  sunmoteUpgradedFrom     SunmoteRedemption[] @relation("SunmoteUpgradedItems") // Base items that upgrade to this
+
   @@unique([wowheadId])
   @@index([raid])
   @@index([slot])
@@ -736,4 +740,24 @@ model TokenRedemption {
   @@unique([tokenItemId, redemptionItemId])
   @@index([tokenItemId])
   @@index([className])
+}
+
+// ============================================
+// SUNMOTE REDEMPTIONS
+// ============================================
+
+model SunmoteRedemption {
+  id               String   @id @default(cuid())
+  baseItemId       String   @unique // One base item can only have one upgrade
+  baseItem         Item     @relation("SunmoteBaseItems", fields: [baseItemId], references: [id], onDelete: Cascade)
+
+  upgradedItemId   String   // The upgraded item you get with Sunmote
+  upgradedItem     Item     @relation("SunmoteUpgradedItems", fields: [upgradedItemId], references: [id], onDelete: Cascade)
+
+  sunmotesRequired Int      @default(1)
+
+  createdAt        DateTime @default(now())
+
+  @@index([baseItemId])
+  @@index([upgradedItemId])
 }

@@ -54,6 +54,19 @@ type TokenRedemption = {
   };
 };
 
+type SunmoteRedemption = {
+  id: string;
+  sunmotesRequired: number;
+  upgradedItem: {
+    id: string;
+    name: string;
+    wowheadId: number;
+    icon?: string;
+    quality: number;
+    lootRecords?: LootRecord[];
+  };
+};
+
 type BisPlayer = {
   id: string;
   name: string;
@@ -76,6 +89,7 @@ type Item = {
   bisSpecs: { id: string; spec: string }[];
   lootRecords?: LootRecord[];
   tokenRedemptions?: TokenRedemption[];
+  sunmoteRedemption?: SunmoteRedemption;
   bisPlayersFromList?: BisPlayer[];
   bisNextPlayersFromList?: BisPlayer[];
 };
@@ -180,6 +194,10 @@ export default function ItemsPage() {
   const [isSearchingRedemption, setIsSearchingRedemption] = useState(false);
   const [addingRedemptionClass, setAddingRedemptionClass] = useState<string | null>(null);
   const [isAddingRedemption, setIsAddingRedemption] = useState(false);
+  // Sunmote upgrade state
+  const [isAddingSunmoteUpgrade, setIsAddingSunmoteUpgrade] = useState(false);
+  const [sunmoteWowheadUrl, setSunmoteWowheadUrl] = useState('');
+  const [isSavingSunmote, setIsSavingSunmote] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     slot: '',
@@ -618,6 +636,9 @@ export default function ItemsPage() {
     setRedemptionSearch('');
     setRedemptionSearchResults([]);
     setAddingRedemptionClass(null);
+    // Reset sunmote state
+    setIsAddingSunmoteUpgrade(false);
+    setSunmoteWowheadUrl('');
     setEditForm({
       name: item.name || '',
       wowheadId: item.wowheadId?.toString() || '',
@@ -821,6 +842,58 @@ export default function ItemsPage() {
     } catch (error) {
       console.error('Failed to remove redemption:', error);
       alert('Failed to remove redemption item');
+    }
+  };
+
+  // Add sunmote upgrade
+  const handleAddSunmoteUpgrade = async () => {
+    if (!editingItem || !sunmoteWowheadUrl.trim()) return;
+    setIsSavingSunmote(true);
+    try {
+      const res = await fetch(`/api/items/${editingItem.id}/sunmote-redemption`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wowheadUrl: sunmoteWowheadUrl }),
+      });
+      if (res.ok) {
+        const newRedemption = await res.json();
+        setEditingItem({
+          ...editingItem,
+          sunmoteRedemption: newRedemption,
+        });
+        setSunmoteWowheadUrl('');
+        setIsAddingSunmoteUpgrade(false);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to add sunmote upgrade');
+      }
+    } catch (error) {
+      console.error('Failed to add sunmote upgrade:', error);
+      alert('Failed to add sunmote upgrade');
+    } finally {
+      setIsSavingSunmote(false);
+    }
+  };
+
+  // Remove sunmote upgrade
+  const handleRemoveSunmoteUpgrade = async () => {
+    if (!editingItem) return;
+    try {
+      const res = await fetch(`/api/items/${editingItem.id}/sunmote-redemption`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setEditingItem({
+          ...editingItem,
+          sunmoteRedemption: undefined,
+        });
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to remove sunmote upgrade');
+      }
+    } catch (error) {
+      console.error('Failed to remove sunmote upgrade:', error);
+      alert('Failed to remove sunmote upgrade');
     }
   };
 
@@ -1936,6 +2009,93 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                   })()}
                 </div>
               )}
+
+              {/* Sunmote Upgrade Section */}
+              <div className="space-y-2">
+                <Label>Sunmote Upgrade</Label>
+                <p className="text-xs text-muted-foreground">
+                  Item that can be obtained by combining this item + 1 Sunmote.
+                </p>
+                <div className="bg-muted/50 rounded-md p-3">
+                  {editingItem?.sunmoteRedemption ? (
+                    <div className="flex items-center justify-between">
+                      <a
+                        href={`https://www.wowhead.com/tbc/item=${editingItem.sunmoteRedemption.upgradedItem.wowheadId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 hover:underline"
+                      >
+                        <img
+                          src={getItemIconUrl(editingItem.sunmoteRedemption.upgradedItem.icon || 'inv_misc_questionmark', 'small')}
+                          alt={editingItem.sunmoteRedemption.upgradedItem.name}
+                          className="w-6 h-6 rounded"
+                          style={{
+                            borderWidth: 1,
+                            borderStyle: 'solid',
+                            borderColor: ITEM_QUALITY_COLORS[editingItem.sunmoteRedemption.upgradedItem.quality] || ITEM_QUALITY_COLORS[5]
+                          }}
+                        />
+                        <span
+                          className="text-sm"
+                          style={{ color: ITEM_QUALITY_COLORS[editingItem.sunmoteRedemption.upgradedItem.quality] || ITEM_QUALITY_COLORS[5] }}
+                        >
+                          {editingItem.sunmoteRedemption.upgradedItem.name}
+                        </span>
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveSunmoteUpgrade}
+                        disabled={isSavingSunmote}
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                      >
+                        {isSavingSunmote ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                  ) : isAddingSunmoteUpgrade ? (
+                    <div className="space-y-2">
+                      <Input
+                        placeholder="Paste Wowhead URL for upgraded item..."
+                        value={sunmoteWowheadUrl}
+                        onChange={(e) => setSunmoteWowheadUrl(e.target.value)}
+                        className="h-8 text-sm"
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={handleAddSunmoteUpgrade}
+                          disabled={isSavingSunmote || !sunmoteWowheadUrl.trim()}
+                          className="h-7 text-xs"
+                        >
+                          {isSavingSunmote ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                          Link Item
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setIsAddingSunmoteUpgrade(false);
+                            setSunmoteWowheadUrl('');
+                          }}
+                          className="h-7 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsAddingSunmoteUpgrade(true)}
+                      className="h-7 text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add Upgrade
+                    </Button>
+                  )}
+                </div>
+              </div>
 
               {/* Looted By Section */}
               <div className="space-y-2">

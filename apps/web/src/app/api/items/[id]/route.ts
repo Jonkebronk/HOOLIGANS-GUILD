@@ -50,6 +50,27 @@ export async function GET(
           },
           orderBy: { className: 'asc' },
         },
+        sunmoteRedemption: {
+          include: {
+            upgradedItem: {
+              include: {
+                lootRecords: {
+                  include: {
+                    player: {
+                      select: {
+                        id: true,
+                        name: true,
+                        class: true,
+                      },
+                    },
+                  },
+                  orderBy: { lootDate: 'desc' },
+                  take: 5,
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -101,8 +122,30 @@ export async function GET(
       });
     }
 
+    // Also check sunmote upgraded item
+    let sunmoteBisConfigs: { phase: string; player: { id: string; name: string; class: string } }[] = [];
+    const sunmoteUpgradedWowheadId = (item as { sunmoteRedemption?: { upgradedItem?: { wowheadId?: number } } })
+      .sunmoteRedemption?.upgradedItem?.wowheadId;
+    if (sunmoteUpgradedWowheadId) {
+      sunmoteBisConfigs = await prisma.playerBisConfiguration.findMany({
+        where: {
+          ...(teamId ? { player: { teamId } } : {}),
+          wowheadId: sunmoteUpgradedWowheadId,
+        },
+        include: {
+          player: {
+            select: {
+              id: true,
+              name: true,
+              class: true,
+            },
+          },
+        },
+      });
+    }
+
     // Combine all BiS configs
-    const combinedConfigs = [...allBisConfigs, ...redemptionBisConfigs];
+    const combinedConfigs = [...allBisConfigs, ...redemptionBisConfigs, ...sunmoteBisConfigs];
 
     // Separate by phase
     const bisPlayersFromList: { id: string; name: string; class: string }[] = [];

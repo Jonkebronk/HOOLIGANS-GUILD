@@ -56,6 +56,32 @@ export async function GET(request: Request) {
               },
               orderBy: { className: 'asc' },
             },
+            sunmoteRedemption: {
+              include: {
+                upgradedItem: {
+                  select: {
+                    id: true,
+                    name: true,
+                    wowheadId: true,
+                    icon: true,
+                    quality: true,
+                    lootRecords: {
+                      include: {
+                        player: {
+                          select: {
+                            id: true,
+                            name: true,
+                            class: true,
+                          },
+                        },
+                      },
+                      orderBy: { lootDate: 'desc' },
+                      take: 3,
+                    },
+                  },
+                },
+              },
+            },
           },
         },
         player: true,
@@ -122,6 +148,19 @@ export async function GET(request: Request) {
                 players.push(player);
               }
             }
+          }
+        }
+      }
+
+      // For sunmote items, check upgraded item
+      const sunmoteItem = item as typeof item & {
+        sunmoteRedemption?: { upgradedItem?: { wowheadId?: number } };
+      };
+      if (sunmoteItem.sunmoteRedemption?.upgradedItem?.wowheadId) {
+        const sunmotePlayers = playerMap.get(sunmoteItem.sunmoteRedemption.upgradedItem.wowheadId) || [];
+        for (const player of sunmotePlayers) {
+          if (!players.find(p => p.id === player.id)) {
+            players.push(player);
           }
         }
       }
@@ -209,6 +248,32 @@ export async function POST(request: Request) {
                 },
               },
               orderBy: { className: 'asc' },
+            },
+            sunmoteRedemption: {
+              include: {
+                upgradedItem: {
+                  select: {
+                    id: true,
+                    name: true,
+                    wowheadId: true,
+                    icon: true,
+                    quality: true,
+                    lootRecords: {
+                      include: {
+                        player: {
+                          select: {
+                            id: true,
+                            name: true,
+                            class: true,
+                          },
+                        },
+                      },
+                      orderBy: { lootDate: 'desc' },
+                      take: 3,
+                    },
+                  },
+                },
+              },
             },
           },
         },
