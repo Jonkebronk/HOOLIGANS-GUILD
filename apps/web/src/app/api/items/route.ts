@@ -69,6 +69,10 @@ export async function GET(request: Request) {
               select: {
                 id: true,
                 wowheadId: true,
+                lootRecords: {
+                  where: { finalized: true, playerId: { not: null } },
+                  select: { playerId: true },
+                },
               },
             },
           },
@@ -85,6 +89,10 @@ export async function GET(request: Request) {
               select: {
                 id: true,
                 wowheadId: true,
+                lootRecords: {
+                  where: { finalized: true, playerId: { not: null } },
+                  select: { playerId: true },
+                },
               },
             },
           },
@@ -154,16 +162,47 @@ export async function GET(request: Request) {
       return players;
     };
 
-    // Enrich items with BiS player info (excluding players who already have the item)
+    // Enrich items with BiS player info (excluding players who already have the item or related items)
     const enrichedItems = items.map(item => {
-      // Get IDs of players who have already looted this item
-      const lootedPlayerIds = new Set(
-        (item.lootRecords || [])
-          .filter(record => record.player)
-          .map(record => record.player!.id)
-      );
+      // Get IDs of players who have already looted this item OR any related items
+      const lootedPlayerIds = new Set<string>();
 
-      // Filter out players who already have the item
+      // Players who looted this item directly
+      for (const record of item.lootRecords || []) {
+        if (record.player?.id) {
+          lootedPlayerIds.add(record.player.id);
+        }
+      }
+
+      // For tokens: players who looted any redemption item
+      if (item.tokenRedemptions) {
+        for (const redemption of item.tokenRedemptions) {
+          const redemptionItem = redemption.redemptionItem as typeof redemption.redemptionItem & {
+            lootRecords?: { playerId: string | null }[];
+          };
+          if (redemptionItem.lootRecords) {
+            for (const record of redemptionItem.lootRecords) {
+              if (record.playerId) {
+                lootedPlayerIds.add(record.playerId);
+              }
+            }
+          }
+        }
+      }
+
+      // For sunmote items: players who looted the upgraded item
+      const sunmoteItem = item as typeof item & {
+        sunmoteRedemption?: { upgradedItem?: { lootRecords?: { playerId: string | null }[] } };
+      };
+      if (sunmoteItem.sunmoteRedemption?.upgradedItem?.lootRecords) {
+        for (const record of sunmoteItem.sunmoteRedemption.upgradedItem.lootRecords) {
+          if (record.playerId) {
+            lootedPlayerIds.add(record.playerId);
+          }
+        }
+      }
+
+      // Filter out players who already have the item or related items
       const bisPlayers = getPlayersForItem(item, bisPlayersByWowheadId)
         .filter(player => !lootedPlayerIds.has(player.id));
       const bisNextPlayers = getPlayersForItem(item, bisNextPlayersByWowheadId)

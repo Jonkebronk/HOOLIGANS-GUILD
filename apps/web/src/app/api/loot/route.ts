@@ -168,13 +168,44 @@ export async function GET(request: Request) {
       return players;
     };
 
-    // Get all item IDs from current records to fetch finalized loot
-    const itemIds = [...new Set(lootRecords.map(r => r.item?.id).filter(Boolean))] as string[];
+    // Collect ALL item IDs (base items + redemption items + sunmote upgrades)
+    const allItemIds = new Set<string>();
+    const itemToRelatedIds = new Map<string, Set<string>>(); // base item -> all related item IDs
 
-    // Fetch all finalized loot records for these items (players who already have them)
+    for (const record of lootRecords) {
+      if (!record.item?.id) continue;
+
+      const baseId = record.item.id;
+      allItemIds.add(baseId);
+
+      if (!itemToRelatedIds.has(baseId)) {
+        itemToRelatedIds.set(baseId, new Set([baseId]));
+      }
+
+      // Add token redemption items
+      if (record.item.tokenRedemptions) {
+        for (const redemption of record.item.tokenRedemptions) {
+          if (redemption.redemptionItem?.id) {
+            allItemIds.add(redemption.redemptionItem.id);
+            itemToRelatedIds.get(baseId)!.add(redemption.redemptionItem.id);
+          }
+        }
+      }
+
+      // Add sunmote upgraded item
+      const sunmoteItem = record.item as typeof record.item & {
+        sunmoteRedemption?: { upgradedItem?: { id?: string } };
+      };
+      if (sunmoteItem.sunmoteRedemption?.upgradedItem?.id) {
+        allItemIds.add(sunmoteItem.sunmoteRedemption.upgradedItem.id);
+        itemToRelatedIds.get(baseId)!.add(sunmoteItem.sunmoteRedemption.upgradedItem.id);
+      }
+    }
+
+    // Fetch all finalized loot records for ALL related items
     const finalizedLoot = await prisma.lootRecord.findMany({
       where: {
-        itemId: { in: itemIds },
+        itemId: { in: [...allItemIds] },
         finalized: true,
         playerId: { not: null },
         ...(teamId ? { teamId } : {}),
@@ -185,25 +216,42 @@ export async function GET(request: Request) {
       },
     });
 
-    // Create a map of itemId -> Set of playerIds who already have this item
-    const lootedPlayersMap = new Map<string, Set<string>>();
+    // Create a map of itemId -> Set of playerIds who have that item
+    const itemToPlayers = new Map<string, Set<string>>();
     for (const record of finalizedLoot) {
       if (record.itemId && record.playerId) {
-        if (!lootedPlayersMap.has(record.itemId)) {
-          lootedPlayersMap.set(record.itemId, new Set());
+        if (!itemToPlayers.has(record.itemId)) {
+          itemToPlayers.set(record.itemId, new Set());
         }
-        lootedPlayersMap.get(record.itemId)!.add(record.playerId);
+        itemToPlayers.get(record.itemId)!.add(record.playerId);
       }
     }
 
-    // Enrich loot records with BiS player info (excluding players who already have the item)
+    // Helper to get all players who have ANY related item
+    const getPlayersWithRelatedItems = (baseItemId: string): Set<string> => {
+      const players = new Set<string>();
+      const relatedIds = itemToRelatedIds.get(baseItemId);
+      if (relatedIds) {
+        for (const id of relatedIds) {
+          const itemPlayers = itemToPlayers.get(id);
+          if (itemPlayers) {
+            for (const playerId of itemPlayers) {
+              players.add(playerId);
+            }
+          }
+        }
+      }
+      return players;
+    };
+
+    // Enrich loot records with BiS player info (excluding players who already have the item or related items)
     const enrichedRecords = lootRecords.map(record => {
-      const lootedPlayerIds = record.item?.id ? lootedPlayersMap.get(record.item.id) : undefined;
+      const lootedPlayerIds = record.item?.id ? getPlayersWithRelatedItems(record.item.id) : new Set<string>();
 
       const bisPlayers = getPlayersForItem(record.item, bisPlayersByWowheadId)
-        .filter(player => !lootedPlayerIds?.has(player.id));
+        .filter(player => !lootedPlayerIds.has(player.id));
       const bisNextPlayers = getPlayersForItem(record.item, bisNextPlayersByWowheadId)
-        .filter(player => !lootedPlayerIds?.has(player.id));
+        .filter(player => !lootedPlayerIds.has(player.id));
 
       return {
         ...record,
