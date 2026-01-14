@@ -1540,18 +1540,28 @@ https://www.wowhead.com/tbc/item=32471/shard-of-contempt`}
                           style={{ borderWidth: 2, borderStyle: 'solid', borderColor: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                         />
                       </a>
-                      <div className="min-w-0 w-64 lg:w-72">
+                      <div className="min-w-0 w-64 lg:w-72 flex items-center gap-2">
                         <a
                           href={`https://www.wowhead.com/tbc/item=${item.wowheadId}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           data-wh-icon-size="0"
-                          className="font-medium truncate block hover:underline"
+                          className="font-medium truncate hover:underline"
                           style={{ color: ITEM_QUALITY_COLORS[item.quality] || ITEM_QUALITY_COLORS[4] }}
                           onClick={(e) => e.stopPropagation()}
                         >
                           {item.name}
                         </a>
+                        {isTokenItem(item) && (
+                          <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                            Token
+                          </span>
+                        )}
+                        {item.sunmoteRedemption && (
+                          <span className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-medium rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                            Sunmote
+                          </span>
+                        )}
                       </div>
                       <div className="hidden sm:block w-20 text-sm text-muted-foreground">
                         {item.slot}

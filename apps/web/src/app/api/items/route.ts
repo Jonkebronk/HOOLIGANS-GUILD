@@ -73,6 +73,16 @@ export async function GET(request: Request) {
             },
           },
         },
+        sunmoteRedemption: {
+          include: {
+            upgradedItem: {
+              select: {
+                id: true,
+                wowheadId: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { name: 'asc' },
     });
