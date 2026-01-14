@@ -24,12 +24,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.provider === 'discord' && profile && user.id) {
         const discordProfile = profile as { id: string; username: string };
         try {
+          // Update user with Discord info
           await prisma.user.update({
             where: { id: user.id },
             data: {
               discordId: discordProfile.id,
               discordName: discordProfile.username,
             },
+          });
+
+          // Delete all old sessions for this user to ensure fresh session data
+          await prisma.session.deleteMany({
+            where: { userId: user.id },
           });
         } catch (error) {
           console.error('Failed to update Discord ID on sign-in:', error);
