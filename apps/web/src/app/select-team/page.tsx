@@ -33,7 +33,7 @@ const ROLE_ICONS = {
 
 export default function SelectTeamPage() {
   const router = useRouter();
-  const { teams, setSelectedTeam, loading, refetchTeams } = useTeam();
+  const { teams, setSelectedTeam, loading, refetchTeams, isGM } = useTeam();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [creating, setCreating] = useState(false);
@@ -167,26 +167,30 @@ export default function SelectTeamPage() {
           <Card className="bg-black/80 backdrop-blur-sm border-border/30 mb-6">
             <CardContent className="py-12 text-center">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No Teams Yet</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">No Teams Available</h3>
               <p className="text-muted-foreground mb-4">
-                Create your first team to get started managing your guild.
+                {isGM
+                  ? 'Create your first team to get started managing your guild.'
+                  : 'Contact the GM to be added to a team.'}
               </p>
             </CardContent>
           </Card>
         )}
 
-        {/* Create Team Button */}
-        <div className="text-center">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-black/50 border-border/50 hover:bg-black/80"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Team
-          </Button>
-        </div>
+        {/* Create Team Button - GM only */}
+        {isGM && (
+          <div className="text-center">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setIsCreateOpen(true)}
+              className="bg-black/50 border-border/50 hover:bg-black/80"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Team
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Create Team Dialog */}

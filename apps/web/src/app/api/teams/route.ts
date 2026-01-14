@@ -50,6 +50,14 @@ async function getUserDiscordRoles(discordId: string): Promise<string[]> {
   }
 }
 
+// Helper to check if user is GM/Officer based on Discord roles
+function isOfficerOrGM(roleNames: string[]): { isGM: boolean; isOfficer: boolean } {
+  const lowerRoles = roleNames.map(r => r.toLowerCase());
+  const isGM = lowerRoles.some(name => name.includes('gm') || name.includes('guild master') || name.includes('guildmaster'));
+  const isOfficer = isGM || lowerRoles.some(name => name.includes('officer') || name.includes('raid lead'));
+  return { isGM, isOfficer };
+}
+
 // GET /api/teams - Get teams for the current user
 export async function GET() {
   try {
@@ -64,10 +72,16 @@ export async function GET() {
       select: { discordId: true },
     });
 
+    let discordRoles: string[] = [];
+    let userIsOfficer = false;
+
     // Fetch Discord roles and auto-add user to matching teams
     if (user?.discordId) {
-      const discordRoles = await getUserDiscordRoles(user.discordId);
+      discordRoles = await getUserDiscordRoles(user.discordId);
       console.log('User Discord roles:', discordRoles);
+
+      const { isOfficer } = isOfficerOrGM(discordRoles);
+      userIsOfficer = isOfficer;
 
       // Get all teams for debugging
       const allTeams = await prisma.team.findMany({ select: { id: true, name: true } });
@@ -111,7 +125,27 @@ export async function GET() {
       }
     }
 
-    // Get all teams the user is a member of
+    // Officers/GM see ALL teams
+    if (userIsOfficer) {
+      const allTeams = await prisma.team.findMany({
+        include: {
+          _count: {
+            select: { players: true, members: true },
+          },
+        },
+      });
+
+      const teams = allTeams.map(team => ({
+        ...team,
+        role: 'Admin', // Officers have admin access to all teams
+        playerCount: team._count.players,
+        memberCount: team._count.members,
+      }));
+
+      return NextResponse.json(teams);
+    }
+
+    // Regular users only see teams they're a member of
     const teamMembers = await prisma.teamMember.findMany({
       where: { userId: session.user.id },
       include: {

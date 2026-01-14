@@ -14,6 +14,7 @@ export type Team = {
 };
 
 type DiscordRoleInfo = {
+  isGM: boolean;
   isOfficer: boolean;
   allRoles: string[];
 };
@@ -24,6 +25,7 @@ type TeamContextType = {
   setSelectedTeam: (team: Team | null) => void;
   loading: boolean;
   refetchTeams: () => Promise<void>;
+  isGM: boolean;
   isOfficer: boolean;
   discordRoles: string[];
   updateTeamSoftRes: (teamId: string, softResUrl: string) => Promise<boolean>;
@@ -67,6 +69,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeamState] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGM, setIsGM] = useState(false);
   const [isOfficer, setIsOfficer] = useState(false);
   const [discordRoles, setDiscordRoles] = useState<string[]>([]);
 
@@ -76,13 +79,14 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         const roles = data.allRoles || [];
-        const officer = data.isGM || data.isOfficer || checkIsOfficer(roles);
-        return { isOfficer: officer, allRoles: roles };
+        const gm = data.isGM || false;
+        const officer = gm || data.isOfficer || checkIsOfficer(roles);
+        return { isGM: gm, isOfficer: officer, allRoles: roles };
       }
     } catch (error) {
       console.error('Failed to fetch Discord roles:', error);
     }
-    return { isOfficer: false, allRoles: [] };
+    return { isGM: false, isOfficer: false, allRoles: [] };
   };
 
   const fetchTeams = async (roleInfo?: DiscordRoleInfo) => {
@@ -128,6 +132,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const init = async () => {
       const roleInfo = await fetchDiscordRoles();
+      setIsGM(roleInfo.isGM);
       setIsOfficer(roleInfo.isOfficer);
       setDiscordRoles(roleInfo.allRoles);
       await fetchTeams(roleInfo);
@@ -182,6 +187,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
         setSelectedTeam,
         loading,
         refetchTeams,
+        isGM,
         isOfficer,
         discordRoles,
         updateTeamSoftRes,
