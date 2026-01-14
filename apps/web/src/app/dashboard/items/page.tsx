@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check, Users, RefreshCw, Download } from 'lucide-react';
+import { Plus, Search, Filter, Package, Database, Sword, Upload, Loader2, Trash2, Pencil, Check, Users, RefreshCw, Download, X } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RAIDS, GEAR_SLOTS, CLASS_COLORS, ITEM_SOURCES } from '@hooligans/shared';
