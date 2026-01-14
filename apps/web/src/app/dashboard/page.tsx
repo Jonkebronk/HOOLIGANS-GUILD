@@ -100,10 +100,14 @@ export default function DashboardPage() {
               className="h-20 md:h-24 object-contain flex-shrink-0"
             />
 
-            {/* Title */}
-            <div className="text-center md:text-left">
+            {/* Title + What We Expect */}
+            <div className="text-center md:text-left flex-1">
               <h2 className="text-xl font-bold text-foreground">READY TO PUMP</h2>
-              <p className="text-xs text-muted-foreground">Assignments & preparation</p>
+              <p className="text-xs text-muted-foreground mb-2">Assignments & preparation</p>
+              <div className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">What We Expect: </span>
+                Know the fights inside out • Study your assignments and routes • Come prepared with consumes/items (check sheet for your class) • Engage with feedback in Discord
+              </div>
             </div>
 
             {/* Tier 4 Playbook Button */}
@@ -111,23 +115,12 @@ export default function DashboardPage() {
               href={CURRENT_TIER.playbookUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium text-sm flex-shrink-0"
             >
               <span className="font-bold">{CURRENT_TIER.tier} Playbook</span>
               <span className="text-cyan-100 hidden sm:inline">{CURRENT_TIER.raids.join(', ')}</span>
               <ExternalLink className="w-4 h-4" />
             </a>
-
-            {/* What We Expect - visible box */}
-            <div className="bg-secondary/30 rounded-lg px-4 py-2 max-w-lg">
-              <h3 className="font-semibold text-xs text-foreground mb-1">What We Expect</h3>
-              <ul className="text-xs text-muted-foreground space-y-0.5">
-                <li>• Know the fights inside out</li>
-                <li>• Study your assignments and routes</li>
-                <li>• Come prepared with consumes/items (check sheet for your class)</li>
-                <li>• Engage with feedback in Discord</li>
-              </ul>
-            </div>
           </div>
 
           {/* Soft-res section for PuGs */}
