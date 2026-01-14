@@ -301,7 +301,7 @@ export default function DropsPage() {
   };
 
   const handleAssignPlayer = async (itemId: string, playerId: string) => {
-    // Optimistic update
+    // Optimistic update for immediate UI feedback
     const player = players.find((p) => p.id === playerId);
     const updatedItems = lootItems.map((item) =>
       item.id === itemId
@@ -334,6 +334,8 @@ export default function DropsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId: playerId || null }),
       });
+      // Refetch data to update BiS lists (they're calculated server-side)
+      await fetchData();
     } catch (error) {
       console.error('Failed to assign player:', error);
     }
