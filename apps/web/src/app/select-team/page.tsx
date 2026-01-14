@@ -33,7 +33,7 @@ const ROLE_ICONS = {
 
 export default function SelectTeamPage() {
   const router = useRouter();
-  const { teams, setSelectedTeam, loading, refetchTeams, isGM } = useTeam();
+  const { teams, setSelectedTeam, loading, refetchTeams, isGM, isOfficer } = useTeam();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [creating, setCreating] = useState(false);
@@ -169,7 +169,7 @@ export default function SelectTeamPage() {
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold text-white mb-2">No Teams Available</h3>
               <p className="text-muted-foreground mb-4">
-                {isGM
+                {isGM || isOfficer
                   ? 'Create your first team to get started managing your guild.'
                   : 'Contact the GM to be added to a team.'}
               </p>
@@ -177,8 +177,8 @@ export default function SelectTeamPage() {
           </Card>
         )}
 
-        {/* Create Team Button - GM only */}
-        {isGM && (
+        {/* Create Team Button - GM and Officers */}
+        {(isGM || isOfficer) && (
           <div className="text-center">
             <Button
               variant="outline"
