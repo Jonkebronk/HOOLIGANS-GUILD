@@ -6,10 +6,16 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get('teamId');
+    const history = searchParams.get('history') === 'true';
 
     // Get loot records with items and redemptions
+    // By default, fetch only current session (non-finalized) items
+    // Use ?history=true to fetch finalized (history) items
     const lootRecords = await prisma.lootRecord.findMany({
-      where: teamId ? { teamId } : undefined,
+      where: {
+        ...(teamId ? { teamId } : {}),
+        finalized: history,
+      },
       include: {
         item: {
           select: {

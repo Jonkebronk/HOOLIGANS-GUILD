@@ -111,6 +111,7 @@ export default function DropsPage() {
   const [loading, setLoading] = useState(true);
   const [players, setPlayers] = useState<Player[]>([]);
   const [lootItems, setLootItems] = useState<LootItem[]>([]);
+  const [lootHistory, setLootHistory] = useState<any[]>([]); // Finalized loot for stats
   const [raiders, setRaiders] = useState<RaiderStats[]>([]);
   // Add Item dialog state
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
@@ -124,18 +125,25 @@ export default function DropsPage() {
 
     setLoading(true);
     try {
-      // Fetch players and loot records in parallel
-      const [playersRes, lootRes] = await Promise.all([
+      // Fetch players, current session loot, and finalized loot history in parallel
+      const [playersRes, lootRes, historyRes] = await Promise.all([
         fetch(`/api/players?teamId=${selectedTeam.id}`),
-        fetch(`/api/loot?teamId=${selectedTeam.id}`),
+        fetch(`/api/loot?teamId=${selectedTeam.id}`), // Current session (non-finalized)
+        fetch(`/api/loot?teamId=${selectedTeam.id}&history=true`), // Finalized history for stats
       ]);
 
       let playersData: Player[] = [];
       let lootData: any[] = [];
+      let historyData: any[] = [];
 
       if (playersRes.ok) {
         playersData = await playersRes.json();
         setPlayers(playersData);
+      }
+
+      if (historyRes.ok) {
+        historyData = await historyRes.json();
+        setLootHistory(historyData);
       }
 
       if (lootRes.ok) {
@@ -197,9 +205,11 @@ export default function DropsPage() {
         setLootItems(items);
       }
 
-      // Calculate raider stats with both players and loot data
+      // Calculate raider stats with both players and ALL loot data (history + current session)
       if (playersData.length > 0) {
-        const raiderStats = calculateRaiderStats(playersData, lootData);
+        // Combine finalized history with current session for complete stats
+        const allLootData = [...historyData, ...lootData];
+        const raiderStats = calculateRaiderStats(playersData, allLootData, lootData);
         setRaiders(raiderStats);
       }
     } catch (error) {
@@ -215,16 +225,20 @@ export default function DropsPage() {
 
   const calculateRaiderStats = (
     playersList: Player[],
-    lootRecords: { playerId: string; lootPoints?: number; lootDate?: string }[]
+    allLootRecords: { playerId: string; lootPoints?: number; lootDate?: string }[],
+    currentSessionRecords?: { playerId: string; lootPoints?: number; lootDate?: string }[]
   ): RaiderStats[] => {
     const now = new Date();
+    const sessionRecords = currentSessionRecords || allLootRecords;
 
     return playersList.map((player) => {
-      const playerLoot = lootRecords.filter((r) => r.playerId === player.id);
-      const totalItems = playerLoot.length;
+      // Total loot from ALL history (finalized + current)
+      const playerTotalLoot = allLootRecords.filter((r) => r.playerId === player.id);
+      const totalItems = playerTotalLoot.length;
 
-      // Calculate LTR (Loot This Raid) - items assigned in current session
-      const lootThisRaid = playerLoot.length;
+      // LTR (Loot This Raid) - items assigned in CURRENT session only
+      const playerSessionLoot = sessionRecords.filter((r) => r.playerId === player.id);
+      const lootThisRaid = playerSessionLoot.length;
 
       // Calculate days since last item and total days in guild
       const totalDays = Math.max(1, Math.floor(
@@ -232,9 +246,9 @@ export default function DropsPage() {
       ));
 
       let daysSinceLastItem = `-/${totalDays}`;
-      if (playerLoot.length > 0) {
+      if (playerTotalLoot.length > 0) {
         const lastLootDate = new Date(
-          Math.max(...playerLoot.map((r) => new Date(r.lootDate || 0).getTime()))
+          Math.max(...playerTotalLoot.map((r) => new Date(r.lootDate || 0).getTime()))
         );
         const daysSince = Math.floor((now.getTime() - lastLootDate.getTime()) / (1000 * 60 * 60 * 24));
         daysSinceLastItem = `${daysSince}/${totalDays}`;
@@ -271,13 +285,15 @@ export default function DropsPage() {
     setLootItems(updatedItems);
 
     // Recalculate raider stats based on updated items
-    const lootRecordsForStats = updatedItems
+    const sessionRecords = updatedItems
       .filter(item => item.playerId)
       .map(item => ({
         playerId: item.playerId!,
         lootDate: item.lootDate,
       }));
-    const raiderStats = calculateRaiderStats(players, lootRecordsForStats);
+    // Combine with history for total stats
+    const allLootRecords = [...lootHistory, ...sessionRecords];
+    const raiderStats = calculateRaiderStats(players, allLootRecords, sessionRecords);
     setRaiders(raiderStats);
 
     // Persist to database
@@ -298,13 +314,15 @@ export default function DropsPage() {
     setLootItems(updatedItems);
 
     // Recalculate raider stats
-    const lootRecordsForStats = updatedItems
+    const sessionRecords = updatedItems
       .filter(item => item.playerId)
       .map(item => ({
         playerId: item.playerId!,
         lootDate: item.lootDate,
       }));
-    const raiderStats = calculateRaiderStats(players, lootRecordsForStats);
+    // Combine with history for total stats
+    const allLootRecords = [...lootHistory, ...sessionRecords];
+    const raiderStats = calculateRaiderStats(players, allLootRecords, sessionRecords);
     setRaiders(raiderStats);
 
     // Delete from database
@@ -395,18 +413,26 @@ export default function DropsPage() {
     }
 
     try {
-      // Clear only unassigned items (assigned items are already saved to DB)
-      const res = await fetch(`/api/loot/clear-unassigned?teamId=${selectedTeam.id}`, {
-        method: 'DELETE',
+      // Mark assigned items as finalized and delete unassigned items
+      const res = await fetch(`/api/loot/finalize-session?teamId=${selectedTeam.id}`, {
+        method: 'POST',
       });
 
       if (res.ok) {
-        // Keep assigned items in state (they are now "finalized" in history)
-        // Clear local state to show empty session
+        const data = await res.json();
+        // Move assigned items from session to history
+        const assignedItems = lootItems.filter(item => item.playerId);
+        const newHistory = [...lootHistory, ...assignedItems.map(item => ({
+          playerId: item.playerId,
+          lootDate: item.lootDate,
+        }))];
+        setLootHistory(newHistory);
+        // Clear local session state
         setLootItems([]);
-        // Reset raider stats for new session
-        const raiderStats = calculateRaiderStats(players, []);
+        // Recalculate raider stats with updated history (no current session items)
+        const raiderStats = calculateRaiderStats(players, newHistory, []);
         setRaiders(raiderStats);
+        alert(`Session finalized! ${data.finalized} items saved to history.`);
       }
     } catch (error) {
       console.error('Failed to finalize session:', error);
@@ -436,10 +462,10 @@ export default function DropsPage() {
       });
 
       if (res.ok) {
-        // Clear all items from local state
+        // Clear all session items from local state (history remains)
         setLootItems([]);
-        // Reset raider stats
-        const raiderStats = calculateRaiderStats(players, []);
+        // Recalculate raider stats with just history (no current session)
+        const raiderStats = calculateRaiderStats(players, lootHistory, []);
         setRaiders(raiderStats);
       }
     } catch (error) {
