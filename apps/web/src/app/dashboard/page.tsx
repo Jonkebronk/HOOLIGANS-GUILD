@@ -114,6 +114,7 @@ export default function DashboardPage() {
                 <span className="text-cyan-100 hidden sm:inline">{CURRENT_TIER.raids.join(', ')}</span>
                 <ExternalLink className="w-4 h-4" />
               </a>
+              <p className="text-xs text-muted-foreground mt-1 italic">Preparation outside the game is what makes dominance inside the game possible.</p>
             </div>
 
             {/* What We Expect */}
