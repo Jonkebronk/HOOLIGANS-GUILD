@@ -1,8 +1,6 @@
 // One-time script to clear all sessions on deploy
 // This forces all users to re-login with fresh sessions
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@hooligans/database';
 
 async function clearSessions() {
   console.log('Clearing all sessions...');
