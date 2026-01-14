@@ -23,6 +23,13 @@ type Needer = {
   receivedDate?: string;
 };
 
+type SpecNeeder = {
+  spec: string;
+  specDisplay: string;
+  class: string;
+  role: string;
+};
+
 type KarazhanItem = {
   id: string;
   name: string;
@@ -32,6 +39,7 @@ type KarazhanItem = {
   boss: string;
   slot: string;
   needers: Needer[];
+  specNeeders?: SpecNeeder[];
 };
 
 type KarazhanOverviewProps = {
@@ -203,7 +211,10 @@ export function KarazhanOverview({ teamId, isPuG = false }: KarazhanOverviewProp
           {/* Legend */}
           <div className="mt-4 pt-3 border-t border-border text-xs text-muted-foreground flex flex-wrap items-center gap-4">
             {isPuG ? (
-              <span>Click items to view on Wowhead. Use soft-res to reserve loot.</span>
+              <>
+                <span>Specs colored by class - hover for details</span>
+                <span>Click items to view on Wowhead</span>
+              </>
             ) : (
               <>
                 <span className="flex items-center gap-1">
@@ -221,6 +232,14 @@ export function KarazhanOverview({ teamId, isPuG = false }: KarazhanOverviewProp
   );
 }
 
+// Role colors for PuG view
+const ROLE_COLORS: Record<string, string> = {
+  Tank: '#C79C6E',
+  Healer: '#00FF96',
+  Melee: '#C41E3A',
+  Ranged: '#3FC7EB',
+};
+
 function ItemRow({ item, isPuG = false }: { item: KarazhanItem; isPuG?: boolean }) {
   const iconUrl = item.icon
     ? getItemIconUrl(item.icon, 'small')
@@ -234,6 +253,16 @@ function ItemRow({ item, isPuG = false }: { item: KarazhanItem; isPuG?: boolean 
     if (!a.hasReceived && b.hasReceived) return -1;
     return a.name.localeCompare(b.name);
   });
+
+  // Sort spec needers by role then class
+  const sortedSpecNeeders = item.specNeeders
+    ? [...item.specNeeders].sort((a, b) => {
+        const roleOrder = ['Tank', 'Healer', 'Melee', 'Ranged'];
+        const roleCompare = roleOrder.indexOf(a.role) - roleOrder.indexOf(b.role);
+        if (roleCompare !== 0) return roleCompare;
+        return a.class.localeCompare(b.class);
+      })
+    : [];
 
   return (
     <div className="flex items-center gap-3 py-1.5 px-2 rounded hover:bg-muted/30">
@@ -269,7 +298,22 @@ function ItemRow({ item, isPuG = false }: { item: KarazhanItem; isPuG?: boolean 
         >
           {item.name}
         </a>
-        {/* Only show needers for team mode */}
+        {/* Show spec needers for PuG mode */}
+        {isPuG && sortedSpecNeeders.length > 0 && (
+          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
+            {sortedSpecNeeders.map((spec, idx) => (
+              <span
+                key={`${spec.spec}-${idx}`}
+                className="text-xs"
+                style={{ color: CLASS_COLORS[spec.class] || '#888' }}
+                title={`${spec.class} ${spec.specDisplay} (${spec.role})`}
+              >
+                {spec.specDisplay}
+              </span>
+            ))}
+          </div>
+        )}
+        {/* Show player needers for team mode */}
         {!isPuG && sortedNeeders.length > 0 && (
           <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1">
             {sortedNeeders.map((needer, idx) => (

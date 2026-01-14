@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@hooligans/database';
+import { SPEC_ROLES } from '@hooligans/shared';
 
 type Needer = {
   playerId: string;
@@ -7,6 +8,13 @@ type Needer = {
   class: string;
   hasReceived: boolean;
   receivedDate?: string;
+};
+
+type SpecNeeder = {
+  spec: string;
+  specDisplay: string;
+  class: string;
+  role: string;
 };
 
 type KarazhanItemWithNeeders = {
@@ -18,6 +26,7 @@ type KarazhanItemWithNeeders = {
   boss: string;
   slot: string;
   needers: Needer[];
+  specNeeders?: SpecNeeder[];
 };
 
 export async function GET(request: Request) {
@@ -91,6 +100,40 @@ export async function GET(request: Request) {
       }
     }
 
+    // For PuG mode, get spec preset BiS data
+    let specBisByWowheadId = new Map<number, SpecNeeder[]>();
+    if (isPuG) {
+      const specBisConfigs = await prisma.bisConfiguration.findMany({
+        where: {
+          phase: 'P1',
+          wowheadId: { not: null },
+        },
+      });
+
+      for (const config of specBisConfigs) {
+        if (config.wowheadId) {
+          const existing = specBisByWowheadId.get(config.wowheadId) || [];
+          // Extract class from spec name (e.g., "DruidBalance" -> "Druid")
+          const specClass = config.spec.replace(/(Balance|Feral|Guardian|Restoration|Dreamstate|BeastMastery|Marksmanship|Survival|Arcane|Fire|Frost|Holy|Protection|Retribution|Discipline|Shadow|Assassination|Combat|Subtlety|Elemental|Enhancement|Affliction|Demonology|Destruction|Arms|Fury|Kebab)$/, '');
+          // Get display name (e.g., "DruidBalance" -> "Balance")
+          const specName = config.spec.replace(specClass, '');
+          // Get role from SPEC_ROLES
+          const roleInfo = SPEC_ROLES[config.spec];
+          const role = roleInfo?.role === 'Tank' ? 'Tank' : roleInfo?.role === 'Heal' ? 'Healer' : roleInfo?.subtype === 'DPS_Melee' ? 'Melee' : 'Ranged';
+
+          if (!existing.find(s => s.spec === config.spec)) {
+            existing.push({
+              spec: config.spec,
+              specDisplay: specName,
+              class: specClass,
+              role,
+            });
+          }
+          specBisByWowheadId.set(config.wowheadId, existing);
+        }
+      }
+    }
+
     // Process items to add needer information
     const itemsWithNeeders: KarazhanItemWithNeeders[] = items
       .map((item) => {
@@ -121,6 +164,11 @@ export async function GET(request: Request) {
           };
         });
 
+        // Get spec needers for PuG mode
+        const specNeeders = isPuG && item.wowheadId
+          ? specBisByWowheadId.get(item.wowheadId) || []
+          : [];
+
         return {
           id: item.id,
           name: item.name,
@@ -130,10 +178,11 @@ export async function GET(request: Request) {
           boss: item.boss,
           slot: item.slot,
           needers,
+          specNeeders: isPuG ? specNeeders : undefined,
         };
       })
-      // For PuG mode, show all items; for team mode, only show items with BiS needers
-      .filter(item => isPuG || item.needers.length > 0);
+      // For PuG mode, show items with spec needers; for team mode, only show items with BiS needers
+      .filter(item => isPuG ? (item.specNeeders && item.specNeeders.length > 0) : item.needers.length > 0);
 
     // Get unique bosses for filtering
     const bosses = [...new Set(items.map(i => i.boss))].sort();
