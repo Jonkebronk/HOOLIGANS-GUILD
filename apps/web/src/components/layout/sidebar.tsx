@@ -18,7 +18,6 @@ import {
   Droplets,
   Activity,
   History,
-  FlaskConical,
   Layers,
   ClipboardList,
 } from 'lucide-react';
@@ -35,7 +34,6 @@ const navigation: NavItem[] = [
   { name: 'Roster', href: '/dashboard/roster', icon: Users },
   { name: 'Raid Splits', href: '/dashboard/splits', icon: Users2 },
   { name: 'Performance', href: '/dashboard/performance', icon: Activity },
-  { name: 'Consumables', href: '/dashboard/consumables', icon: FlaskConical },
   { name: 'Assignments', href: '/dashboard/assignments', icon: ClipboardList },
   {
     name: 'Loot Council',
