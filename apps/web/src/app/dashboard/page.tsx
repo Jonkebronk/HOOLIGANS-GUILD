@@ -17,6 +17,7 @@ import { useTeam } from '@/components/providers/team-provider';
 const CURRENT_TIER = {
   tier: 'Tier 4',
   raids: ['Karazhan', "Gruul's Lair", "Magtheridon's Lair"],
+  playbookUrl: 'https://docs.google.com/spreadsheets/d/1e4vNjyKwtOC3HTEQ16VOXRjIBgsVHV1vVoSaNivJOAQ/edit?gid=1112278956#gid=1112278956',
 };
 
 // Class Discord server links
@@ -109,6 +110,46 @@ export default function DashboardPage() {
             <span className="text-cyan-100">{CURRENT_TIER.raids.join(', ')}</span>
             <ExternalLink className="w-4 h-4" />
           </Link>
+
+          {/* What We Expect & The Playbook */}
+          <div className="grid md:grid-cols-2 gap-4 mb-4 text-left max-w-2xl">
+            <div className="bg-secondary/30 rounded-lg p-4">
+              <h3 className="font-semibold text-sm text-foreground mb-2">What We Expect</h3>
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 mt-0.5">•</span>
+                  <span>Know the fights inside out</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 mt-0.5">•</span>
+                  <span>Study your assignments and routes</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 mt-0.5">•</span>
+                  <span>Come prepared with everything you need to perform and any situational speed items</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="text-cyan-400 mt-0.5">•</span>
+                  <span>Engage with feedback and improvement discussions in Discord</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-secondary/30 rounded-lg p-4">
+              <h3 className="font-semibold text-sm text-foreground mb-2">The Playbook</h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Detailed assignments and optimized routes for all TBC content. Preparation outside the game is what makes dominance inside the game possible.
+              </p>
+              <a
+                href={CURRENT_TIER.playbookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-cyan-600/20 hover:bg-cyan-600/30 transition-colors text-cyan-400 text-xs font-medium"
+              >
+                <span>{CURRENT_TIER.tier} Playbook</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
 
           {/* Soft-res link for PuGs */}
           {isPuG && (
