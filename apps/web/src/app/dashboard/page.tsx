@@ -91,60 +91,65 @@ export default function DashboardPage() {
       {/* Ready to Pump Card */}
       <Card className="overflow-hidden">
         <div className="p-6">
-          {/* Top section: Arnold left, Tier 4 Playbook right */}
-          <div className="flex flex-col md:flex-row items-start gap-6 mb-6">
-            {/* Arnold + Title */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <img
-                src="/images/pump-arnold.webp"
-                alt="Ready to pump"
-                className="h-24 md:h-32 object-contain"
-              />
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">READY TO PUMP</h2>
-                <p className="text-sm text-muted-foreground">Assignments & preparation</p>
-              </div>
-            </div>
+          {/* Top section: Arnold + Title + Tier 4 Playbook + What We Expect */}
+          <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
+            {/* Arnold */}
+            <img
+              src="/images/pump-arnold.webp"
+              alt="Ready to pump"
+              className="h-20 md:h-24 object-contain flex-shrink-0"
+            />
 
-            {/* Tier 4 Playbook Section */}
-            <div className="md:ml-auto bg-secondary/30 rounded-lg p-4 max-w-md">
+            {/* Title + Buttons row */}
+            <div className="flex flex-col md:flex-row items-center gap-4 flex-1">
+              <div className="text-center md:text-left">
+                <h2 className="text-xl font-bold text-foreground">READY TO PUMP</h2>
+                <p className="text-xs text-muted-foreground">Assignments & preparation</p>
+              </div>
+
+              {/* Tier 4 Playbook Button */}
               <a
                 href={CURRENT_TIER.playbookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium mb-3"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium text-sm"
               >
                 <span className="font-bold">{CURRENT_TIER.tier} Playbook</span>
                 <span className="text-cyan-100 hidden sm:inline">{CURRENT_TIER.raids.join(', ')}</span>
                 <ExternalLink className="w-4 h-4" />
               </a>
-              <p className="text-xs text-muted-foreground">
-                Detailed assignments and optimized routes for all TBC content. Preparation outside the game is what makes dominance inside the game possible.
-              </p>
-            </div>
-          </div>
 
-          {/* What We Expect */}
-          <div className="bg-secondary/30 rounded-lg p-4 mb-4">
-            <h3 className="font-semibold text-sm text-foreground mb-2">What We Expect</h3>
-            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
-              <li className="flex items-start gap-1.5">
-                <span className="text-cyan-400 mt-0.5">•</span>
-                <span>Know the fights inside out</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <span className="text-cyan-400 mt-0.5">•</span>
-                <span>Study your assignments and routes</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <span className="text-cyan-400 mt-0.5">•</span>
-                <span>Come prepared with everything you need to perform and any situational speed items. Check the tab in sheet for consumes and items for your class and spec.</span>
-              </li>
-              <li className="flex items-start gap-1.5">
-                <span className="text-cyan-400 mt-0.5">•</span>
-                <span>Engage with feedback and improvement discussions in Discord</span>
-              </li>
-            </ul>
+              {/* What We Expect Dropdown */}
+              <details className="group">
+                <summary className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors cursor-pointer text-sm font-medium list-none">
+                  <span>What We Expect</span>
+                  <Eye className="w-4 h-4 group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="absolute mt-2 bg-popover border border-border rounded-lg p-4 shadow-lg z-10 max-w-md">
+                  <ul className="space-y-2 text-xs text-muted-foreground">
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-cyan-400 mt-0.5">•</span>
+                      <span>Know the fights inside out</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-cyan-400 mt-0.5">•</span>
+                      <span>Study your assignments and routes</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-cyan-400 mt-0.5">•</span>
+                      <span>Come prepared with everything you need to perform and any situational speed items. Check the tab in sheet for consumes and items for your class and spec.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-cyan-400 mt-0.5">•</span>
+                      <span>Engage with feedback and improvement discussions in Discord</span>
+                    </li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
+                    Detailed assignments and optimized routes for all TBC content. Preparation outside the game is what makes dominance inside the game possible.
+                  </p>
+                </div>
+              </details>
+            </div>
           </div>
 
           {/* Soft-res section for PuGs */}
