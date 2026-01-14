@@ -92,9 +92,9 @@ export default function DashboardPage() {
       <Card className="overflow-hidden">
         <div className="p-6">
           {/* Top section: Arnold left, Tier 4 Playbook right */}
-          <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+          <div className="flex flex-col md:flex-row items-start gap-6 mb-6">
             {/* Arnold + Title */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-shrink-0">
               <img
                 src="/images/pump-arnold.webp"
                 alt="Ready to pump"
@@ -106,18 +106,21 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Tier 4 Playbook Button */}
-            <div className="md:ml-auto">
+            {/* Tier 4 Playbook Section */}
+            <div className="md:ml-auto bg-secondary/30 rounded-lg p-4 max-w-md">
               <a
                 href={CURRENT_TIER.playbookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium"
+                className="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium mb-3"
               >
                 <span className="font-bold">{CURRENT_TIER.tier} Playbook</span>
                 <span className="text-cyan-100 hidden sm:inline">{CURRENT_TIER.raids.join(', ')}</span>
                 <ExternalLink className="w-4 h-4" />
               </a>
+              <p className="text-xs text-muted-foreground">
+                Detailed assignments and optimized routes for all TBC content. Preparation outside the game is what makes dominance inside the game possible.
+              </p>
             </div>
           </div>
 
@@ -135,7 +138,7 @@ export default function DashboardPage() {
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-cyan-400 mt-0.5">•</span>
-                <span>Come prepared with everything you need to perform and any situational speed items. Check the tab in sheet for your class and spec.</span>
+                <span>Come prepared with everything you need to perform and any situational speed items. Check the tab in sheet for consumes and items for your class and spec.</span>
               </li>
               <li className="flex items-start gap-1.5">
                 <span className="text-cyan-400 mt-0.5">•</span>
