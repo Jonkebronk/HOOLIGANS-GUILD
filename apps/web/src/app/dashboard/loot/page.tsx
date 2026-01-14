@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Loader2, Search, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Loader2, Search, Plus, RefreshCw, Trash2, Save, RotateCcw } from 'lucide-react';
 import { ITEM_QUALITY_COLORS, getItemIconUrl } from '@/lib/wowhead';
 import { useTeam } from '@/components/providers/team-provider';
 import { ItemsTable } from '@/components/drops/items-table';
@@ -130,17 +130,16 @@ export default function DropsPage() {
         fetch(`/api/loot?teamId=${selectedTeam.id}`),
       ]);
 
-      if (playersRes.ok) {
-        const playersData = await playersRes.json();
-        setPlayers(playersData);
+      let playersData: Player[] = [];
+      let lootData: any[] = [];
 
-        // Calculate raider stats from players and loot
-        const raiderStats = calculateRaiderStats(playersData, []);
-        setRaiders(raiderStats);
+      if (playersRes.ok) {
+        playersData = await playersRes.json();
+        setPlayers(playersData);
       }
 
       if (lootRes.ok) {
-        const lootData = await lootRes.json();
+        lootData = await lootRes.json();
         // Transform loot records to LootItem format
         // Handle both: records with item relation AND records with direct itemName (from RC import)
         const items: LootItem[] = lootData.map((record: {
@@ -196,19 +195,19 @@ export default function DropsPage() {
           };
         });
         setLootItems(items);
+      }
 
-        // Update raider stats with loot data
-        if (players.length > 0) {
-          const raiderStats = calculateRaiderStats(players, lootData);
-          setRaiders(raiderStats);
-        }
+      // Calculate raider stats with both players and loot data
+      if (playersData.length > 0) {
+        const raiderStats = calculateRaiderStats(playersData, lootData);
+        setRaiders(raiderStats);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
-  }, [selectedTeam, players]);
+  }, [selectedTeam]);
 
   useEffect(() => {
     fetchData();
@@ -224,22 +223,21 @@ export default function DropsPage() {
       const playerLoot = lootRecords.filter((r) => r.playerId === player.id);
       const totalItems = playerLoot.length;
 
-      // Calculate days since last item
-      let daysSinceLastItem = '0/0';
+      // Calculate LTR (Loot This Raid) - items assigned in current session
+      const lootThisRaid = playerLoot.length;
+
+      // Calculate days since last item and total days in guild
+      const totalDays = Math.max(1, Math.floor(
+        (now.getTime() - new Date(player.joinedDate).getTime()) / (1000 * 60 * 60 * 24)
+      ));
+
+      let daysSinceLastItem = `-/${totalDays}`;
       if (playerLoot.length > 0) {
         const lastLootDate = new Date(
           Math.max(...playerLoot.map((r) => new Date(r.lootDate || 0).getTime()))
         );
         const daysSince = Math.floor((now.getTime() - lastLootDate.getTime()) / (1000 * 60 * 60 * 24));
-        const totalDays = Math.floor(
-          (now.getTime() - new Date(player.joinedDate).getTime()) / (1000 * 60 * 60 * 24)
-        );
         daysSinceLastItem = `${daysSince}/${totalDays}`;
-      } else {
-        const totalDays = Math.floor(
-          (now.getTime() - new Date(player.joinedDate).getTime()) / (1000 * 60 * 60 * 24)
-        );
-        daysSinceLastItem = `0/${totalDays}`;
       }
 
       return {
@@ -248,7 +246,7 @@ export default function DropsPage() {
         class: player.class,
         role: player.role,
         roleSubtype: player.roleSubtype,
-        lootThisRaid: 0, // TODO: Calculate based on current raid session
+        lootThisRaid,
         totalLootCurrentPhase: totalItems,
         bisPercent: 0, // TODO: Calculate from PlayerBisStatus
         totalItems,
@@ -260,18 +258,27 @@ export default function DropsPage() {
   const handleAssignPlayer = async (itemId: string, playerId: string) => {
     // Optimistic update
     const player = players.find((p) => p.id === playerId);
-    setLootItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId
-          ? {
-              ...item,
-              playerId: playerId || undefined,
-              playerName: player?.name,
-              playerClass: player?.class,
-            }
-          : item
-      )
+    const updatedItems = lootItems.map((item) =>
+      item.id === itemId
+        ? {
+            ...item,
+            playerId: playerId || undefined,
+            playerName: player?.name,
+            playerClass: player?.class,
+          }
+        : item
     );
+    setLootItems(updatedItems);
+
+    // Recalculate raider stats based on updated items
+    const lootRecordsForStats = updatedItems
+      .filter(item => item.playerId)
+      .map(item => ({
+        playerId: item.playerId!,
+        lootDate: item.lootDate,
+      }));
+    const raiderStats = calculateRaiderStats(players, lootRecordsForStats);
+    setRaiders(raiderStats);
 
     // Persist to database
     try {
@@ -282,6 +289,33 @@ export default function DropsPage() {
       });
     } catch (error) {
       console.error('Failed to assign player:', error);
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    // Optimistic update
+    const updatedItems = lootItems.filter((item) => item.id !== itemId);
+    setLootItems(updatedItems);
+
+    // Recalculate raider stats
+    const lootRecordsForStats = updatedItems
+      .filter(item => item.playerId)
+      .map(item => ({
+        playerId: item.playerId!,
+        lootDate: item.lootDate,
+      }));
+    const raiderStats = calculateRaiderStats(players, lootRecordsForStats);
+    setRaiders(raiderStats);
+
+    // Delete from database
+    try {
+      await fetch(`/api/loot/${itemId}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to delete item:', error);
+      // Revert on error
+      fetchData();
     }
   };
 
@@ -341,6 +375,44 @@ export default function DropsPage() {
     }
   };
 
+  const handleFinalizeSession = async () => {
+    if (!selectedTeam) return;
+
+    const assignedItems = lootItems.filter(item => item.playerId);
+    const unassignedCount = lootItems.filter(item => !item.playerId).length;
+
+    if (assignedItems.length === 0) {
+      alert('No items have been assigned yet. Assign items to players before finalizing.');
+      return;
+    }
+
+    const message = unassignedCount > 0
+      ? `Save ${assignedItems.length} assigned items to loot history and clear ${unassignedCount} unassigned items?`
+      : `Save ${assignedItems.length} assigned items to loot history?`;
+
+    if (!confirm(message)) {
+      return;
+    }
+
+    try {
+      // Clear only unassigned items (assigned items are already saved to DB)
+      const res = await fetch(`/api/loot/clear-unassigned?teamId=${selectedTeam.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        // Keep assigned items in state (they are now "finalized" in history)
+        // Clear local state to show empty session
+        setLootItems([]);
+        // Reset raider stats for new session
+        const raiderStats = calculateRaiderStats(players, []);
+        setRaiders(raiderStats);
+      }
+    } catch (error) {
+      console.error('Failed to finalize session:', error);
+    }
+  };
+
   const handleNewSession = async () => {
     if (!selectedTeam) return;
 
@@ -349,7 +421,12 @@ export default function DropsPage() {
       return;
     }
 
-    if (!confirm(`Clear all ${totalCount} items and start a new loot session?`)) {
+    const assignedCount = lootItems.filter(item => item.playerId).length;
+    if (assignedCount > 0) {
+      if (!confirm(`WARNING: This will delete ALL ${totalCount} items including ${assignedCount} assigned items. Use "Finalize Session" to save assigned items first. Continue anyway?`)) {
+        return;
+      }
+    } else if (!confirm(`Clear all ${totalCount} unassigned items?`)) {
       return;
     }
 
@@ -361,6 +438,9 @@ export default function DropsPage() {
       if (res.ok) {
         // Clear all items from local state
         setLootItems([]);
+        // Reset raider stats
+        const raiderStats = calculateRaiderStats(players, []);
+        setRaiders(raiderStats);
       }
     } catch (error) {
       console.error('Failed to clear session:', error);
@@ -449,9 +529,13 @@ export default function DropsPage() {
           </Button>
           {isOfficer && (
             <>
+              <Button variant="default" size="sm" onClick={handleFinalizeSession}>
+                <Save className="h-4 w-4 mr-2" />
+                Finalize Session
+              </Button>
               <Button variant="outline" size="sm" onClick={handleNewSession}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                New Session
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Clear All
               </Button>
               <RCImportDialog onImport={handleRCImport} />
             </>
@@ -563,6 +647,7 @@ export default function DropsPage() {
               players={players}
               onAssignPlayer={handleAssignPlayer}
               onUpdateResponse={handleUpdateResponse}
+              onDeleteItem={handleDeleteItem}
               isOfficer={isOfficer}
             />
           </CardContent>

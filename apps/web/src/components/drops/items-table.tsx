@@ -8,7 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { ITEM_QUALITY_COLORS, refreshWowheadTooltips, getItemIconUrl } from '@/lib/wowhead';
 
@@ -92,6 +93,7 @@ type ItemsTableProps = {
   players: Player[];
   onAssignPlayer: (itemId: string, playerId: string) => void;
   onUpdateResponse: (itemId: string, response: string) => void;
+  onDeleteItem?: (itemId: string) => void;
   isOfficer?: boolean;
 };
 
@@ -109,6 +111,7 @@ export function ItemsTable({
   players,
   onAssignPlayer,
   onUpdateResponse,
+  onDeleteItem,
   isOfficer = false,
 }: ItemsTableProps) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -149,6 +152,7 @@ export function ItemsTable({
             <th className="text-left py-2 px-2 font-medium text-muted-foreground w-[140px]">Loot Prio</th>
             <th className="text-left py-2 px-2 font-medium text-muted-foreground w-[120px]">BiS</th>
             <th className="text-left py-2 px-2 font-medium text-muted-foreground w-[120px]">BiS Next</th>
+            {isOfficer && onDeleteItem && <th className="text-left py-2 px-2 font-medium text-muted-foreground w-[50px]"></th>}
           </tr>
         </thead>
         <tbody>
@@ -343,11 +347,26 @@ export function ItemsTable({
                   )}
                 </div>
               </td>
+              {isOfficer && onDeleteItem && (
+                <td className="py-1.5 px-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteItem(item.id);
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </td>
+              )}
                 </tr>
                 {/* Expanded token redemption row */}
                 {hasRedemptions && isExpanded && (
                   <tr key={`${item.id}-expanded`} className="bg-muted/30">
-                    <td colSpan={8} className="py-3 px-4">
+                    <td colSpan={isOfficer && onDeleteItem ? 9 : 8} className="py-3 px-4">
                       <div className="space-y-2">
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
                           Redemption Items
@@ -432,7 +451,7 @@ export function ItemsTable({
           })}
           {items.length === 0 && (
             <tr>
-              <td colSpan={8} className="py-8 text-center text-muted-foreground">
+              <td colSpan={isOfficer && onDeleteItem ? 9 : 8} className="py-8 text-center text-muted-foreground">
                 No items yet. Import from RCLootCouncil or add items manually.
               </td>
             </tr>
