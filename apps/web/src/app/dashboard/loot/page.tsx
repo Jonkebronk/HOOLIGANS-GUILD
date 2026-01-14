@@ -323,11 +323,16 @@ export default function DropsPage() {
           newBisNextPlayers = newBisNextPlayers.filter(p => p.id !== playerId);
         }
 
-        // If un-assigning and there was a previous player, add them back to BiS
+        // If un-assigning and there was a previous player, add them back to BiS lists
         if (isUnassigning && previousPlayer && previousPlayerId) {
-          // Only add back if not already in list
+          const playerData = { id: previousPlayerId, name: previousPlayer.name, class: previousPlayer.class };
+          // Add back to BiS if not already in list
           if (!newBisPlayers.find(p => p.id === previousPlayerId)) {
-            newBisPlayers = [...newBisPlayers, { id: previousPlayerId, name: previousPlayer.name, class: previousPlayer.class }];
+            newBisPlayers = [...newBisPlayers, playerData];
+          }
+          // Add back to BiS Next if not already in list
+          if (!newBisNextPlayers.find(p => p.id === previousPlayerId)) {
+            newBisNextPlayers = [...newBisNextPlayers, playerData];
           }
         }
 
@@ -351,10 +356,14 @@ export default function DropsPage() {
           newBisNextPlayers = newBisNextPlayers.filter(p => p.id !== playerId);
         }
 
-        // If un-assigning, add previous player back
+        // If un-assigning, add previous player back to both lists
         if (isUnassigning && previousPlayer && previousPlayerId) {
+          const playerData = { id: previousPlayerId, name: previousPlayer.name, class: previousPlayer.class };
           if (!newBisPlayers.find(p => p.id === previousPlayerId)) {
-            newBisPlayers = [...newBisPlayers, { id: previousPlayerId, name: previousPlayer.name, class: previousPlayer.class }];
+            newBisPlayers = [...newBisPlayers, playerData];
+          }
+          if (!newBisNextPlayers.find(p => p.id === previousPlayerId)) {
+            newBisNextPlayers = [...newBisNextPlayers, playerData];
           }
         }
 
