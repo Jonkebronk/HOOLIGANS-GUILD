@@ -150,7 +150,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   };
 
   const refetchTeams = async () => {
-    const roleInfo = { isOfficer, allRoles: discordRoles };
+    const roleInfo = { isGM, isOfficer, allRoles: discordRoles };
     await fetchTeams(roleInfo);
   };
 
