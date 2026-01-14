@@ -344,7 +344,7 @@ export default function TokensPage() {
     return acc;
   }, {} as Record<string, TierToken[]>);
 
-  const slotOrder = ['Head', 'Shoulder', 'Chest', 'Hands', 'Legs'];
+  const slotOrder = ['Head', 'Shoulder', 'Chest', 'Hands', 'Legs', 'Wrist', 'Waist', 'Feet'];
 
   // Group upgrades by armor type for sidebar
   const upgradesByArmor = upgrades.reduce((acc, upgrade) => {
