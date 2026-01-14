@@ -90,130 +90,126 @@ export default function DashboardPage() {
 
       {/* Ready to Pump Card */}
       <Card className="overflow-hidden">
-        <div className="flex flex-col items-center text-center p-6">
-          {/* Arnold - centered and prominent */}
-          <img
-            src="/images/pump-arnold.webp"
-            alt="Ready to pump"
-            className="h-32 md:h-40 object-contain mb-4"
-          />
-
-          <h2 className="text-xl font-bold text-foreground mb-1">Ready to Pump?</h2>
-          <p className="text-sm text-muted-foreground mb-4">Consumables, items and assignments</p>
-
-          {/* Tier 4 - button link to assigns */}
-          <Link
-            href="/dashboard/assigns"
-            className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors mb-4 text-white font-medium"
-          >
-            <span className="font-bold">{CURRENT_TIER.tier}</span>
-            <span className="text-cyan-100">{CURRENT_TIER.raids.join(', ')}</span>
-            <ExternalLink className="w-4 h-4" />
-          </Link>
-
-          {/* What We Expect & The Playbook */}
-          <div className="grid md:grid-cols-2 gap-4 mb-4 text-left max-w-2xl">
-            <div className="bg-secondary/30 rounded-lg p-4">
-              <h3 className="font-semibold text-sm text-foreground mb-2">What We Expect</h3>
-              <ul className="space-y-1 text-xs text-muted-foreground">
-                <li className="flex items-start gap-1.5">
-                  <span className="text-cyan-400 mt-0.5">•</span>
-                  <span>Know the fights inside out</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-cyan-400 mt-0.5">•</span>
-                  <span>Study your assignments and routes</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-cyan-400 mt-0.5">•</span>
-                  <span>Come prepared with everything you need to perform and any situational speed items</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-cyan-400 mt-0.5">•</span>
-                  <span>Engage with feedback and improvement discussions in Discord</span>
-                </li>
-              </ul>
+        <div className="p-6">
+          {/* Top section: Arnold left, Tier 4 Playbook right */}
+          <div className="flex flex-col md:flex-row items-center gap-6 mb-6">
+            {/* Arnold + Title */}
+            <div className="flex items-center gap-4">
+              <img
+                src="/images/pump-arnold.webp"
+                alt="Ready to pump"
+                className="h-24 md:h-32 object-contain"
+              />
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">READY TO PUMP</h2>
+                <p className="text-sm text-muted-foreground">Assignments & preparation</p>
+              </div>
             </div>
-            <div className="bg-secondary/30 rounded-lg p-4">
-              <h3 className="font-semibold text-sm text-foreground mb-2">The Playbook</h3>
-              <p className="text-xs text-muted-foreground mb-3">
-                Detailed assignments and optimized routes for all TBC content. Preparation outside the game is what makes dominance inside the game possible.
-              </p>
+
+            {/* Tier 4 Playbook Button */}
+            <div className="md:ml-auto">
               <a
                 href={CURRENT_TIER.playbookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-cyan-600/20 hover:bg-cyan-600/30 transition-colors text-cyan-400 text-xs font-medium"
+                className="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition-colors text-white font-medium"
               >
-                <span>{CURRENT_TIER.tier} Playbook</span>
-                <ExternalLink className="w-3 h-3" />
+                <span className="font-bold">{CURRENT_TIER.tier} Playbook</span>
+                <span className="text-cyan-100 hidden sm:inline">{CURRENT_TIER.raids.join(', ')}</span>
+                <ExternalLink className="w-4 h-4" />
               </a>
             </div>
           </div>
 
-          {/* Soft-res link for PuGs */}
+          {/* What We Expect */}
+          <div className="bg-secondary/30 rounded-lg p-4 mb-4">
+            <h3 className="font-semibold text-sm text-foreground mb-2">What We Expect</h3>
+            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
+              <li className="flex items-start gap-1.5">
+                <span className="text-cyan-400 mt-0.5">•</span>
+                <span>Know the fights inside out</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-cyan-400 mt-0.5">•</span>
+                <span>Study your assignments and routes</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-cyan-400 mt-0.5">•</span>
+                <span>Come prepared with everything you need to perform and any situational speed items</span>
+              </li>
+              <li className="flex items-start gap-1.5">
+                <span className="text-cyan-400 mt-0.5">•</span>
+                <span>Engage with feedback and improvement discussions in Discord</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Soft-res section for PuGs */}
           {isPuG && (
-            <div className="flex items-center gap-2 mb-4">
-              {selectedTeam?.softResUrl ? (
-                <a
-                  href={selectedTeam.softResUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 transition-colors text-white font-medium"
-                >
-                  <Gift className="w-4 h-4" />
-                  <span>Soft-Res for Tonight</span>
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-              ) : (
-                <span className="text-sm text-muted-foreground">No soft-res link set</span>
-              )}
-              {isOfficer && (
-                <Dialog open={softResDialogOpen} onOpenChange={setSoftResDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={openSoftResDialog}
-                      className="text-muted-foreground hover:text-foreground"
+            <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex items-center gap-3">
+                  {selectedTeam?.softResUrl ? (
+                    <a
+                      href={selectedTeam.softResUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 transition-colors text-white font-medium"
                     >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Edit Soft-Res URL</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 pt-4">
-                      <Input
-                        placeholder="https://softres.it/raid/..."
-                        value={softResInput}
-                        onChange={(e) => setSoftResInput(e.target.value)}
-                      />
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setSoftResDialogOpen(false)}>
-                          Cancel
+                      <Gift className="w-4 h-4" />
+                      <span>Soft-Res for Tonight</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No soft-res link set</span>
+                  )}
+                  {isOfficer && (
+                    <Dialog open={softResDialogOpen} onOpenChange={setSoftResDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={openSoftResDialog}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button onClick={handleSaveSoftRes} disabled={isSaving}>
-                          {isSaving ? 'Saving...' : 'Save'}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Edit Soft-Res URL</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-4">
+                          <Input
+                            placeholder="https://softres.it/raid/..."
+                            value={softResInput}
+                            onChange={(e) => setSoftResInput(e.target.value)}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setSoftResDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button onClick={handleSaveSoftRes} disabled={isSaving}>
+                              {isSaving ? 'Saving...' : 'Save'}
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Not sure what to soft-res?</span>
+                  <Link
+                    href="/dashboard/bis"
+                    className="inline-flex items-center gap-1 text-amber-400 hover:text-amber-300 font-medium"
+                  >
+                    Check your BiS lists here!
+                  </Link>
+                </div>
+              </div>
             </div>
           )}
-
-          <div className="flex flex-wrap justify-center gap-2">
-            <Link
-              href="/dashboard/bis"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
-            >
-              <Users className="w-4 h-4 text-blue-400" />
-              <span>BiS Lists</span>
-            </Link>
-          </div>
         </div>
       </Card>
 

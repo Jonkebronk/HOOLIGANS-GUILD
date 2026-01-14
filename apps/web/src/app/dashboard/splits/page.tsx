@@ -96,6 +96,9 @@ export default function RaidSplitsPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Check if this is a PuG team
+  const isPuG = selectedTeam?.name?.toLowerCase().includes('pug');
+
   // Drag state
   const [draggedPlayer, setDraggedPlayer] = useState<Player | null>(null);
   const [dragSource, setDragSource] = useState<{ raidId: string; groupIndex: number; slotIndex: number } | 'available' | null>(null);
@@ -1538,7 +1541,9 @@ export default function RaidSplitsPage() {
     );
   }
 
-  if (players.length === 0) {
+  // For non-PuG teams with no players, show empty state
+  // For PuGs, always show the full UI so they can import from Raid-Helper
+  if (players.length === 0 && !isPuG) {
     return (
       <div className="min-h-screen bg-black text-white p-6">
         <div className="flex items-center justify-between mb-6">
@@ -1692,7 +1697,7 @@ export default function RaidSplitsPage() {
           {/* Karazhan Loot Overview */}
           {selectedTeam && (
             <div className="mt-6">
-              <KarazhanOverview teamId={selectedTeam.id} />
+              <KarazhanOverview teamId={selectedTeam.id} isPuG={isPuG} />
             </div>
           )}
         </div>
