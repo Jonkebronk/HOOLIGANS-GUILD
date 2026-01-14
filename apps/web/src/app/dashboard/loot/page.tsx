@@ -304,35 +304,64 @@ export default function DropsPage() {
     const isUnassigning = !playerId;
     const player = players.find((p) => p.id === playerId);
 
-    // Find the item being updated to get its itemId for filtering other items
+    // Find the item being updated
     const targetItem = lootItems.find(item => item.id === itemId);
     const targetItemId = targetItem?.itemId;
     const previousPlayerId = targetItem?.playerId;
+    const previousPlayer = previousPlayerId ? players.find(p => p.id === previousPlayerId) : null;
 
     // Optimistic update for immediate UI feedback
     const updatedItems = lootItems.map((item) => {
       if (item.id === itemId) {
-        // Update the assigned item
+        // Build updated BiS lists
+        let newBisPlayers = item.bisPlayersFromList || [];
+        let newBisNextPlayers = item.bisNextPlayersFromList || [];
+
+        // If assigning, remove new player from BiS
+        if (playerId) {
+          newBisPlayers = newBisPlayers.filter(p => p.id !== playerId);
+          newBisNextPlayers = newBisNextPlayers.filter(p => p.id !== playerId);
+        }
+
+        // If un-assigning and there was a previous player, add them back to BiS
+        if (isUnassigning && previousPlayer && previousPlayerId) {
+          // Only add back if not already in list
+          if (!newBisPlayers.find(p => p.id === previousPlayerId)) {
+            newBisPlayers = [...newBisPlayers, { id: previousPlayerId, name: previousPlayer.name, class: previousPlayer.class }];
+          }
+        }
+
         return {
           ...item,
           playerId: playerId || undefined,
           playerName: player?.name,
           playerClass: player?.class,
-          // Remove assigned player from BiS lists (if assigning)
-          bisPlayersFromList: playerId
-            ? item.bisPlayersFromList?.filter(p => p.id !== playerId)
-            : item.bisPlayersFromList,
-          bisNextPlayersFromList: playerId
-            ? item.bisNextPlayersFromList?.filter(p => p.id !== playerId)
-            : item.bisNextPlayersFromList,
+          bisPlayersFromList: newBisPlayers,
+          bisNextPlayersFromList: newBisNextPlayers,
         };
       }
-      // For other items with the same itemId, also remove the player from BiS (if assigning)
-      if (targetItemId && item.itemId === targetItemId && playerId) {
+      // For other items with the same itemId
+      if (targetItemId && item.itemId === targetItemId) {
+        let newBisPlayers = item.bisPlayersFromList || [];
+        let newBisNextPlayers = item.bisNextPlayersFromList || [];
+
+        // If assigning, remove player from BiS
+        if (playerId) {
+          newBisPlayers = newBisPlayers.filter(p => p.id !== playerId);
+          newBisNextPlayers = newBisNextPlayers.filter(p => p.id !== playerId);
+        }
+
+        // If un-assigning, add previous player back
+        if (isUnassigning && previousPlayer && previousPlayerId) {
+          if (!newBisPlayers.find(p => p.id === previousPlayerId)) {
+            newBisPlayers = [...newBisPlayers, { id: previousPlayerId, name: previousPlayer.name, class: previousPlayer.class }];
+          }
+        }
+
         return {
           ...item,
-          bisPlayersFromList: item.bisPlayersFromList?.filter(p => p.id !== playerId),
-          bisNextPlayersFromList: item.bisNextPlayersFromList?.filter(p => p.id !== playerId),
+          bisPlayersFromList: newBisPlayers,
+          bisNextPlayersFromList: newBisNextPlayers,
         };
       }
       return item;
@@ -358,11 +387,6 @@ export default function DropsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId: playerId || null }),
       });
-
-      // If un-assigning, refetch to restore BiS lists correctly
-      if (isUnassigning) {
-        await fetchData();
-      }
     } catch (error) {
       console.error('Failed to assign player:', error);
     }
