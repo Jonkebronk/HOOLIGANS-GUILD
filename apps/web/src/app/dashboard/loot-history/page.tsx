@@ -147,28 +147,26 @@ export default function LootHistoryPage() {
     });
 
   // Group by player for player view
-  const playerStats: PlayerStats[] = Array.from(
-    filteredLoot.reduce((acc, record) => {
-      if (!record.player) return acc;
+  const playerStatsMap = filteredLoot.reduce((acc, record) => {
+    if (!record.player) return acc;
 
-      const existing = acc.get(record.player.id);
-      if (existing) {
-        existing.totalItems++;
-        existing.items.push(record);
-      } else {
-        acc.set(record.player.id, {
-          id: record.player.id,
-          name: record.player.name,
-          class: record.player.class,
-          totalItems: 1,
-          items: [record],
-        });
-      }
-      return acc;
-    }, new Map<string, PlayerStats>())
-  ).values();
+    const existing = acc.get(record.player.id);
+    if (existing) {
+      existing.totalItems++;
+      existing.items.push(record);
+    } else {
+      acc.set(record.player.id, {
+        id: record.player.id,
+        name: record.player.name,
+        class: record.player.class,
+        totalItems: 1,
+        items: [record],
+      });
+    }
+    return acc;
+  }, new Map<string, PlayerStats>());
 
-  const sortedPlayerStats = Array.from(playerStats).sort((a, b) =>
+  const sortedPlayerStats = Array.from(playerStatsMap.values()).sort((a, b) =>
     sortOrder === 'desc' ? b.totalItems - a.totalItems : a.totalItems - b.totalItems
   );
 
