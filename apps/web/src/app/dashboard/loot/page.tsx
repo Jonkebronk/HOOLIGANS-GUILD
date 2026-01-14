@@ -303,16 +303,34 @@ export default function DropsPage() {
   const handleAssignPlayer = async (itemId: string, playerId: string) => {
     // Optimistic update for immediate UI feedback
     const player = players.find((p) => p.id === playerId);
-    const updatedItems = lootItems.map((item) =>
-      item.id === itemId
-        ? {
-            ...item,
-            playerId: playerId || undefined,
-            playerName: player?.name,
-            playerClass: player?.class,
-          }
-        : item
-    );
+
+    // Find the item being updated to get its itemId for filtering other items
+    const targetItem = lootItems.find(item => item.id === itemId);
+    const targetItemId = targetItem?.itemId;
+
+    const updatedItems = lootItems.map((item) => {
+      if (item.id === itemId) {
+        // Update the assigned item
+        return {
+          ...item,
+          playerId: playerId || undefined,
+          playerName: player?.name,
+          playerClass: player?.class,
+          // Remove assigned player from BiS lists on this item
+          bisPlayersFromList: item.bisPlayersFromList?.filter(p => p.id !== playerId),
+          bisNextPlayersFromList: item.bisNextPlayersFromList?.filter(p => p.id !== playerId),
+        };
+      }
+      // For other items with the same itemId, also remove the player from BiS
+      if (targetItemId && item.itemId === targetItemId && playerId) {
+        return {
+          ...item,
+          bisPlayersFromList: item.bisPlayersFromList?.filter(p => p.id !== playerId),
+          bisNextPlayersFromList: item.bisNextPlayersFromList?.filter(p => p.id !== playerId),
+        };
+      }
+      return item;
+    });
     setLootItems(updatedItems);
 
     // Recalculate raider stats based on updated items
@@ -334,8 +352,6 @@ export default function DropsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId: playerId || null }),
       });
-      // Refetch data to update BiS lists (they're calculated server-side)
-      await fetchData();
     } catch (error) {
       console.error('Failed to assign player:', error);
     }
