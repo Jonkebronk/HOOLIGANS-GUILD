@@ -72,6 +72,21 @@ type LootItem = {
   bisPlayersFromList?: BisPlayer[];
   bisNextPlayersFromList?: BisPlayer[];
   tokenRedemptions?: TokenRedemption[];
+  sunmoteRedemption?: {
+    id: string;
+    sunmotesRequired: number;
+    upgradedItem: {
+      id: string;
+      name: string;
+      wowheadId: number;
+      icon?: string;
+      quality: number;
+      lootRecords?: {
+        id: string;
+        player: { id: string; name: string; class: string } | null;
+      }[];
+    };
+  };
 };
 
 type RaiderStats = {
@@ -164,6 +179,21 @@ export default function DropsPage() {
             bisFor?: string;
             bisNextPhase?: string;
             tokenRedemptions?: TokenRedemption[];
+            sunmoteRedemption?: {
+              id: string;
+              sunmotesRequired: number;
+              upgradedItem: {
+                id: string;
+                name: string;
+                wowheadId: number;
+                icon?: string;
+                quality: number;
+                lootRecords?: {
+                  id: string;
+                  player: { id: string; name: string; class: string } | null;
+                }[];
+              };
+            };
           };
           itemName?: string;
           wowheadId?: number;
@@ -200,6 +230,7 @@ export default function DropsPage() {
             bisPlayersFromList: record.bisPlayersFromList,
             bisNextPlayersFromList: record.bisNextPlayersFromList,
             tokenRedemptions: record.item?.tokenRedemptions,
+            sunmoteRedemption: record.item?.sunmoteRedemption,
           };
         });
         setLootItems(items);
