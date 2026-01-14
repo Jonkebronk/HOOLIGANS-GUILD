@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ExternalLink, Eye, Zap, FlaskConical, Swords, Users, Gift, Pencil } from 'lucide-react';
+import { ExternalLink, Eye, Zap, FlaskConical, Users, Gift, Pencil } from 'lucide-react';
 import { CLASS_COLORS } from '@hooligans/shared';
 import { getClassIconUrl } from '@/lib/wowhead';
 import { useTeam } from '@/components/providers/team-provider';
@@ -212,13 +212,6 @@ export default function DashboardPage() {
             >
               <FlaskConical className="w-4 h-4 text-green-400" />
               <span>Consumables</span>
-            </Link>
-            <Link
-              href="/dashboard/items"
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 transition-colors text-sm font-medium"
-            >
-              <Swords className="w-4 h-4 text-purple-400" />
-              <span>Items</span>
             </Link>
             <Link
               href="/dashboard/bis"
