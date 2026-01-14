@@ -18,7 +18,6 @@ import {
   Droplets,
   Activity,
   History,
-  Layers,
   ClipboardList,
 } from 'lucide-react';
 
@@ -41,7 +40,6 @@ const navigation: NavItem[] = [
     children: [
       { name: 'Drops', href: '/dashboard/loot', icon: Droplets },
       { name: 'Items', href: '/dashboard/items', icon: Package },
-      { name: 'Tokens', href: '/dashboard/tokens', icon: Layers },
       { name: 'BiS Lists', href: '/dashboard/bis', icon: Scroll },
       { name: 'Attendance', href: '/dashboard/attendance', icon: Calendar },
       { name: 'Loot History', href: '/dashboard/loot-history', icon: History },
