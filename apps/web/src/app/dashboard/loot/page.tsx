@@ -301,13 +301,15 @@ export default function DropsPage() {
   };
 
   const handleAssignPlayer = async (itemId: string, playerId: string) => {
-    // Optimistic update for immediate UI feedback
+    const isUnassigning = !playerId;
     const player = players.find((p) => p.id === playerId);
 
     // Find the item being updated to get its itemId for filtering other items
     const targetItem = lootItems.find(item => item.id === itemId);
     const targetItemId = targetItem?.itemId;
+    const previousPlayerId = targetItem?.playerId;
 
+    // Optimistic update for immediate UI feedback
     const updatedItems = lootItems.map((item) => {
       if (item.id === itemId) {
         // Update the assigned item
@@ -316,12 +318,16 @@ export default function DropsPage() {
           playerId: playerId || undefined,
           playerName: player?.name,
           playerClass: player?.class,
-          // Remove assigned player from BiS lists on this item
-          bisPlayersFromList: item.bisPlayersFromList?.filter(p => p.id !== playerId),
-          bisNextPlayersFromList: item.bisNextPlayersFromList?.filter(p => p.id !== playerId),
+          // Remove assigned player from BiS lists (if assigning)
+          bisPlayersFromList: playerId
+            ? item.bisPlayersFromList?.filter(p => p.id !== playerId)
+            : item.bisPlayersFromList,
+          bisNextPlayersFromList: playerId
+            ? item.bisNextPlayersFromList?.filter(p => p.id !== playerId)
+            : item.bisNextPlayersFromList,
         };
       }
-      // For other items with the same itemId, also remove the player from BiS
+      // For other items with the same itemId, also remove the player from BiS (if assigning)
       if (targetItemId && item.itemId === targetItemId && playerId) {
         return {
           ...item,
@@ -352,6 +358,11 @@ export default function DropsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId: playerId || null }),
       });
+
+      // If un-assigning, refetch to restore BiS lists correctly
+      if (isUnassigning) {
+        await fetchData();
+      }
     } catch (error) {
       console.error('Failed to assign player:', error);
     }
