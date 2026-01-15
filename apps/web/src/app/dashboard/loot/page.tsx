@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Loader2, Search, Plus, RefreshCw, Trash2, Save, RotateCcw } from 'lucide-react';
+import { Loader2, Search, Plus, RefreshCw, Trash2, Save, RotateCcw, HelpCircle } from 'lucide-react';
 import { ITEM_QUALITY_COLORS, getItemIconUrl } from '@/lib/wowhead';
 import { useTeam } from '@/components/providers/team-provider';
 import { ItemsTable } from '@/components/drops/items-table';
@@ -660,6 +660,115 @@ export default function DropsPage() {
             </>
           )}
           <RCExportDialog items={lootItems} />
+          {/* RCLootCouncil Guide */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <HelpCircle className="h-4 w-4 mr-2" />
+                RC Guide
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>RCLootCouncil — HOOLIGANS Guide</DialogTitle>
+                <DialogDescription>
+                  How to use RCLootCouncil with our loot system
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 py-4 text-sm">
+                {/* Basic Setup */}
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Basic Setup</h3>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>All raiders install <span className="text-foreground font-medium">RCLootCouncil Classic</span></li>
+                    <li>Raid Leader/ML types <code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc start</code> to activate</li>
+                  </ul>
+                </div>
+
+                {/* Our Loot System */}
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Our Loot System: Award Later</h3>
+                  <p className="text-muted-foreground mb-3">We collect all loot during the raid and vote at the end.</p>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-medium text-foreground mb-1">During Raid</h4>
+                      <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                        <li>Boss dies → ML loots with &quot;Award Later&quot; checked</li>
+                        <li>Item goes to ML&apos;s bags with trade timer</li>
+                        <li>Keep pulling — no waiting around</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium text-foreground mb-1">After Last Boss</h4>
+                      <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                        <li>Everyone stay in raid group!</li>
+                        <li>ML types <code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc award</code></li>
+                        <li>Loot Frame pops up for all raiders</li>
+                        <li>Raiders: Click your response (MS / OS / Pass)</li>
+                        <li>Council: Exports the responses and loot to platform, decides who gets what item, then imports back in-game</li>
+                        <li>Trade items to winners</li>
+                        <li>Disband</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Warning */}
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-md p-3">
+                  <p className="text-amber-500 font-medium">
+                    ⚠️ Important: You must be in the raid group to vote. Don&apos;t leave early!
+                  </p>
+                </div>
+
+                {/* Essential Commands */}
+                <div>
+                  <h3 className="font-semibold text-foreground mb-2">Essential Commands</h3>
+                  <div className="border rounded-md overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="text-left px-3 py-2 font-medium">Command</th>
+                          <th className="text-left px-3 py-2 font-medium">What it does</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        <tr>
+                          <td className="px-3 py-2"><code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc start</code></td>
+                          <td className="px-3 py-2 text-muted-foreground">Activate addon as ML</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2"><code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc award</code></td>
+                          <td className="px-3 py-2 text-muted-foreground">Start voting session with stored loot</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2"><code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc list</code></td>
+                          <td className="px-3 py-2 text-muted-foreground">Show items waiting to be awarded</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2"><code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc add bags</code></td>
+                          <td className="px-3 py-2 text-muted-foreground">Add all tradeable items from bags</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2"><code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc open</code></td>
+                          <td className="px-3 py-2 text-muted-foreground">Open voting frame</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2"><code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc history</code></td>
+                          <td className="px-3 py-2 text-muted-foreground">View loot history</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2"><code className="bg-muted px-1.5 py-0.5 rounded text-xs">/rc config</code></td>
+                          <td className="px-3 py-2 text-muted-foreground">Open settings</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           {isOfficer && (
           <Dialog open={isAddItemOpen} onOpenChange={(open) => {
             setIsAddItemOpen(open);
