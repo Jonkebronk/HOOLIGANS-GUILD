@@ -103,11 +103,12 @@ type RaiderStats = {
 };
 
 type ParsedItem = {
-  session: number;
   itemName: string;
-  itemId: number;
+  wowheadId: number;
   ilvl: number;
   quality: number;
+  boss?: string;
+  timestamp?: number;
 };
 
 type DatabaseItem = {
@@ -455,7 +456,7 @@ export default function DropsPage() {
     const newItems: LootItem[] = items.map((item, index) => ({
       id: `temp-${Date.now()}-${index}`,
       itemName: item.itemName,
-      wowheadId: item.itemId,
+      wowheadId: item.wowheadId,
       quality: item.quality,
     }));
 
@@ -470,7 +471,7 @@ export default function DropsPage() {
           teamId: selectedTeam.id,
           items: items.map((item) => ({
             itemName: item.itemName,
-            wowheadId: item.itemId,
+            wowheadId: item.wowheadId,
             quality: item.quality,
             ilvl: item.ilvl,
           })),

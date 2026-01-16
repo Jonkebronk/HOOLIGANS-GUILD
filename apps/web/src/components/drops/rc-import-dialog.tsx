@@ -16,59 +16,49 @@ import { Label } from '@/components/ui/label';
 import { Upload, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 type ParsedItem = {
-  session: number;
   itemName: string;
-  itemId: number;
+  wowheadId: number;
   ilvl: number;
   quality: number;
+  boss?: string;
+  timestamp?: number;
+};
+
+type HooligansLootExport = {
+  items: Array<{
+    itemName: string;
+    wowheadId: number;
+    quality: number;
+    ilvl: number;
+    boss?: string;
+    timestamp?: number;
+  }>;
+  teamId?: string;
 };
 
 type RCImportDialogProps = {
   onImport: (items: ParsedItem[]) => Promise<void>;
 };
 
-// Parse WoW item link color code to quality
-// |cff9d9d9d = Poor (0)
-// |cffffffff = Common (1)
-// |cff1eff00 = Uncommon (2)
-// |cff0070dd = Rare (3)
-// |cffa335ee = Epic (4)
-// |cffff8000 = Legendary (5)
-const COLOR_TO_QUALITY: Record<string, number> = {
-  '9d9d9d': 0, // Poor
-  'ffffff': 1, // Common
-  '1eff00': 2, // Uncommon
-  '0070dd': 3, // Rare
-  'a335ee': 4, // Epic
-  'ff8000': 5, // Legendary
-};
+function parseHooligansLootExport(text: string): ParsedItem[] {
+  try {
+    const data: HooligansLootExport = JSON.parse(text);
 
-function parseRCLootCouncilExport(text: string): ParsedItem[] {
-  const lines = text.trim().split('\n');
-  const items: ParsedItem[] = [];
-
-  for (const line of lines) {
-    // Skip header line
-    if (line.startsWith('session,item,itemID,ilvl')) continue;
-    if (!line.trim()) continue;
-
-    // Parse CSV format: session,item,itemID,ilvl
-    // Example: 1,|cffa335ee|Hitem:17076::::::::60::::::::::|h[Bonereaver's Edge]|h|r,17076,77
-    const match = line.match(/^(\d+),\|cff([a-f0-9]{6})\|Hitem:(\d+).*?\|h\[(.+?)\]\|h\|r,(\d+),(\d+)/i);
-
-    if (match) {
-      const [, sessionStr, colorCode, , itemName, itemIdStr, ilvlStr] = match;
-      items.push({
-        session: parseInt(sessionStr),
-        itemName,
-        itemId: parseInt(itemIdStr),
-        ilvl: parseInt(ilvlStr),
-        quality: COLOR_TO_QUALITY[colorCode.toLowerCase()] ?? 4,
-      });
+    if (!data.items || !Array.isArray(data.items)) {
+      return [];
     }
-  }
 
-  return items;
+    return data.items.map((item) => ({
+      itemName: item.itemName,
+      wowheadId: item.wowheadId,
+      quality: item.quality,
+      ilvl: item.ilvl,
+      boss: item.boss,
+      timestamp: item.timestamp,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export function RCImportDialog({ onImport }: RCImportDialogProps) {
@@ -83,11 +73,11 @@ export function RCImportDialog({ onImport }: RCImportDialogProps) {
     setError('');
 
     if (text.trim()) {
-      const items = parseRCLootCouncilExport(text);
+      const items = parseHooligansLootExport(text);
       setParsedItems(items);
 
-      if (items.length === 0 && text.includes(',')) {
-        setError('Could not parse any items. Make sure you copied the full export from RCLootCouncil.');
+      if (items.length === 0) {
+        setError('Could not parse any items. Make sure you copied the full JSON export from HooligansLoot addon.');
       }
     } else {
       setParsedItems([]);
@@ -122,10 +112,9 @@ export function RCImportDialog({ onImport }: RCImportDialogProps) {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import from RCLootCouncil</DialogTitle>
+          <DialogTitle>Import from HooligansLoot Addon</DialogTitle>
           <DialogDescription>
-            Paste the export from RCLootCouncil addon. Open RCLootCouncil in-game, go to History,
-            select items, and click Export.
+            Paste the JSON export from the HooligansLoot addon. Use /hlexport in-game to generate the data.
           </DialogDescription>
         </DialogHeader>
 
@@ -133,9 +122,17 @@ export function RCImportDialog({ onImport }: RCImportDialogProps) {
           <div className="space-y-2">
             <Label>Paste Export Data</Label>
             <Textarea
-              placeholder={`session,item,itemID,ilvl
-1,|cffa335ee|Hitem:17076::::::::60::::::::::|h[Bonereaver's Edge]|h|r,17076,77
-2,|cffa335ee|Hitem:19148::::::::60::::::::::|h[Dark Iron Helm]|h|r,19148,66`}
+              placeholder={`{
+  "items": [
+    {
+      "itemName": "Helm of the Fallen Hero",
+      "wowheadId": 29759,
+      "quality": 4,
+      "ilvl": 70,
+      "boss": "Prince Malchezaar"
+    }
+  ]
+}`}
               value={importText}
               onChange={(e) => handleTextChange(e.target.value)}
               className="font-mono text-xs h-40"
@@ -153,7 +150,7 @@ export function RCImportDialog({ onImport }: RCImportDialogProps) {
                   {parsedItems.slice(0, 10).map((item, i) => (
                     <li key={i} className="text-muted-foreground">
                       <span className="text-purple-400">{item.itemName}</span>
-                      <span className="ml-2">(ID: {item.itemId}, ilvl: {item.ilvl})</span>
+                      <span className="ml-2">(ID: {item.wowheadId}, ilvl: {item.ilvl})</span>
                     </li>
                   ))}
                   {parsedItems.length > 10 && (
