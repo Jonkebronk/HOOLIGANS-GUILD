@@ -80,7 +80,8 @@
       "Bash(pnpm prisma migrate dev:*)",
       "Bash(npx dotenv:*)",
       "Bash(dir /s /b \"C:\\\\Users\\\\johnn\\\\HOOLIGANS Guild\\\\apps\\\\web\\\\src\\\\app\\\\dashboard\")",
-      "Bash(git revert:*)"
+      "Bash(git revert:*)",
+      "Bash(dir /s /b *.md)"
     ]
   }
 }

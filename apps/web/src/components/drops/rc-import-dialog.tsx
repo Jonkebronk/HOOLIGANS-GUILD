@@ -62,20 +62,25 @@ function parseHooligansLootExport(text: string): ParsedItem[] {
       return [];
     }
 
-    return data.items.map((item) => ({
-      itemName: item.itemName,
-      wowheadId: item.wowheadId,
-      quality: item.quality,
-      ilvl: item.ilvl,
-      boss: item.boss,
-      timestamp: item.timestamp,
-      responses: item.responses?.map((r) => ({
-        player: r.player,
-        class: r.class,
-        response: r.response,
-        note: r.note || '',
-      })),
-    }));
+    return data.items.map((item) => {
+      // Handle responses being either an array or an empty object {}
+      const responses = Array.isArray(item.responses) ? item.responses : [];
+
+      return {
+        itemName: item.itemName,
+        wowheadId: item.wowheadId,
+        quality: item.quality,
+        ilvl: item.ilvl,
+        boss: item.boss,
+        timestamp: item.timestamp,
+        responses: responses.map((r) => ({
+          player: r.player,
+          class: r.class,
+          response: r.response,
+          note: r.note || '',
+        })),
+      };
+    });
   } catch {
     return [];
   }
