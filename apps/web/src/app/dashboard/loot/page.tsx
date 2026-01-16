@@ -102,6 +102,13 @@ type RaiderStats = {
   daysSinceLastItem: string;
 };
 
+type ParsedResponse = {
+  player: string;
+  class: string;
+  response: string;
+  note?: string;
+};
+
 type ParsedItem = {
   itemName: string;
   wowheadId: number;
@@ -109,6 +116,7 @@ type ParsedItem = {
   quality: number;
   boss?: string;
   timestamp?: number;
+  responses?: ParsedResponse[];
 };
 
 type DatabaseItem = {
@@ -452,7 +460,7 @@ export default function DropsPage() {
   const handleRCImport = async (items: ParsedItem[]) => {
     if (!selectedTeam) return;
 
-    // Add imported items to the items table
+    // Add imported items to the items table optimistically
     const newItems: LootItem[] = items.map((item, index) => ({
       id: `temp-${Date.now()}-${index}`,
       itemName: item.itemName,
@@ -462,7 +470,6 @@ export default function DropsPage() {
 
     setLootItems((prev) => [...newItems, ...prev]);
 
-    // TODO: Implement API call to save imported items
     try {
       const res = await fetch('/api/loot/import-rc', {
         method: 'POST',
@@ -474,6 +481,9 @@ export default function DropsPage() {
             wowheadId: item.wowheadId,
             quality: item.quality,
             ilvl: item.ilvl,
+            boss: item.boss,
+            timestamp: item.timestamp,
+            responses: item.responses,
           })),
         }),
       });

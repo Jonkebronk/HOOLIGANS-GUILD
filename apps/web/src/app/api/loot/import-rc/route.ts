@@ -1,13 +1,36 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@hooligans/database';
+import { prisma, LootResponse } from '@hooligans/database';
 import { requireOfficer, canAccessTeam } from '@/lib/auth-utils';
+
+type ImportResponse = {
+  player: string;
+  class: string;
+  response: string;
+  note?: string;
+};
 
 type ImportItem = {
   itemName: string;
   wowheadId: number;
   quality: number;
   ilvl: number;
+  boss?: string;
+  timestamp?: number;
+  responses?: ImportResponse[];
 };
+
+// Map lowercase response IDs from addon to LootResponse enum
+function mapResponseToEnum(response: string): LootResponse | null {
+  const responseMap: Record<string, LootResponse> = {
+    bis: LootResponse.BiS,
+    greater: LootResponse.GreaterUpgrade,
+    minor: LootResponse.MinorUpgrade,
+    offspec: LootResponse.Offspec,
+    pvp: LootResponse.PvP,
+    disenchant: LootResponse.Disenchant,
+  };
+  return responseMap[response.toLowerCase()] || null;
+}
 
 export async function POST(request: Request) {
   try {
@@ -35,27 +58,31 @@ export async function POST(request: Request) {
 
     const results = {
       imported: 0,
+      assigned: 0,
       linked: 0,
       skipped: 0,
       errors: [] as string[],
     };
 
-    // Create LootRecords for each imported item (unassigned drops)
+    // Get all players for this team to match by name
+    const teamPlayers = await prisma.player.findMany({
+      where: { teamId },
+      select: { id: true, name: true },
+    });
+
+    // Create a case-insensitive name lookup map
+    const playerByName = new Map<string, string>();
+    for (const player of teamPlayers) {
+      playerByName.set(player.name.toLowerCase(), player.id);
+    }
+
+    // Create LootRecords for each imported item
     for (const importItem of items) {
       try {
-        // Check if this item was already imported (same wowheadId and team, unassigned)
-        const existing = await prisma.lootRecord.findFirst({
-          where: {
-            teamId,
-            wowheadId: importItem.wowheadId,
-            playerId: null, // Only skip if unassigned duplicate
-          },
-        });
-
-        if (existing) {
-          results.skipped++;
-          continue;
-        }
+        // Parse timestamp from Unix seconds to Date
+        const lootDate = importItem.timestamp
+          ? new Date(importItem.timestamp * 1000)
+          : new Date();
 
         // Try to find the item in our database by wowheadId
         const dbItem = await prisma.item.findFirst({
@@ -64,22 +91,55 @@ export async function POST(request: Request) {
           },
         });
 
-        // Create the loot record, linking to database item if found
+        // Determine if we should auto-assign based on responses
+        let assignedPlayerId: string | null = null;
+        let assignedResponse: LootResponse | null = null;
+
+        if (importItem.responses && importItem.responses.length === 1) {
+          // Single response = winner, auto-assign
+          const winnerResponse = importItem.responses[0];
+          const playerId = playerByName.get(winnerResponse.player.toLowerCase());
+          if (playerId) {
+            assignedPlayerId = playerId;
+            assignedResponse = mapResponseToEnum(winnerResponse.response);
+          }
+        }
+
+        // Check for duplicates - same item, same timestamp, same player
+        const existing = await prisma.lootRecord.findFirst({
+          where: {
+            teamId,
+            wowheadId: importItem.wowheadId,
+            rcTimestamp: lootDate,
+          },
+        });
+
+        if (existing) {
+          results.skipped++;
+          continue;
+        }
+
+        // Create the loot record
         await prisma.lootRecord.create({
           data: {
             teamId,
-            itemId: dbItem?.id || null, // Link to Item if found
+            itemId: dbItem?.id || null,
             itemName: importItem.itemName,
             wowheadId: importItem.wowheadId,
             quality: importItem.quality,
-            // No playerId = unassigned
-            // No response = pending
+            playerId: assignedPlayerId,
+            response: assignedResponse,
+            lootDate,
+            rcTimestamp: lootDate,
           },
         });
 
         results.imported++;
         if (dbItem) {
           results.linked++;
+        }
+        if (assignedPlayerId) {
+          results.assigned++;
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unknown error';

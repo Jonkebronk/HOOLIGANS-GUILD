@@ -15,6 +15,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Upload, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
+type ParsedResponse = {
+  player: string;
+  class: string;
+  response: string;
+  note?: string;
+};
+
 type ParsedItem = {
   itemName: string;
   wowheadId: number;
@@ -22,6 +29,7 @@ type ParsedItem = {
   quality: number;
   boss?: string;
   timestamp?: number;
+  responses?: ParsedResponse[];
 };
 
 type HooligansLootExport = {
@@ -32,6 +40,12 @@ type HooligansLootExport = {
     ilvl: number;
     boss?: string;
     timestamp?: number;
+    responses?: Array<{
+      player: string;
+      class: string;
+      response: string;
+      note?: string;
+    }>;
   }>;
   teamId?: string;
 };
@@ -55,6 +69,12 @@ function parseHooligansLootExport(text: string): ParsedItem[] {
       ilvl: item.ilvl,
       boss: item.boss,
       timestamp: item.timestamp,
+      responses: item.responses?.map((r) => ({
+        player: r.player,
+        class: r.class,
+        response: r.response,
+        note: r.note || '',
+      })),
     }));
   } catch {
     return [];
@@ -150,7 +170,12 @@ export function RCImportDialog({ onImport }: RCImportDialogProps) {
                   {parsedItems.slice(0, 10).map((item, i) => (
                     <li key={i} className="text-muted-foreground">
                       <span className="text-purple-400">{item.itemName}</span>
-                      <span className="ml-2">(ID: {item.wowheadId}, ilvl: {item.ilvl})</span>
+                      <span className="ml-2">(ilvl: {item.ilvl})</span>
+                      {item.responses && item.responses.length > 0 && (
+                        <span className="ml-2 text-green-400">
+                          {item.responses.length} vote{item.responses.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
                     </li>
                   ))}
                   {parsedItems.length > 10 && (
